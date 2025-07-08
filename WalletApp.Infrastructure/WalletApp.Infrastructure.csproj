@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WalletApp.Application\WalletApp.Application.csproj" />
+    <ProjectReference Include="..\WalletApp.Domain\WalletApp.Domain.csproj" />
+    <ProjectReference Include="..\WalletApp.Persistence\WalletApp.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

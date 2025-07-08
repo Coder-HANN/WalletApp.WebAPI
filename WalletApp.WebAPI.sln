@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WalletApp.WebAPI", "WalletApp.WebAPI\WalletApp.WebAPI.csproj", "{6E2A9981-498D-4D78-91BD-C69B5A3264C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WalletApp.Domain", "WalletApp.Domain\WalletApp.Domain.csproj", "{9A96F583-F3D8-4B80-8BE5-1C929C40CC72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WalletApp.Application", "WalletApp.Application\WalletApp.Application.csproj", "{48C0E47A-31E1-44FF-9DED-0BAFD0A39A81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WalletApp.Persistence", "WalletApp.Persistence\WalletApp.Persistence.csproj", "{4C79ABAA-3245-4828-92B1-5B6F95029277}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WalletApp.Infrastructure", "WalletApp.Infrastructure\WalletApp.Infrastructure.csproj", "{835AC75C-B03A-4038-80C8-EB0740854969}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E2A9981-498D-4D78-91BD-C69B5A3264C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E2A9981-498D-4D78-91BD-C69B5A3264C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E2A9981-498D-4D78-91BD-C69B5A3264C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E2A9981-498D-4D78-91BD-C69B5A3264C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A96F583-F3D8-4B80-8BE5-1C929C40CC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A96F583-F3D8-4B80-8BE5-1C929C40CC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A96F583-F3D8-4B80-8BE5-1C929C40CC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A96F583-F3D8-4B80-8BE5-1C929C40CC72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48C0E47A-31E1-44FF-9DED-0BAFD0A39A81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48C0E47A-31E1-44FF-9DED-0BAFD0A39A81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48C0E47A-31E1-44FF-9DED-0BAFD0A39A81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48C0E47A-31E1-44FF-9DED-0BAFD0A39A81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C79ABAA-3245-4828-92B1-5B6F95029277}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C79ABAA-3245-4828-92B1-5B6F95029277}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C79ABAA-3245-4828-92B1-5B6F95029277}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C79ABAA-3245-4828-92B1-5B6F95029277}.Release|Any CPU.Build.0 = Release|Any CPU
+		{835AC75C-B03A-4038-80C8-EB0740854969}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{835AC75C-B03A-4038-80C8-EB0740854969}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{835AC75C-B03A-4038-80C8-EB0740854969}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{835AC75C-B03A-4038-80C8-EB0740854969}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0EA4E1B5-DEF3-49FA-894C-C3B9C3935A37}
+	EndGlobalSection
+EndGlobal
