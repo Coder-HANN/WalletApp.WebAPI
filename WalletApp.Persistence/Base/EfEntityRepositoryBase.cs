@@ -18,7 +18,6 @@ namespace WalletApp.Persistence.Base
         public T Add(T entity)
         {
             _dbSet.Add(entity);
-            _context.SaveChanges();
             return entity;
         }
         public async Task<T> AddAsync(T entity)
@@ -79,12 +78,13 @@ namespace WalletApp.Persistence.Base
 
         public IQueryable<T> Query()
         {
-            throw new NotImplementedException();
+            return _dbSet.AsQueryable();
         }
 
         public Task<int> SaveChangesAsync()
         {
-            throw new NotImplementedException();
+            return _context.SaveChangesAsync();
         }
+
     }
 }

@@ -12,6 +12,7 @@ namespace WalletApp.Domain.Base
      public DateTime? ModifiedDate { get; set; }
      public string ModifiedUser { get; set; }
      public bool IsDelete { get; set; }
-     public Guid Created { get; set; }
+        public string CreatedUser { get; set; }
+        public Guid Created { get; set; }
     }
 }

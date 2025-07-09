@@ -180,15 +180,20 @@ namespace WalletApp.Persistence
             foreach (var entry in entries)
             {
                 var entity = (ProductClass)entry.Entity;
+                var now = DateTime.UtcNow;
+                var user = "system"; // Giriş yapan kullanıcı adı ile değiştirilebilir
 
                 if (entry.State == EntityState.Added)
                 {
-                    entity.CreatedDate = DateTime.UtcNow;
+                    entity.CreatedDate = now;
+                    entity.CreatedUser = user;
+                    entity.ModifiedDate = now;
+                    entity.ModifiedUser = user;
                 }
-                else
+                else if (entry.State == EntityState.Modified)
                 {
-                    entity.ModifiedDate = DateTime.UtcNow;
-                    entity.ModifiedUser = "system"; // Gerçek kullanıcı adı varsa oraya yazabilirsin
+                    entity.ModifiedDate = now;
+                    entity.ModifiedUser = user;
                 }
             }
 

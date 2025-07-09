@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace WalletApp.Application.DTO
 {
-    internal class UserResponseDTO
+    public class UserResponseDTO
     {
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 }

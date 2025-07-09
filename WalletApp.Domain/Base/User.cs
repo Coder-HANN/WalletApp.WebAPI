@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace WalletApp.Domain.Base
         public UserDetail UserDetail { get; set; }
         public ICollection<Wallet> Wallet { get; set; }
         public ICollection<BankAccount> BankaHesap { get; set; }
+        public ClaimsIdentity? Name { get; set; }
     }
 
 };
