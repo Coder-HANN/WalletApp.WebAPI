@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WalletApp.Domain.Base
 {
-    public class Payment
+    public class Payment : ProductClass
     {
         public int Id { get; set; }
         public int TransectionId { get; set; }

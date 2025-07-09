@@ -3,10 +3,11 @@ using WalletApp.Domain.Base;
 
 
 
-namespace WalletApp.Application.Abstarction.Repositories.EntitysRepository
+namespace WalletApp.Application.Abstraction.Repositories.EntitysRepository
 {
     public interface IWalletRepository : IEntityRepository<Wallet>
     {
- 
+
+
     }
 }

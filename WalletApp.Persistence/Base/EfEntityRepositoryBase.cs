@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using WalletApp.Application.Abstarction.Repositories;
+using WalletApp.Application.Abstraction.Repositories;
 
 namespace WalletApp.Persistence.Base
 {
@@ -75,6 +75,16 @@ namespace WalletApp.Persistence.Base
             }
             return await _dbSet.Where(predicate).ToListAsync();
 
+        }
+
+        public IQueryable<T> Query()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> SaveChangesAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

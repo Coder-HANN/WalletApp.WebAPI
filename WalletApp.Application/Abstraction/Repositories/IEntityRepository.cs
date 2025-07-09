@@ -1,26 +1,24 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
-
-namespace WalletApp.Application.Abstarction.Repositories
+namespace WalletApp.Application.Abstraction.Repositories
 {
-    public interface IEntityRepository<T> where T : class 
-
+    public interface IEntityRepository<T> where T : class
     {
-        T Add (T entity);
+        T Add(T entity);
         Task<T> AddAsync(T entity);
-
         T Update(T entity);
         Task<T> UpdateAsync(T entity);
-
         T Delete(T entity);
         Task<T> DeleteAsync(T entity);
-        
         T Get(Expression<Func<T, bool>> predicate);
         Task<T> GetAsync(Expression<Func<T, bool>> predicate);
-
         IEnumerable<T> GetAll(Expression<Func<T, bool>> predicate = null);
-        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate = null);   
-
+        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate = null);
+        IQueryable<T> Query();
+        Task<int> SaveChangesAsync();
     }
 }

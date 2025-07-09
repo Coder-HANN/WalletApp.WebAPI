@@ -14,6 +14,7 @@ namespace WalletApp.Persistence
         public DbSet<Payment> Payments { get; set; }
         public DbSet<BankTransection> BankTransections { get; set; }
         
+
         public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,7 +24,7 @@ namespace WalletApp.Persistence
             {
                 
                 builder.HasKey(ud => ud.Id);
-                builder.Property(ud => ud.name).IsRequired().HasMaxLength(50);
+                builder.Property(ud => ud.Name).IsRequired().HasMaxLength(50);
                 builder.Property(ud => ud.BirthDay).IsRequired();
                 builder.Property(ud => ud.Occupation).IsRequired().HasMaxLength(50);
                 builder.Property(ud => ud.PhoneNumber).IsRequired();
@@ -41,7 +42,7 @@ namespace WalletApp.Persistence
                 builder.HasKey(u => u.Id);
 
                 builder.Property(u => u.Email).IsRequired().HasMaxLength(100);
-                builder.Property(u => u.Password).IsRequired().HasMaxLength(100);
+                builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(100);
                 builder.Property(u => u.CreatedDate).IsRequired();
                 
             });
@@ -167,8 +168,34 @@ namespace WalletApp.Persistence
                 
             });
 
+
             base.OnModelCreating(modelBuilder);
         }
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is ProductClass &&
+                           (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+            foreach (var entry in entries)
+            {
+                var entity = (ProductClass)entry.Entity;
+
+                if (entry.State == EntityState.Added)
+                {
+                    entity.CreatedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    entity.ModifiedDate = DateTime.UtcNow;
+                    entity.ModifiedUser = "system"; // Gerçek kullanıcı adı varsa oraya yazabilirsin
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
     }
+
 }
 

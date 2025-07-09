@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Abstarction\Repositories\EntitysRepository\ITransectionRepository.cs" />
+    <None Include="Abstraction\Repositories\EntitysRepository\ITransectionRepository.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>

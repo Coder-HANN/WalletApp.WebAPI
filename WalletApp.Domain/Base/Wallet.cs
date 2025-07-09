@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace WalletApp.Domain.Base
 {
-    public class Wallet
+    public class Wallet : ProductClass
     {
         public int Id { get; set; }
         public int UserId { get; set; }
         public decimal TotalBalance { get; set; }
-        public DateTime CreatedDate { get; set; }
+       
         public string Assest { get; set; }
         public User User { get; set; }
         public ICollection<Transection> Transections { get; set; }

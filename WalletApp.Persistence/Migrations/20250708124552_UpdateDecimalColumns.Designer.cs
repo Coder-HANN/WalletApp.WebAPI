@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WalletApp.Persistence;
 
@@ -11,9 +12,11 @@ using WalletApp.Persistence;
 namespace WalletApp.Persistence.Migrations
 {
     [DbContext(typeof(WalletDbContext))]
-    partial class WalletDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250708124552_UpdateDecimalColumns")]
+    partial class UpdateDecimalColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
