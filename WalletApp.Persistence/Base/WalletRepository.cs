@@ -14,35 +14,30 @@ namespace WalletApp.Infrastructure.Repositories
         {
             _context = context;
         }
-
         public Wallet Add(Wallet entity)
         {
             _context.Wallets.Add(entity);
             _context.SaveChanges();
             return entity;
         }
-
         public async Task<Wallet> AddAsync(Wallet entity)
         {
             await _context.Wallets.AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
-
         public Wallet Delete(Wallet entity)
         {
             _context.Wallets.Remove(entity);
             _context.SaveChanges();
             return entity;
         }
-
         public async Task<Wallet> DeleteAsync(Wallet entity)
         {
             _context.Wallets.Remove(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
-
         public Wallet Get(Expression<Func<Wallet, bool>> predicate)
         {
             return _context.Wallets
@@ -51,7 +46,6 @@ namespace WalletApp.Infrastructure.Repositories
                 .Include(w => w.WalletTransfers)
                 .FirstOrDefault(predicate);
         }
-
         public async Task<Wallet> GetAsync(
         Expression<Func<Wallet, bool>> predicate,
         Func<IQueryable<Wallet>, IQueryable<Wallet>> include = null)
@@ -72,7 +66,6 @@ namespace WalletApp.Infrastructure.Repositories
 
             return await query.FirstOrDefaultAsync(predicate);
         }
-
         public IEnumerable<Wallet> GetAll(Expression<Func<Wallet, bool>> predicate = null)
         {
             IQueryable<Wallet> query = _context.Wallets
@@ -86,7 +79,6 @@ namespace WalletApp.Infrastructure.Repositories
             }
             return query.ToList();
         }
-
         public async Task<IEnumerable<Wallet>> GetAllAsync(Expression<Func<Wallet, bool>> predicate = null)
         {
             IQueryable<Wallet> query = _context.Wallets
@@ -100,7 +92,6 @@ namespace WalletApp.Infrastructure.Repositories
             }
             return await query.ToListAsync();
         }
-
         public IQueryable<Wallet> Query()
         {
             return _context.Wallets
@@ -108,24 +99,31 @@ namespace WalletApp.Infrastructure.Repositories
                 .Include(w => w.Transections)
                 .Include(w => w.WalletTransfers);
         }
-
         public Task<int> SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
         }
-
         public Wallet Update(Wallet entity)
         {
             _context.Wallets.Update(entity);
             _context.SaveChanges();
             return entity;
         }
-
         public async Task<Wallet> UpdateAsync(Wallet entity)
         {
             _context.Wallets.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
+        public async Task<IEnumerable<Wallet>> GetAllByUserIdAsync(int userId)
+        {
+            return await _context.Wallets
+                                 .Where(w => w.UserId == userId)
+                                 .Include(w => w.User)
+                                 .Include(w => w.Transections)
+                                 .Include(w => w.WalletTransfers)
+                                 .ToListAsync();
+        }
+
     }
 }

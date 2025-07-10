@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Application.DTO;
 using WalletApp.Application.Handler.RegisterUserCommandHandler;
+using WalletApp.Application.Services;
 using WalletApp.Domain.Base;
 using WalletApp.Infrastructure.Repositories;
 using WalletApp.Persistence;
@@ -23,6 +24,8 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Scoped olarak repository'leri ekle
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+builder.Services.AddScoped<WalletService>();
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Generic repository
