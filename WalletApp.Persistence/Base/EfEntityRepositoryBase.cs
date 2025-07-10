@@ -6,10 +6,10 @@ namespace WalletApp.Persistence.Base
 {
     public class EfEntityRepositoryBase<T> : IEntityRepository<T> where T : class
     {
-        protected DbContext _context;
+        protected WalletDbContext _context;
         protected DbSet<T> _dbSet;
 
-        public EfEntityRepositoryBase(DbContext context)
+        public EfEntityRepositoryBase(WalletDbContext context)
         {
             _context = context;
             _dbSet = _context.Set<T>();
@@ -54,10 +54,20 @@ namespace WalletApp.Persistence.Base
         {
             return _dbSet.FirstOrDefault(predicate);
         }
-        public async Task<T> GetAsync(Expression<Func<T, bool>> predicate)
+        public async Task<T> GetAsync(
+            Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IQueryable<T>> include = null)
         {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
+            IQueryable<T> query = _dbSet;
+
+            if (include != null)
+            {
+                query = include(query);
+            }
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
+
         public IEnumerable<T> GetAll(Expression<Func<T, bool>> predicate = null)
         {
             if (predicate == null)

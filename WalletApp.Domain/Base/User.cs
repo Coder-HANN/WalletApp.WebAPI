@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -16,7 +17,8 @@ namespace WalletApp.Domain.Base
         public UserDetail UserDetail { get; set; }
         public ICollection<Wallet> Wallet { get; set; }
         public ICollection<BankAccount> BankaHesap { get; set; }
+
+        [NotMapped]
         public ClaimsIdentity? Name { get; set; }
     }
-
 };

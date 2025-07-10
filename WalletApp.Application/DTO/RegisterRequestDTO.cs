@@ -1,35 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using WalletApp.Application.Abstraction.Constence;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WalletApp.Application.DTO
 {
     public class RegisterRequestDTO
     {
-        [Required(ErrorMessage = "Email boş olamaz.")]
-        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girin.")]
+        [Required(ErrorMessage = ValidationMessages.EmailRequired) ]
+        [EmailAddress(ErrorMessage = ValidationMessages.EmailInvalid)]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "Şifre boş olamaz.")]
-        [MinLength(6, ErrorMessage = "Şifre en az 6 karakter olmalıdır.")]
+        [Required(ErrorMessage = ValidationMessages.PasswordRequired)]
+        [MinLength(6, ErrorMessage = ValidationMessages.PasswordMinLength)]
         public string Password { get; set; } = null;
 
-        [Required(ErrorMessage = "İsim boş olamaz.")]
+        [Required(ErrorMessage = ValidationMessages.NameRequired)]
         public string Name { get; set; } = null!;
 
-        [Required(ErrorMessage = "Doğum günü boş olamaz.")]
-        [DataType(DataType.Date, ErrorMessage = "Geçerli bir tarih girin.")]
+        [Required(ErrorMessage = ValidationMessages.BirthDayRequired)]
+        [DataType(DataType.Date, ErrorMessage = ValidationMessages.BirthDayInvalid)]
         public DateTime BirthDay { get; set; } 
 
-        [Required(ErrorMessage = "Lütfen meslek seçimi yapınız.")]
-        [StringLength(100, ErrorMessage = "Meslek en fazla 100 karakter olmalıdır.")]
+        [Required(ErrorMessage = ValidationMessages.OccupationRequired)]
+        [StringLength(100, ErrorMessage = ValidationMessages.OccupationMaxLength)]
         public string Occupation { get; set; } = null!;
 
-        [Required(ErrorMessage = "Telefon numarası boş olamaz.")]
-        [Phone(ErrorMessage = "Geçerli bir telefon numarası girin.")]
+        [Required(ErrorMessage = ValidationMessages.PhoneNumberRequired)]
+        [Phone(ErrorMessage = ValidationMessages.PhoneNumberInvalid)]
         public string PhoneNumber { get; set; } = null!;
 
     }

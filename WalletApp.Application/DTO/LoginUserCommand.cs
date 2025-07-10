@@ -1,25 +1,18 @@
 ﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WalletApp.Application.DTO
 {
-    public class LoginUserCommand : IRequest<string>
+    public class LoginUserCommand : IRequest<LoginResponseDTO>
     {
-        private LoginUserCommand dto;
 
+        public LoginUserCommand() { }
         public UserRequestDTO RequestDTO { get; set; }
+
+        public LoginUserCommand(LoginUserCommand dto) { }
+
         public LoginUserCommand(UserRequestDTO requestDTO)
         {
-                        RequestDTO = requestDTO;
-        }
-
-        public LoginUserCommand(LoginUserCommand dto)
-        {
-            this.dto = dto;
+            RequestDTO = requestDTO;
         }
     }
 }

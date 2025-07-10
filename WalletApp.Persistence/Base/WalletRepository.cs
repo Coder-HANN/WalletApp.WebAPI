@@ -52,13 +52,25 @@ namespace WalletApp.Infrastructure.Repositories
                 .FirstOrDefault(predicate);
         }
 
-        public async Task<Wallet> GetAsync(Expression<Func<Wallet, bool>> predicate)
+        public async Task<Wallet> GetAsync(
+        Expression<Func<Wallet, bool>> predicate,
+        Func<IQueryable<Wallet>, IQueryable<Wallet>> include = null)
         {
-            return await _context.Wallets
-                .Include(w => w.User)
-                .Include(w => w.Transections)
-                .Include(w => w.WalletTransfers)
-                .FirstOrDefaultAsync(predicate);
+            IQueryable<Wallet> query = _context.Wallets;
+
+            if (include != null)
+            {
+                query = include(query);
+            }
+            else
+            {
+                // İstersen default olarak include edilecek navigation propertyleri ekleyebilirsin:
+                query = query.Include(w => w.User)
+                             .Include(w => w.Transections)
+                             .Include(w => w.WalletTransfers);
+            }
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
 
         public IEnumerable<Wallet> GetAll(Expression<Func<Wallet, bool>> predicate = null)

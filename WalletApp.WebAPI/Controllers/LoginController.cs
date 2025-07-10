@@ -14,11 +14,10 @@ namespace WalletApp.WebAPI.Controllers
             _mediator = mediator;
         }
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserCommand dto)
+        public async Task<ActionResult<LoginResponseDTO>> Login([FromBody] LoginUserCommand command)
         {
-            var command = new LoginUserCommand(dto);
-            var result = await _mediator.Send(command);
-            return Ok(result); // 200 OK
+            var response = await _mediator.Send(command);
+            return Ok(response); // Artık genişletilmiş yanıt dönecek
         }
     }
 }
