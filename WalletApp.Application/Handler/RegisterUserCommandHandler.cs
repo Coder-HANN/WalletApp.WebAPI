@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Application.DTO;
+using WalletApp.Application.Services;
 using WalletApp.Domain.Base;
 
 
@@ -12,15 +13,18 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
         private readonly IWalletRepository _walletRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IUserRepository _userRepository;
-
+        private readonly WalletService _walletService;
+        
         public RegisterUserCommandHandler(
             IWalletRepository walletRepository,
             IPasswordHasher<User> passwordHasher,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            WalletService walletService)
         {
             _walletRepository = walletRepository;
             _passwordHasher = passwordHasher;
             _userRepository = userRepository;
+            _walletService = walletService;
         }
 
         public async Task<RegisterResponseDTO> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -44,11 +48,13 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
                     Occupation = dto.Occupation
                 }
             };
+            
 
             try
             {
                 _userRepository.Add(user);
                 await _userRepository.SaveChangesAsync();
+                await _walletService.CreateWalletAsync(user.Id, "TL");
             }
             catch (Exception ex)
             {
@@ -62,8 +68,12 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
             {
                 Name = user.UserDetail.Name,
                 Email = user.Email,
-                Message = "Kayıt başarılı"
+                Message = "Kayıt başarılı",
+                
             };
+            
+    
         }
     }
+
 }

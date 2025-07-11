@@ -8,6 +8,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Application.DTO;
 using WalletApp.Application.Handler.RegisterUserCommandHandler;
+using WalletApp.Application.Handlers.Bank;
 using WalletApp.Application.Services;
 using WalletApp.Domain.Base;
 using WalletApp.Infrastructure.Repositories;
@@ -21,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Dependency Injection (DI)
 // -----------------------------
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<WalletService>();
 
 // Scoped olarak repository'leri ekle
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
@@ -39,9 +41,9 @@ builder.Services.AddDbContext<WalletDbContext>(options =>
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(
         typeof(RegisterUserCommandHandler).Assembly,
-        typeof(RegisterUserCommand).Assembly
+        typeof(RegisterUserCommand).Assembly,
+        typeof(BankTransferCommand).Assembly
     ));
-
 // -----------------------------
 // JWT Authentication
 // -----------------------------
@@ -68,7 +70,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
+builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
+builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));
 // -----------------------------
 // Controllers & Swagger
 // -----------------------------
@@ -92,7 +98,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT token'ı buraya girin: Bearer {token}"
+        Description = "Tokenınızı girin"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement

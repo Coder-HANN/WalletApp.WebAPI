@@ -42,7 +42,7 @@ namespace WalletApp.Infrastructure.Repositories
         {
             return _context.Wallets
                 .Include(w => w.User)
-                .Include(w => w.Transections)
+                .Include(w => w.Transactions)
                 .Include(w => w.WalletTransfers)
                 .FirstOrDefault(predicate);
         }
@@ -60,7 +60,7 @@ namespace WalletApp.Infrastructure.Repositories
             {
                 // İstersen default olarak include edilecek navigation propertyleri ekleyebilirsin:
                 query = query.Include(w => w.User)
-                             .Include(w => w.Transections)
+                             .Include(w => w.Transactions)
                              .Include(w => w.WalletTransfers);
             }
 
@@ -70,7 +70,7 @@ namespace WalletApp.Infrastructure.Repositories
         {
             IQueryable<Wallet> query = _context.Wallets
                 .Include(w => w.User)
-                .Include(w => w.Transections)
+                .Include(w => w.Transactions)
                 .Include(w => w.WalletTransfers);
 
             if (predicate != null)
@@ -83,7 +83,7 @@ namespace WalletApp.Infrastructure.Repositories
         {
             IQueryable<Wallet> query = _context.Wallets
                 .Include(w => w.User)
-                .Include(w => w.Transections)
+                .Include(w => w.Transactions)
                 .Include(w => w.WalletTransfers);
 
             if (predicate != null)
@@ -96,7 +96,7 @@ namespace WalletApp.Infrastructure.Repositories
         {
             return _context.Wallets
                 .Include(w => w.User)
-                .Include(w => w.Transections)
+                .Include(w => w.Transactions)
                 .Include(w => w.WalletTransfers);
         }
         public Task<int> SaveChangesAsync()
@@ -120,7 +120,7 @@ namespace WalletApp.Infrastructure.Repositories
             return await _context.Wallets
                                  .Where(w => w.UserId == userId)
                                  .Include(w => w.User)
-                                 .Include(w => w.Transections)
+                                 .Include(w => w.Transactions)
                                  .Include(w => w.WalletTransfers)
                                  .ToListAsync();
         }

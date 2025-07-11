@@ -30,7 +30,7 @@ namespace WalletApp.WebAPI.Controllers
         }
 
         // ✅ Kullanıcının tüm cüzdanlarını getir
-        [HttpGet("all")]
+        [HttpPost("all")]
         public async Task<IActionResult> GetUserWallets()
         {
             int userId = GetUserId(); // Aynı şekilde örnek
@@ -48,5 +48,32 @@ namespace WalletApp.WebAPI.Controllers
 
             return int.Parse(userIdClaim.Value);
         }
+        [HttpPost("deposit")]
+        public async Task<IActionResult> Deposit([FromBody] TransactionRequestDTO dto)
+        {
+            var transaction = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Deposit", dto.Description);
+            return Ok(transaction);
+        }
+        [HttpPost("withdraw")]
+        public async Task<IActionResult> Withdraw([FromBody] TransactionRequestDTO dto)
+        {
+            var transaction = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Withdraw", dto.Description);
+            return Ok(transaction);
+        }
+        [HttpPost("transfer")]
+        public async Task<IActionResult> Transfer([FromBody] TransferRequestDTO dto)
+        {
+            var transaction = await _walletService.TransferAsync(dto.SourceWalletId, dto.TargetWalletId, dto.Amount);
+            return Ok(transaction);
+        }
+        [HttpGet("{walletId}/history")]
+        public async Task<IActionResult> GetHistory(int walletId)
+        {
+            var history = await _walletService.GetTransactionHistoryAsync(walletId);
+            return Ok(history);
+        }
+
+
     }
+
 }

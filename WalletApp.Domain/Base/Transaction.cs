@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace WalletApp.Domain.Base
 {
-    public class Transection : ProductClass
+    public class Transaction : ProductClass
     {
         public int Id { get; set; }
         public int WalletId { get; set; }
         public decimal Amount { get; set; }
         public decimal Currency { get; set; }
-        public decimal Type { get; set; }
-        public string Description { get; set; }
+        public TransectionType Type { get; set; }
+        public string? Description { get; set; }
         public Wallet Wallet { get; set; }
         public ICollection<WalletTransfer> WalletTransfers { get; set; }
         public Payment Payment { get; set; }
-        public BankTransection BankTransection { get; set; }
+        public BankTransaction BankTransaction { get; set; }
     }
 }

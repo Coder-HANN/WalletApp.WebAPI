@@ -11,6 +11,6 @@ namespace WalletApp.Domain.Base
         public int Id { get; set; }
         public string BankName { get; set; }
 
-        public ICollection<BankTransection> BankTransections { get; set; }
+        public ICollection<BankTransaction> BankTransactions { get; set; }
     }
 }
