@@ -1,9 +1,9 @@
 ﻿using MediatR;
-
+using WalletApp.Domain.Base;
 
 namespace WalletApp.Application.DTO
 {
-    public class BankTransferCommand : IRequest<Transection>
+    public class BankTransferCommand : IRequest<Transaction>
     {
         public BankTransferRequestDTO BankTransferRequest { get; }
 

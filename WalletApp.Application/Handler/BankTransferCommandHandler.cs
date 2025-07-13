@@ -1,29 +1,31 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Application.DTO;
+using WalletApp.Domain.Base;
+using WalletApp.Domain.Enums;
 
 namespace WalletApp.Application.Handlers.Bank
 {
-    public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, Transection>
+    public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, Transaction>
     {
         private readonly IWalletRepository _walletRepository;
-        private readonly ITransectionRepository _transectionRepository;
-        private readonly IBankTransectionRepository _bankTransectionRepository;
+        private readonly ITransactionRepository _TransactionRepository;
+        private readonly IBankTransactionRepository _bankTransactionRepository;
         private readonly IProviderBankRepository _providerBankRepository;
 
         public BankTransferCommandHandler(
             IWalletRepository walletRepository,
-            ITransectionRepository transectionRepository,
-            IBankTransectionRepository bankTransectionRepository,
+            ITransactionRepository TransactionRepository,
+            IBankTransactionRepository bankTransactionRepository,
             IProviderBankRepository providerBankRepository)
         {
             _walletRepository = walletRepository;
-            _transectionRepository = transectionRepository;
-            _bankTransectionRepository = bankTransectionRepository;
+            _TransactionRepository = TransactionRepository;
+            _bankTransactionRepository = bankTransactionRepository;
             _providerBankRepository = providerBankRepository;
         }
 
-        public async Task<Transection> Handle(BankTransferCommand request, CancellationToken cancellationToken)
+        public async Task<Transaction> Handle(BankTransferCommand request, CancellationToken cancellationToken)
         {
             var dto = request.BankTransferRequest;
 
@@ -43,29 +45,29 @@ namespace WalletApp.Application.Handlers.Bank
             await _walletRepository.UpdateAsync(wallet);
 
             // 2. İşlem oluştur
-            var transection = new Transection
+            var Transaction = new Transaction
             {
                 WalletId = wallet.Id,
                 Amount = dto.Amount,
-                Type = 3, // 3 = Banka Transferi
+                Type = TransactionType.BankTransfer, // Banka Transferi
                 Currency = 0, // TL
                 Description = dto.Description ?? $"Banka transferi - {dto.Iban}"
             };
-            await _transectionRepository.AddAsync(transection);
+            await _TransactionRepository.AddAsync(Transaction);
 
             // 3. Banka işlemi oluştur
-            var bankTransection = new BankTransection
+            var bankTransaction = new BankTransaction
             {
-                TransactionId = transection.Id,
+                TransactionId = Transaction.Id,
                 ProviderBankId = providerBank.Id,
                 Iban = dto.Iban,
                 TargetBankId = dto.TargetBankId,
                 SourceBankId = dto.SourceBankId,
                 Commission = "0" // opsiyonel
             };
-            await _bankTransectionRepository.AddAsync(bankTransection);
+            await _bankTransactionRepository.AddAsync(bankTransaction);
 
-            return transection;
+            return Transaction;
         }
     }
 }

@@ -8,9 +8,6 @@ namespace WalletApp.Application.DTO
 {
     public class CreateWalletDTO
     {
-       
         public string Assest { get; set; }
     }
-    
-    
 }

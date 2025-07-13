@@ -30,8 +30,13 @@ namespace WalletApp.WebAPI.Controllers
             // ⚠️ Opsiyonel: userId doğrulaması eklenebilir (örneğin dto içinde varsa)
 
             var command = new BankTransferCommand(dto);
-            var result = await _mediator.Send(command);
+            var result = await GetResult(command);
             return Ok(result);
+        }
+
+        private async Task<object> GetResult(BankTransferCommand command)
+        {
+            return await GetResult(command);
         }
 
         /// <summary>

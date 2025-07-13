@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 using WalletApp.Domain.Enums;
@@ -13,7 +11,6 @@ namespace WalletApp.Application.Services
         private readonly ITransactionRepository _transactionRepository;
         private readonly IWalletTransferRepository _walletTransferRepository;
 
-        // Tüm repository'leri tek constructor'da inject et
         public WalletService(
             IWalletRepository walletRepository,
             ITransactionRepository transactionRepository,
@@ -38,18 +35,7 @@ namespace WalletApp.Application.Services
 
         public async Task<IEnumerable<Wallet>> GetWalletsByUserIdAsync(int userId)
         {
-            var wallets = await _walletRepository.GetAllAsync(w => w.UserId == userId);
-
-            var result = wallets.Select(w => new Wallet
-            {
-                Id = w.Id,
-                UserId = w.UserId,
-                Assest = w.Assest,
-                TotalBalance = w.TotalBalance,
-                Currency = w.Currency
-            }).ToList();
-
-            return result;
+            return await _walletRepository.GetAllAsync(w => w.UserId == userId);
         }
 
         public async Task<Wallet> GetWalletByIdAsync(int walletId)
@@ -67,19 +53,17 @@ namespace WalletApp.Application.Services
             return await _walletRepository.DeleteAsync(wallet);
         }
 
-        public async Task<Transaction> ProcessWalletTransactionAsync(int walletId, decimal amount, TransectionType type, string? description)
-
+        public async Task<WalletApp.Domain.Base.Transaction> ProcessWalletTransactionAsync(int walletId, decimal amount, TransactionType type, string? description)
         {
-            var wallet = await _walletRepository.GetAsync(w => w.Id == walletId);
-            if (wallet == null)
-                throw new Exception("Cüzdan bulunamadı");
+            var wallet = await _walletRepository.GetAsync(w => w.Id == walletId)
+                         ?? throw new Exception("Cüzdan bulunamadı");
 
-            if (type == "Withdraw" && wallet.TotalBalance < amount)
+            if (type == TransactionType.Withdraw && wallet.TotalBalance < amount)
                 throw new Exception("Yetersiz bakiye");
 
-            if (type == TransectionType.Deposit)
+            if (type == TransactionType.Deposit)
                 wallet.TotalBalance += amount;
-            else if (type == "Withdraw")
+            else if (type == TransactionType.Withdraw)
                 wallet.TotalBalance -= amount;
 
             await _walletRepository.UpdateAsync(wallet);
@@ -88,50 +72,46 @@ namespace WalletApp.Application.Services
             {
                 WalletId = walletId,
                 Amount = amount,
-                Type = type,
+                Type = TransactionType.Withdraw,
                 Description = description
             };
 
             await _transactionRepository.AddAsync(transaction);
             return transaction;
         }
-
         public async Task<Transaction> TransferAsync(int sourceWalletId, int targetWalletId, decimal amount)
         {
-            var source = await _walletRepository.GetAsync(w => w.Id == sourceWalletId);
-            var target = await _walletRepository.GetAsync(w => w.Id == targetWalletId);
+            var source = await _walletRepository.GetAsync(w => w.Id == sourceWalletId)
+                         ?? throw new Exception("Kaynak cüzdan bulunamadı");
 
-            if (source == null || target == null)
-                throw new Exception("Cüzdan(lar) bulunamadı");
+            var target = await _walletRepository.GetAsync(w => w.Id == targetWalletId)
+                         ?? throw new Exception("Hedef cüzdan bulunamadı");
 
             if (source.TotalBalance < amount)
                 throw new Exception("Yetersiz bakiye");
 
-            // 1. Kaynaktan düş
             source.TotalBalance -= amount;
             await _walletRepository.UpdateAsync(source);
 
-            // 2. Hedefe ekle
             target.TotalBalance += amount;
             await _walletRepository.UpdateAsync(target);
 
-            // 3. Transaction kaydı oluştur
             var transaction = new Transaction
             {
                 WalletId = sourceWalletId,
                 Amount = amount,
-                Type = "Transfer",
+                Type = TransactionType.Transfer,
                 Description = $"Cüzdanlar arası transfer: {targetWalletId}"
             };
+
             await _transactionRepository.AddAsync(transaction);
 
-            // 4. WalletTransfer kaydı
             var transfer = new WalletTransfer
             {
                 WalletId = sourceWalletId,
                 SourceWalletId = sourceWalletId,
                 Target = targetWalletId.ToString(),
-                TransactionId = transaction.Id,  
+                TransactionId = transaction.Id,
                 IslemNo = new Random().Next(100000, 999999)
             };
 
@@ -143,21 +123,6 @@ namespace WalletApp.Application.Services
         public async Task<IEnumerable<Transaction>> GetTransactionHistoryAsync(int walletId)
         {
             return await _transactionRepository.GetAllAsync(t => t.WalletId == walletId);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return base.Equals(obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override string? ToString()
-        {
-            return base.ToString();
         }
     }
 }

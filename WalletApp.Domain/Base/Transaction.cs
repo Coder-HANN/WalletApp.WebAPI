@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using WalletApp.Domain.Enums;
 
 namespace WalletApp.Domain.Base
 {
@@ -12,7 +8,7 @@ namespace WalletApp.Domain.Base
         public int WalletId { get; set; }
         public decimal Amount { get; set; }
         public decimal Currency { get; set; }
-        public TransectionType Type { get; set; }
+        public TransactionType Type { get; set; }
         public string? Description { get; set; }
         public Wallet Wallet { get; set; }
         public ICollection<WalletTransfer> WalletTransfers { get; set; }

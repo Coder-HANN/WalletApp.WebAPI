@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using WalletApp.Domain.Base;
 
 namespace WalletApp.Domain.Enums
 {
-    public enum TransectionType
+    public enum TransactionType
     {
         Deposit = 0,
         Withdraw = 1,

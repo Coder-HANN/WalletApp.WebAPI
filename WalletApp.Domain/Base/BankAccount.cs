@@ -1,7 +1,4 @@
 ﻿
-
-
-
 namespace WalletApp.Domain.Base
 {
     public class BankAccount : ProductClass
