@@ -1,5 +1,4 @@
-﻿using WalletApp.Domain.Base;
-
+﻿
 namespace WalletApp.Domain.Enums
 {
     public enum TransactionType

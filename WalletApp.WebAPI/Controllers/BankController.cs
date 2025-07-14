@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WalletApp.Application.Command;
 using WalletApp.Application.DTO;
 
 namespace WalletApp.WebAPI.Controllers
@@ -38,7 +39,6 @@ namespace WalletApp.WebAPI.Controllers
         {
             return await GetResult(command);
         }
-
         /// <summary>
         /// JWT token'dan userId çeker. Token'da "userId" claim'inin olması gerekir.
         /// </summary>

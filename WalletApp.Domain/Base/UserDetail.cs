@@ -2,7 +2,7 @@
 
 namespace WalletApp.Domain.Base
 {
-    public class UserDetail : ProductClass
+    public class UserDetail : BaseEntity
     {
         public int Id { get; set; }
         public int UserId { get; set; }

@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
-using static WalletApp.Application.Abstraction.Repositories.EntitysRepository.IBankTransactionRepository;
+
 
 namespace WalletApp.Persistence.Base
 {
-    public class BankTransactionRepository : EfEntityRepositoryBase<BankTransaction, WalletDbContext>, IBankTransactionRepository
+    public class BankTransactionRepository : EfEntityRepositoryBase<BankTransaction>, IBankTransactionRepository
     {
 
         public BankTransactionRepository(WalletDbContext context) : base(context) { }
@@ -70,14 +70,14 @@ namespace WalletApp.Persistence.Base
             throw new NotImplementedException();
         }
     }
-    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank, WalletDbContext>, Application.Abstraction.Repositories.EntitysRepository.IProviderBankRepository
+    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank>, Application.Abstraction.Repositories.EntitysRepository.IProviderBankRepository
     {
         public ProviderBankRepository(WalletDbContext context) : base(context) { }
 
         public ProviderBank Add(ProviderBank entity)
         {
             throw new NotImplementedException();
-        }
+        } 
 
         public Task<ProviderBank> AddAsync(ProviderBank entity)
         {

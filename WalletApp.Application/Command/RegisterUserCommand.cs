@@ -1,6 +1,7 @@
 ﻿using MediatR;
+using WalletApp.Application.DTO;
 
-namespace WalletApp.Application.DTO
+namespace WalletApp.Application.Command
 {
     public class RegisterUserCommand : IRequest<RegisterResponseDTO>
     {

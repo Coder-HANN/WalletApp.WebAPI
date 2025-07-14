@@ -22,7 +22,7 @@ namespace WalletApp.Application.Services
             _walletTransferRepository = walletTransferRepository;
         }
 
-        public async Task<Wallet> CreateWalletAsync(int userId, string assest)
+        public async Task<Wallet> CreateWalletAsync(int userId, string assest, CancellationToken ct)
         {
             var wallet = new Wallet
             {

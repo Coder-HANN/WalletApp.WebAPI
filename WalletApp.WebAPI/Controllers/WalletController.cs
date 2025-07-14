@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using WalletApp.Application.DTO;
-using WalletApp.Application.Services;
-using WalletApp.Domain.Base;
-using WalletApp.Domain.Enums;
-
-
+using WalletApp.Application.Command;
+using WalletApp.Application.Command.CreateWalletCommand;
+using WalletApp.Application.Feature.Wallet.Query;
+using WalletApp.Application.Features.Wallet.Commands.Deposit;
+using WalletApp.Application.Features.Wallet.Queries.GetWalletHistory;
 
 namespace WalletApp.WebAPI.Controllers
 {
@@ -15,70 +14,64 @@ namespace WalletApp.WebAPI.Controllers
     [Route("api/[controller]")]
     public class WalletController : ControllerBase
     {
-        private readonly WalletService _walletService;
+        private readonly IMediator _mediator;
+        public WalletController(IMediator mediator) => _mediator = mediator;
 
-        public WalletController(WalletService walletService)
+        /// <summary>JWT içinden userId alır</summary>
+        private int GetUserId()
         {
-            _walletService = walletService;
+            var claim = User.FindFirst("userId");
+            if (claim == null) throw new UnauthorizedAccessException("UserId bulunamadı.");
+            return int.Parse(claim.Value);
         }
 
-        // ✅ Cüzdan oluştur
+        /// ✅ Cüzdan oluştur
         [HttpPost("create")]
-        public async Task<IActionResult> CreateWallet([FromBody] CreateWalletDTO dto)
+        public async Task<IActionResult> CreateWallet([FromBody] CreateWalletCommand command)
         {
-            int userId = GetUserId(); // Şu anlık sabit alıyoruz
-            var result = await _walletService.CreateWalletAsync(userId, dto.Assest);
+            command = command with { UserId = GetUserId() };
+            var result = await _mediator.Send(command);
             return Ok(result);
         }
 
-        // ✅ Kullanıcının tüm cüzdanlarını getir
+        /// ✅ Tüm cüzdanları getir
         [HttpPost("all")]
         public async Task<IActionResult> GetUserWallets()
         {
-            int userId = GetUserId(); // Aynı şekilde örnek
-            var wallets = await _walletService.GetWalletsByUserIdAsync(userId);
-            return Ok(wallets);
-        }
-
-        // Bu metot JWT token'dan ya da başka bir yerden UserId alacak şekilde değiştirilebilir
-        private int GetUserId()
-        {
-            var userIdClaim = User.FindFirst("userId"); // Eğer token'da "userId" varsa
-
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("UserId bulunamadı.");
-
-            return int.Parse(userIdClaim.Value);
-        }
-        [HttpPost("deposit")]
-        public async Task<IActionResult> Deposit([FromBody] TransactionRequestDTO dto)
-        {
-            if (dto.Type != TransactionType.Deposit)
-                return BadRequest("Invalid transaction type for deposit.");
-
-            var result = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, dto.Type, dto.Description);
+            var result = await _mediator.Send(new GetUserWalletsQuery(GetUserId()));
             return Ok(result);
         }
+
+        /// ✅ Para yatır
+        [HttpPost("deposit")]
+        public async Task<IActionResult> Deposit([FromBody] DepositCommand command)
+        {
+            var result = await _mediator.Send(command with { RequestedBy = GetUserId() });
+            return Ok(result);
+        }
+
+        /// ✅ Para çek
         [HttpPost("withdraw")]
-        public async Task<IActionResult> Withdraw([FromBody] TransactionRequestDTO dto)
+        public async Task<IActionResult> Withdraw([FromBody] WithdrawCommand command)
         {
-            await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Withdraw", dto.Description);
-            return Ok("İşlem Başarılı");
+            var result = await _mediator.Send(command with { RequestedBy = GetUserId() });
+            return Ok(result);
         }
+
+        /// ✅ Transfer
         [HttpPost("transfer")]
-        public async Task<IActionResult> Transfer([FromBody] TransferRequestDTO dto)
+        public async Task<IActionResult> Transfer([FromBody] TransferCommand command)
         {
-            var transaction = await _walletService.TransferAsync(dto.SourceWalletId, dto.TargetWalletId, dto.Amount);
-            return Ok(transaction);
+            var result = await _mediator.Send(command with { RequestedBy = GetUserId() });
+            return Ok(result);
         }
-        [HttpGet("{walletId}/history")]
+
+        /// ✅ İşlem geçmişi
+        [HttpGet("{walletId:guid}/history")]
         public async Task<IActionResult> GetHistory(Guid walletId)
         {
-            var history = await _walletService.GetTransactionHistoryAsync(walletId);
-            return Ok(history);
+            var result = await _mediator.Send(new GetWalletHistoryQuery(walletId));
+            return Ok(result);
         }
-
-
     }
-
 }

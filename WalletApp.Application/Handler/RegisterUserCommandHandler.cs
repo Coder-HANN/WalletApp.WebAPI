@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
+using WalletApp.Application.Command;
 using WalletApp.Application.DTO;
 using WalletApp.Application.Services;
 using WalletApp.Domain.Base;
@@ -47,14 +48,13 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
                     PhoneNumber = dto.PhoneNumber,
                     Occupation = dto.Occupation
                 }
-            };
-            
+            };   
 
             try
             {
                 _userRepository.Add(user);
                 await _userRepository.SaveChangesAsync();
-                await _walletService.CreateWalletAsync(user.Id, "TL");
+                await _walletService.CreateWalletAsync(user.Id, "TL",CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -63,7 +63,6 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
                 throw new Exception("Kayıt sırasında hata oluştu: " + inner);
             }
 
-
             return new RegisterResponseDTO
             {
                 Name = user.UserDetail.Name,
@@ -71,9 +70,6 @@ namespace WalletApp.Application.Handler.RegisterUserCommandHandler
                 Message = "Kayıt başarılı",
                 
             };
-            
-    
         }
     }
-
 }

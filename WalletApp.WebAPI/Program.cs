@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -6,7 +8,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
-using WalletApp.Application.DTO;
+using WalletApp.Application.Command;
 using WalletApp.Application.Handler.RegisterUserCommandHandler;
 using WalletApp.Application.Handlers.Bank;
 using WalletApp.Application.Services;
@@ -15,6 +17,8 @@ using WalletApp.Infrastructure.Repositories;
 using WalletApp.Persistence;
 using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Repositories;
+using WalletApp.WebAPI.Middleware;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,17 +79,21 @@ builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>(
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));
+builder.Services.AddValidatorsFromAssemblyContaining<CreateWalletCommandValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddControllers().AddJsonOptions(x =>
 {
     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
 });
 
+ builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
 
 
 // -----------------------------
 // Controllers & Swagger
 // -----------------------------
 builder.Services.AddControllers();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -120,6 +128,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 // -----------------------------
 // App Pipeline
 // -----------------------------
@@ -133,7 +142,7 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Wallet API v1");
     });
 }
-
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthentication(); // ➕ JWT doğrulaması

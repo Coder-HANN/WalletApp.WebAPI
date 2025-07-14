@@ -9,6 +9,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Application.DTO;
 using WalletApp.Domain.Base;
+using WalletApp.Application.Command;
 
 namespace WalletApp.Application.Handler.LoginUserCommandHandler
 {

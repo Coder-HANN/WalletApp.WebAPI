@@ -2,7 +2,7 @@
 
 namespace WalletApp.Domain.Base
 {
-    public class Transaction : ProductClass
+    public class Transaction : BaseEntity
     {
         public Guid Id { get; set; }
         public Guid WalletId { get; set; }

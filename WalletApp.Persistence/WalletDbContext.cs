@@ -175,12 +175,12 @@ namespace WalletApp.Persistence
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is ProductClass &&
+                .Where(e => e.Entity is BaseEntity &&
                            (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entry in entries)
             {
-                var entity = (ProductClass)entry.Entity;
+                var entity = (BaseEntity)entry.Entity;
                 var now = DateTime.UtcNow;
                 var user = "system"; // Giriş yapan kullanıcı adı ile değiştirilebilir
 

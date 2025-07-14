@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WalletApp.Domain.Base
 {
-    public class BankTransaction : ProductClass
+    public class BankTransaction : BaseEntity
     {
         public Guid Id { get; set; }
         public Guid TransactionId { get; set; }

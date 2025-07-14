@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.DTO;
 using MediatR;
+using WalletApp.Application.Command;
 namespace WalletApp.WebAPI
 {
     [ApiController]
@@ -20,5 +21,4 @@ namespace WalletApp.WebAPI
             return Ok(result); // 200 OK
         }
     }
-
 }

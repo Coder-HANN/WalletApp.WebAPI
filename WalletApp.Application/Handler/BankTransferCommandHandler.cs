@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
-using WalletApp.Application.DTO;
+using WalletApp.Application.Command;
 using WalletApp.Domain.Base;
 using WalletApp.Domain.Enums;
 
