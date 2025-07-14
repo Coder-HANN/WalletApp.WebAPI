@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using WalletApp.Application.DTO;
 using WalletApp.Application.Services;
 using WalletApp.Domain.Base;
+using WalletApp.Domain.Enums;
+
 
 
 namespace WalletApp.WebAPI.Controllers
@@ -51,14 +53,17 @@ namespace WalletApp.WebAPI.Controllers
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] TransactionRequestDTO dto)
         {
-            var transaction = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Deposit", dto.Description);
-            return Ok(transaction);
+            if (dto.Type != TransactionType.Deposit)
+                return BadRequest("Invalid transaction type for deposit.");
+
+            var result = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, dto.Type, dto.Description);
+            return Ok(result);
         }
         [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] TransactionRequestDTO dto)
         {
-            var transaction = await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Withdraw", dto.Description);
-            return Ok(transaction);
+            await _walletService.ProcessWalletTransactionAsync(dto.WalletId, dto.Amount, "Withdraw", dto.Description);
+            return Ok("İşlem Başarılı");
         }
         [HttpPost("transfer")]
         public async Task<IActionResult> Transfer([FromBody] TransferRequestDTO dto)
@@ -67,7 +72,7 @@ namespace WalletApp.WebAPI.Controllers
             return Ok(transaction);
         }
         [HttpGet("{walletId}/history")]
-        public async Task<IActionResult> GetHistory(int walletId)
+        public async Task<IActionResult> GetHistory(Guid walletId)
         {
             var history = await _walletService.GetTransactionHistoryAsync(walletId);
             return Ok(history);

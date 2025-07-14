@@ -75,6 +75,13 @@ builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>(
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));
+builder.Services.AddControllers().AddJsonOptions(x =>
+{
+    x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});
+
+
+
 // -----------------------------
 // Controllers & Swagger
 // -----------------------------

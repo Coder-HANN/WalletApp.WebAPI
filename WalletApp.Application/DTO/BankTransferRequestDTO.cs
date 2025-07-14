@@ -8,10 +8,10 @@ namespace WalletApp.Application.DTO
 {
     public class BankTransferRequestDTO
     {
-        public int WalletId { get; set; }
-        public int ProviderBankId { get; set; }
-        public int TargetBankId { get; set; }
-        public int SourceBankId { get; set; }
+        public Guid WalletId { get; set; }
+        public Guid ProviderBankId { get; set; }
+        public Guid TargetBankId { get; set; }
+        public Guid SourceBankId { get; set; }
         public int Iban { get; set; }
         public decimal Amount { get; set; }
         public string? Description { get; set; }

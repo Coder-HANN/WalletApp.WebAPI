@@ -8,9 +8,8 @@ namespace WalletApp.Application.DTO
 {
     public class TransferRequestDTO
     {
-        public int SourceWalletId { get; set; }
-        public int TargetWalletId { get; set; }
+        public Guid SourceWalletId { get; set; }
+        public Guid TargetWalletId { get; set; }
         public decimal Amount { get; set; }
-
     }
 }

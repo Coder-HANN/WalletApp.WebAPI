@@ -1,5 +1,6 @@
 ﻿
 using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
+using WalletApp.Application.DTO;
 using WalletApp.Domain.Base;
 using WalletApp.Domain.Enums;
 
@@ -38,7 +39,7 @@ namespace WalletApp.Application.Services
             return await _walletRepository.GetAllAsync(w => w.UserId == userId);
         }
 
-        public async Task<Wallet> GetWalletByIdAsync(int walletId)
+        public async Task<Wallet> GetWalletByIdAsync(Guid walletId)
         {
             return await _walletRepository.GetAsync(w => w.Id == walletId);
         }
@@ -53,7 +54,7 @@ namespace WalletApp.Application.Services
             return await _walletRepository.DeleteAsync(wallet);
         }
 
-        public async Task<WalletApp.Domain.Base.Transaction> ProcessWalletTransactionAsync(int walletId, decimal amount, TransactionType type, string? description)
+        public async Task<TransactionResponseDTO> ProcessWalletTransactionAsync(Guid walletId, decimal amount, TransactionType type, string? description)
         {
             var wallet = await _walletRepository.GetAsync(w => w.Id == walletId)
                          ?? throw new Exception("Cüzdan bulunamadı");
@@ -72,14 +73,25 @@ namespace WalletApp.Application.Services
             {
                 WalletId = walletId,
                 Amount = amount,
-                Type = TransactionType.Withdraw,
+                Type = type,
                 Description = description
             };
 
             await _transactionRepository.AddAsync(transaction);
-            return transaction;
+
+            // Entity yerine DTO dön
+            return new TransactionResponseDTO
+            {
+                Id = transaction.Id,
+                WalletId = transaction.WalletId,
+                Amount = transaction.Amount,
+                Type = transaction.Type,
+                Description = transaction.Description,
+                CreatedDate = transaction.CreatedDate
+            };
         }
-        public async Task<Transaction> TransferAsync(int sourceWalletId, int targetWalletId, decimal amount)
+
+        public async Task<Transaction> TransferAsync(Guid sourceWalletId, Guid targetWalletId, decimal amount)
         {
             var source = await _walletRepository.GetAsync(w => w.Id == sourceWalletId)
                          ?? throw new Exception("Kaynak cüzdan bulunamadı");
@@ -120,9 +132,14 @@ namespace WalletApp.Application.Services
             return transaction;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactionHistoryAsync(int walletId)
+        public async Task<IEnumerable<Transaction>> GetTransactionHistoryAsync(Guid walletId)
         {
             return await _transactionRepository.GetAllAsync(t => t.WalletId == walletId);
+        }
+
+        public async Task ProcessWalletTransactionAsync(Guid walletId, decimal amount, string v, string? description)
+        {
+            throw new NotImplementedException();
         }
     }
 }

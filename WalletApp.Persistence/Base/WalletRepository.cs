@@ -9,7 +9,6 @@ namespace WalletApp.Infrastructure.Repositories
     public class WalletRepository : IWalletRepository
     {
         private readonly WalletDbContext _context;
-
         public WalletRepository(WalletDbContext context)
         {
             _context = context;

@@ -2,10 +2,10 @@
 {
     public class WalletTransfer : ProductClass
     {
-        public int Id { get; set; }
-        public int TransactionId { get; set; }
-        public int WalletId { get; set; }
-        public int SourceWalletId { get; set; } // source wallet id
+        public Guid Id { get; set; }
+        public Guid TransactionId { get; set; }
+        public Guid WalletId { get; set; }
+        public Guid SourceWalletId { get; set; } // source wallet id
 
         public string Target { get; set; } // string mi
         public int IslemNo { get; set; }

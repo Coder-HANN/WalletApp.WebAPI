@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
+using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 using static WalletApp.Application.Abstraction.Repositories.EntitysRepository.IBankTransactionRepository;
 
@@ -11,6 +7,7 @@ namespace WalletApp.Persistence.Base
 {
     public class BankTransactionRepository : EfEntityRepositoryBase<BankTransaction, WalletDbContext>, IBankTransactionRepository
     {
+
         public BankTransactionRepository(WalletDbContext context) : base(context) { }
 
         public BankTransaction Add(BankTransaction entity)
@@ -73,7 +70,7 @@ namespace WalletApp.Persistence.Base
             throw new NotImplementedException();
         }
     }
-    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank, WalletDbContext>, IProviderBankRepository
+    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank, WalletDbContext>, Application.Abstraction.Repositories.EntitysRepository.IProviderBankRepository
     {
         public ProviderBankRepository(WalletDbContext context) : base(context) { }
 

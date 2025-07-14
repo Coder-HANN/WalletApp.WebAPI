@@ -68,10 +68,8 @@ namespace WalletApp.Application.Handler.LoginUserCommandHandler
         new Claim(JwtRegisteredClaimNames.Sub, user.Email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim("email", user.Email),
-        new Claim("userId", user.Id.ToString())
-        
+        new Claim("userId", user.Id.ToString())  
     };
-
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],

@@ -10,8 +10,8 @@ namespace WalletApp.Persistence
         {
             var optionsBuilder = new DbContextOptionsBuilder<WalletDbContext>();
             optionsBuilder.UseSqlServer("Server=DESKTOP-GEU3I6M\\SQLEXPRESS;Database=WalletApplicationDB;Trusted_Connection=True;TrustServerCertificate=True;");
-
             return new WalletDbContext(optionsBuilder.Options);
         }
     }
 }
+

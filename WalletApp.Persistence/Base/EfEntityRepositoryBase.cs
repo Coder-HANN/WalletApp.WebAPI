@@ -64,10 +64,8 @@ namespace WalletApp.Persistence.Base
             {
                 query = include(query);
             }
-
             return await query.FirstOrDefaultAsync(predicate);
         }
-
         public IEnumerable<T> GetAll(Expression<Func<T, bool>> predicate = null)
         {
             if (predicate == null)
@@ -83,9 +81,7 @@ namespace WalletApp.Persistence.Base
                 return await _dbSet.ToListAsync();
             }
             return await _dbSet.Where(predicate).ToListAsync();
-
         }
-
         public IQueryable<T> Query()
         {
             return _dbSet.AsQueryable();
@@ -95,6 +91,5 @@ namespace WalletApp.Persistence.Base
         {
             return _context.SaveChangesAsync();
         }
-
     }
 }
