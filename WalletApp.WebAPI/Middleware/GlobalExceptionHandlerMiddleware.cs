@@ -1,4 +1,4 @@
-﻿using WalletApp.Application.DTO;
+﻿using WalletApp.Application.Feature.DTO;
 
 namespace WalletApp.WebAPI.Middleware
 {

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
+using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 
 
@@ -70,7 +70,7 @@ namespace WalletApp.Persistence.Base
             throw new NotImplementedException();
         }
     }
-    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank>, Application.Abstraction.Repositories.EntitysRepository.IProviderBankRepository
+    public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank>, IProviderBankRepository
     {
         public ProviderBankRepository(WalletDbContext context) : base(context) { }
 

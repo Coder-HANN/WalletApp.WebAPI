@@ -1,11 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Command;
-using WalletApp.Application.Command.CreateWalletCommand;
-using WalletApp.Application.Feature.Wallet.Query;
-using WalletApp.Application.Features.Wallet.Commands.Deposit;
-using WalletApp.Application.Features.Wallet.Queries.GetWalletHistory;
+using WalletApp.Application.Feature.Command;
+using WalletApp.Application.Feature.DTO;
+using WalletApp.Application.Feature.Queries;
+
 
 namespace WalletApp.WebAPI.Controllers
 {
@@ -27,11 +26,9 @@ namespace WalletApp.WebAPI.Controllers
 
         /// ✅ Cüzdan oluştur
         [HttpPost("create")]
-        public async Task<IActionResult> CreateWallet([FromBody] CreateWalletCommand command)
+        public async Task<ServiceResponse<CreateWalletDTO>> CreateWallet([FromBody] CreateWalletCommand command)
         {
-            command = command with { UserId = GetUserId() };
-            var result = await _mediator.Send(command);
-            return Ok(result);
+            return await _mediator.Send(command);
         }
 
         /// ✅ Tüm cüzdanları getir

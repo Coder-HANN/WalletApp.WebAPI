@@ -2,8 +2,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Command;
-using WalletApp.Application.DTO;
+using WalletApp.Application.Feature.Command;
+using WalletApp.Application.Feature.DTO;
 
 namespace WalletApp.WebAPI.Controllers
 {

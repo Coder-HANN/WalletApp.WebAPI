@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
+using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 
 namespace WalletApp.Persistence.Base

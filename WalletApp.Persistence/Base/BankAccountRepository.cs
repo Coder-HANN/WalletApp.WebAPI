@@ -1,6 +1,6 @@
 ﻿using WalletApp.Domain.Base;
-using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
 using WalletApp.Persistence.Base;
+using WalletApp.Application.Services.Repositories.EntitysRepository;
 
 namespace WalletApp.Persistence.Repositories
 {

@@ -1,6 +1,5 @@
-﻿
-using WalletApp.Application.Abstraction.Repositories.EntitysRepository;
-using WalletApp.Application.DTO;
+﻿using WalletApp.Application.Feature.DTO;
+using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 using WalletApp.Domain.Enums;
 

@@ -8,7 +8,7 @@ namespace WalletApp.Persistence
         public DbSet<User> Users { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<BankAccount> BankaHesaps { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WalletTransfer> WalletTransfers { get; set; }
         public DbSet<Payment> Payments { get; set; }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using WalletApp.Application.Abstraction.Repositories;
+using WalletApp.Application.Services.Repositories;
 
 namespace WalletApp.Persistence.Base
 {

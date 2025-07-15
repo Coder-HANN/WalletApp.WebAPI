@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.DTO;
 using MediatR;
-using WalletApp.Application.Command;
+using WalletApp.Application.Feature.Command;
+using WalletApp.Application.Feature.DTO;
 namespace WalletApp.WebAPI
 {
     [ApiController]
