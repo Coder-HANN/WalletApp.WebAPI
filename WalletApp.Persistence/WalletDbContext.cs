@@ -1,10 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalletApp.Domain.Base;
+using WalletApp.Persistence.Migrations;
 
 namespace WalletApp.Persistence
 {
     public class WalletDbContext : DbContext
     {
+        public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
+
         public DbSet<User> Users { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
@@ -14,8 +17,6 @@ namespace WalletApp.Persistence
         public DbSet<Payment> Payments { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         
-
-        public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -73,7 +74,7 @@ namespace WalletApp.Persistence
             modelBuilder.Entity<BankAccount>(builder =>
             {
                 builder.HasKey(ba => ba.Id);
-                builder.Property(ba => ba.Bilgiler).IsRequired().HasMaxLength(200);
+                builder.Property(ba => ba.Information).IsRequired().HasMaxLength(200);
                 builder
                     .HasOne(ba => ba.User)
                     .WithMany(u => u.BankaHesap)

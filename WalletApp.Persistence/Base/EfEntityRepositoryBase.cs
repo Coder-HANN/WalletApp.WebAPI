@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using WalletApp.Application.Services.Repositories;
 
+
 namespace WalletApp.Persistence.Base
 {
     public class EfEntityRepositoryBase<T> : IEntityRepository<T> where T : class
@@ -14,7 +15,14 @@ namespace WalletApp.Persistence.Base
             _context = context;
             _dbSet = _context.Set<T>();
         }
-
+        public async Task<T?> GetByIdAsync(Guid id)
+        {
+            return await _context.Set<T>().FindAsync(id);
+        }
+        public T? GetById(Guid id)
+        {
+            return _context.Set<T>().Find(id);
+        }
         public T Add(T entity)
         {
             _dbSet.Add(entity);

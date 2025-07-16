@@ -1,27 +1,33 @@
 ﻿using MediatR;
-using WalletApp.Application.Services;
 using WalletApp.Application.Feature.DTO;
 using WalletApp.Application.Feature.Queries;
 
 
-namespace WalletApp.Application.Feature.Handler;
-
-public class GetUserWalletsQueryHandler: IRequestHandler<GetUserWalletsQuery, IEnumerable<CreateWalletDTO>>
+namespace WalletApp.Application.Feature.Handler
 {
-    private readonly WalletService _walletService;
-
-    public GetUserWalletsQueryHandler(WalletService walletService) => _walletService = walletService;
-
-    public async Task<IEnumerable<CreateWalletDTO>> Handle(GetUserWalletsQuery q,CancellationToken ct)
+    public class GetUserWalletsQueryHandler : IRequestHandler<GetUserWalletsQuery, ServiceResponse<IEnumerable<CreateWalletResponseDTO>>>
     {
-        var transaction= await _walletService.GetWalletsByUserIdAsync(q.UserId);
+        private readonly WalletService _walletService;
 
-        return transaction.Select(t => new CreateWalletDTO
+        public GetUserWalletsQueryHandler(WalletService walletService)
         {
-            Id = t.Id,
-            UserId = t.UserId,
-            Assest = t.Assest,
-            TotalBalance = t.TotalBalance,
-        });
+            _walletService = walletService;
+        }
+
+        public async Task<ServiceResponse<IEnumerable<CreateWalletResponseDTO>>> Handle(GetUserWalletsQuery request, CancellationToken cancellationToken)
+        {
+            var wallets = await _walletService.GetWalletsByUserIdAsync(request.UserId);
+
+            var dtoList = wallets.Select(w => new CreateWalletResponseDTO
+            {
+                Id = w.Id,
+                UserId = w.UserId,
+                TotalBalance = w.TotalBalance,
+                Assest = w.Assest,
+                Currency = w.Currency
+            });
+
+            return ServiceResponse<IEnumerable<CreateWalletResponseDTO>>.Ok(dtoList, "Cüzdanlar getirildi.");
+        }
     }
 }

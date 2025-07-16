@@ -3,23 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.DTO;
 
-namespace WalletApp.WebAPI.Controllers
+[ApiController]
+[Route("[controller]")]
+public class LoginController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class LoginController : ControllerBase
+    private readonly IMediator _mediator;
+    public LoginController(IMediator mediator) => _mediator = mediator;
+
+    [HttpPost("login")]
+    public async Task<ServiceResponse<LoginResponseDTO>> Login([FromBody] LoginUserCommand command)
     {
-        private readonly IMediator _mediator;
-        public LoginController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-        [HttpPost("login")]
-        public async Task<ActionResult<LoginResponseDTO>> Login([FromBody] LoginUserCommand command)
-        {
-            var response = await _mediator.Send(command);
-            return Ok(response); // Artık genişletilmiş yanıt dönecek
-        }
+        return await _mediator.Send(command);
     }
 }
-

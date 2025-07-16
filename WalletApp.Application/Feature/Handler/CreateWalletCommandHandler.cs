@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.DTO;
-using WalletApp.Application.Services;
+using WalletApp.Application.Feature.Handler;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, ServiceResponse<CreateWalletDTO>>
+public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, ServiceResponse<CreateWalletResponseDTO>>
 {
     private readonly WalletService _walletService;
 
@@ -12,17 +14,17 @@ public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, S
         _walletService = walletService;
     }
 
-    public async Task<ServiceResponse<CreateWalletDTO>> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
+    public async Task<ServiceResponse<CreateWalletResponseDTO>> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(request.Name))
-            return ServiceResponse<CreateWalletDTO>.Fail("Cüzdan adı boş olamaz.");
+            return ServiceResponse<CreateWalletResponseDTO>.Fail("Cüzdan adı boş olamaz.");
 
         var result = await _walletService.CreateWalletAsync(request.UserId, request.Currency, cancellationToken);
 
         if (result == null)
-            return ServiceResponse<CreateWalletDTO>.Fail("Cüzdan oluşturulamadı.");
+            return ServiceResponse<CreateWalletResponseDTO>.Fail("Cüzdan oluşturulamadı.");
 
-        var dto = new CreateWalletDTO
+        var dto = new CreateWalletResponseDTO
         {
             Id = result.Id,
             UserId = result.UserId,
@@ -30,6 +32,6 @@ public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, S
             TotalBalance = result.TotalBalance
         };
 
-        return ServiceResponse<CreateWalletDTO>.Ok(dto, "Cüzdan başarıyla oluşturuldu.");
+        return ServiceResponse<CreateWalletResponseDTO>.Ok(dto, "Cüzdan başarıyla oluşturuldu.");
     }
 }

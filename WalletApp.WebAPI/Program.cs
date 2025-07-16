@@ -9,7 +9,6 @@ using System.Text;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.Constence;
 using WalletApp.Application.Feature.Handler;
-using WalletApp.Application.Services;
 using WalletApp.Application.Services.Repositories;
 using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
@@ -31,6 +30,8 @@ builder.Services.AddScoped<WalletService>();
 // Scoped olarak repository'leri ekle
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
 builder.Services.AddScoped<WalletService>();
+builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
+
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
@@ -76,6 +77,10 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
+
+builder.Services.AddDbContext<WalletDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));

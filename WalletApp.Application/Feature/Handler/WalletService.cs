@@ -3,7 +3,7 @@ using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 using WalletApp.Domain.Enums;
 
-namespace WalletApp.Application.Services
+namespace WalletApp.Application.Feature.Handler
 {
     public class WalletService
     {
@@ -78,7 +78,7 @@ namespace WalletApp.Application.Services
 
             await _transactionRepository.AddAsync(transaction);
 
-            // Entity yerine DTO dön
+            
             return new TransactionResponseDTO
             {
                 Id = transaction.Id,

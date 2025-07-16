@@ -13,7 +13,7 @@ using WalletApp.Application.Services.Repositories.EntitysRepository;
 
 namespace WalletApp.Application.Feature.Handler
 {
-    public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand,LoginResponseDTO >
+    public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, ServiceResponse<LoginResponseDTO>>
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
@@ -34,30 +34,28 @@ namespace WalletApp.Application.Feature.Handler
             _entityRepository = entityRepository;
         }
 
-        public async Task<LoginResponseDTO> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+        public async Task<ServiceResponse<LoginResponseDTO>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            var user = _entityRepository.Query()
-                .FirstOrDefault(u => u.Email == request.RequestDTO.Email);
-
+            var user = _entityRepository.Query().FirstOrDefault(u => u.Email == request.RequestDTO.Email);
             if (user == null)
-                throw new Exception("Email veya şifre hatalı.");
+                return ServiceResponse<LoginResponseDTO>.Fail("Email veya şifre hatalı.");
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.RequestDTO.Password);
-
             if (result == PasswordVerificationResult.Failed)
-                throw new Exception("Email veya şifre hatalı.");
+                return ServiceResponse<LoginResponseDTO>.Fail("Email veya şifre hatalı.");
 
             var token = GenerateJwtToken(user);
-            var expiration = DateTime.UtcNow.AddHours(1); // Token süresiyle eşleşmeli
+            var expiration = DateTime.UtcNow.AddHours(1);
 
-            return new LoginResponseDTO
+            return ServiceResponse<LoginResponseDTO>.Ok(new LoginResponseDTO
             {
                 Token = token,
                 Email = user.Email,
                 UserId = user.Id,
                 TokenExpiration = expiration
-            };
+            }, "Giriş başarılı.");
         }
+
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
@@ -82,6 +80,5 @@ namespace WalletApp.Application.Feature.Handler
             return new JwtSecurityTokenHandler().WriteToken(token);
 
         }
-
     }
 }

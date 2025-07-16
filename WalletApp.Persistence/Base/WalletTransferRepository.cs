@@ -1,11 +1,20 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
+using WalletApp.Persistence;
+
 
 namespace WalletApp.Persistence.Base
 {
     public class WalletTransferRepository : IWalletTransferRepository
     {
+        public readonly WalletDbContext _context;
+
+        public WalletTransferRepository(WalletDbContext context)
+        {
+            _context = context;
+        }
         public WalletTransfer Add(WalletTransfer entity)
         {
             throw new NotImplementedException();
@@ -54,5 +63,11 @@ namespace WalletApp.Persistence.Base
         {
             throw new NotImplementedException();
         }
+       
+        public async Task<WalletTransfer?> GetByIdAsync(Guid id)
+        {
+            return await _context.WalletTransfers.FindAsync(id);
+        }
+
     }
 }

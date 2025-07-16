@@ -1,6 +1,6 @@
 ﻿namespace WalletApp.Application.Feature.DTO
 {
-    public class CreateWalletDTO
+    public class CreateWalletResponseDTO
     {
         public Guid Id { get; set; }
         public int UserId { get; set; }

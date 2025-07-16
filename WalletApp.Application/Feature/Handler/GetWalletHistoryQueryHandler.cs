@@ -1,27 +1,34 @@
 ﻿using MediatR;
 using WalletApp.Application.Feature.DTO;
 using WalletApp.Application.Feature.Queries;
-using WalletApp.Application.Services;
 
-namespace WalletApp.Application.Feature.Handler;
 
-public class GetWalletHistoryQueryHandler: IRequestHandler<GetWalletHistoryQuery, IEnumerable<TransactionRequestDTO>>
+namespace WalletApp.Application.Feature.Handler
 {
-    private readonly WalletService _walletService;
-
-    public GetWalletHistoryQueryHandler(WalletService walletService)  => _walletService = walletService;
-
-    public async Task<IEnumerable<TransactionRequestDTO>> Handle(GetWalletHistoryQuery q, CancellationToken ct)
+    public class GetWalletHistoryQueryHandler : IRequestHandler<GetWalletHistoryQuery, ServiceResponse<IEnumerable<TransactionResponseDTO>>>
     {
-        var transactions = await _walletService.GetTransactionHistoryAsync(q.WalletId);
+        private readonly WalletService _walletService;
 
-        return transactions.Select(t => new TransactionRequestDTO
+        public GetWalletHistoryQueryHandler(WalletService walletService)
         {
-            WalletId = t.WalletId,
-            Amount = t.Amount,
-            Type = t.Type,
-            Description = t.Description,
-        });
+            _walletService = walletService;
+        }
 
+        public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> Handle(GetWalletHistoryQuery request, CancellationToken cancellationToken)
+        {
+            var transactions = await _walletService.GetTransactionHistoryAsync(request.WalletId);
+
+            var dtoList = transactions.Select(t => new TransactionResponseDTO
+            {
+                Id = t.Id,
+                WalletId = t.WalletId,
+                Amount = t.Amount,
+                Type = t.Type,
+                Description = t.Description,
+                CreatedDate = t.CreatedDate
+            });
+
+            return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Ok(dtoList, "İşlem geçmişi getirildi.");
+        }
     }
 }

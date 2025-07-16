@@ -1,13 +1,13 @@
 ﻿using MediatR;
-using WalletApp.Application.Services;
-using WalletApp.Domain.Enums;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.DTO;
+using WalletApp.Application.Services;
+using WalletApp.Domain.Enums;
+
 
 namespace WalletApp.Application.Feature.Handler;
 
-public class WithdrawCommandHandler
-    : IRequestHandler<WithdrawCommand, TransactionRequestDTO>
+public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceResponse<TransactionResponseDTO>>
 {
     private readonly WalletService _walletService;
 
@@ -16,16 +16,24 @@ public class WithdrawCommandHandler
         _walletService = walletService;
     }
 
-    public async Task<TransactionRequestDTO> Handle(WithdrawCommand cmd, CancellationToken ct)
+    public async Task<ServiceResponse<TransactionResponseDTO>> Handle(WithdrawCommand request, CancellationToken cancellationToken)
     {
-        var transaction = await _walletService.ProcessWalletTransactionAsync(cmd.WalletId,cmd.Amount,TransactionType.Withdraw,cmd.Description);
+        // Validation (şimdilik atlıyoruz)
 
-        return transaction.ToString() == "null" ? null : new TransactionRequestDTO
+        var transaction = await _walletService.ProcessWalletTransactionAsync(
+            request.WalletId, request.Amount, TransactionType.Withdraw, request.Description);
+
+        if (transaction == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Withdraw failed.");
+
+        var dto = new TransactionResponseDTO
         {
-            WalletId = cmd.WalletId,
-            Amount = cmd.Amount,
-            Type = TransactionType.Withdraw,
-            Description = cmd.Description
+            WalletId = transaction.WalletId,
+            Amount = transaction.Amount,
+            Type = transaction.Type,
+            Description = transaction.Description
         };
+
+        return ServiceResponse<TransactionResponseDTO>.Ok(dto, "Withdraw successful.");
     }
 }

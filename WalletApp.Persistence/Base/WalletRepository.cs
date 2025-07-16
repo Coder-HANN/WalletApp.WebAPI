@@ -13,6 +13,10 @@ namespace WalletApp.Infrastructure.Repositories
         {
             _context = context;
         }
+        public async Task<Wallet?> GetByIdAsync(Guid id)
+        {
+            return await _context.Wallets.FindAsync(id);
+        }
         public Wallet Add(Wallet entity)
         {
             _context.Wallets.Add(entity);

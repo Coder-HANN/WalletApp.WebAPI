@@ -4,27 +4,51 @@ using WalletApp.Application.Feature.DTO;
 using WalletApp.Application.Services.Repositories.EntitysRepository;
 using WalletApp.Domain.Base;
 
-namespace WalletApp.Application.Feature.Handler;
-public class CreateBankAccountCommandHandler : IRequestHandler<CreateBankAccountCommand, ServiceResponse<bool>>
+
+namespace WalletApp.Application.Feature.Handler
 {
-    private readonly IBankAccountRepository _bankAccountRepository;
-
-    public CreateBankAccountCommandHandler(IBankAccountRepository bankAccountRepository)
+    public class BankAccountCommandHandler : IRequestHandler<BankAccountCommand, ServiceResponse<BankAccountRequestDTO>>
     {
-        _bankAccountRepository = bankAccountRepository;
-    }
+        private readonly IBankAccountRepository _bankAccountRepository;
 
-    public async Task<ServiceResponse<bool>> Handle(CreateBankAccountCommand request, CancellationToken cancellationToken)
-    {
-        var entity = new BankAccount
+        public BankAccountCommandHandler(IBankAccountRepository bankAccountRepository)
         {
-            Id = Guid.NewGuid(),
-            UserId = request.UserId,
-            WalletId = request.WalletId,
-            Bilgiler = request.Bilgiler
-        };
+            _bankAccountRepository = bankAccountRepository;
+        }
 
-        await _bankAccountRepository.AddAsync(entity);
-        return ServiceResponse<bool>.Ok(true, "Banka hesabı başarıyla eklendi.");
+        public async Task<ServiceResponse<BankAccountRequestDTO>> Handle(BankAccountCommand request, CancellationToken cancellationToken)
+        {
+            var entity = new BankAccount
+            {
+                Id = Guid.NewGuid(),
+                UserId = (int)request.UserId, // dikkat: cast gerekiyor çünkü int
+                WalletId = request.WalletId,
+                AccountName = request.AccountName,
+                Iban = request.Iban,
+                BankName = request.BankName,
+                BranchName = request.BranchName,
+                AccountType = request.AccountType,
+                Balance = request.Balance,
+                CreatedDate = DateTime.UtcNow,
+                UpdatedDate = DateTime.UtcNow
+            };
+
+            await _bankAccountRepository.AddAsync(entity);
+
+            var dto = new BankAccountRequestDTO
+            {
+                Id = entity.Id,
+                AccountName = entity.AccountName,
+                Iban = entity.Iban,
+                BankName = entity.BankName,
+                BranchName = entity.BranchName,
+                AccountType = entity.AccountType,
+                Balance = entity.Balance,
+                CreatedAt = entity.CreatedDate,
+                UpdatedAt = entity.UpdatedDate
+            };
+
+            return ServiceResponse<BankAccountRequestDTO>.Ok(dto, "Banka hesabı başarıyla eklendi.");
+        }
     }
 }

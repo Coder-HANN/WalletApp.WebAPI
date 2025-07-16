@@ -3,7 +3,7 @@ using WalletApp.Application.Feature.DTO;
 
 namespace WalletApp.Application.Feature.Command
 {
-    public class LoginUserCommand : IRequest<LoginResponseDTO>
+    public class LoginUserCommand : IRequest<ServiceResponse<LoginResponseDTO>>
     {
         public LoginUserCommand() { }
         public UserRequestDTO RequestDTO { get; set; }

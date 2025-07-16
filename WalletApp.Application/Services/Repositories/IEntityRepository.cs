@@ -20,5 +20,8 @@ namespace WalletApp.Application.Services.Repositories
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate = null);
         IQueryable<T> Query();
         Task<int> SaveChangesAsync();
+       
+        Task<T?> GetByIdAsync(Guid id);
+        
     }
 }

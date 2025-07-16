@@ -1,54 +1,25 @@
-﻿
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.DTO;
+using WalletApp.Domain.Base;
 
-namespace WalletApp.WebAPI.Controllers
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class BankController : ControllerBase
 {
-    [Authorize]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class BankController : ControllerBase
+    private readonly IMediator _mediator;
+    public BankController(IMediator mediator) => _mediator = mediator;
+
+    private int GetUserId() =>
+        int.Parse(User.FindFirst("userId")?.Value ?? throw new UnauthorizedAccessException());
+
+    [HttpPost("transfer")]
+    public async Task<ServiceResponse<TransactionResponseDTO>> BankTransfer([FromBody] BankTransferCommand command)
     {
-        private readonly IMediator _mediator;
-
-        public BankController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
-        /// <summary>
-        /// Kullanıcının cüzdanından seçilen bankaya para transfer eder.
-        /// </summary>
-        /// <param name="dto">Transfer detayları</param>
-        [HttpPost("transfer")]
-        public async Task<IActionResult> BankTransfer([FromBody] BankTransferRequestDTO dto)
-        {
-            int userId = GetUserId();
-
-            // ⚠️ Opsiyonel: userId doğrulaması eklenebilir (örneğin dto içinde varsa)
-
-            var command = new BankTransferCommand(dto);
-            var result = await GetResult(command);
-            return Ok(result);
-        }
-
-        private async Task<object> GetResult(BankTransferCommand command)
-        {
-            return await GetResult(command);
-        }
-        /// <summary>
-        /// JWT token'dan userId çeker. Token'da "userId" claim'inin olması gerekir.
-        /// </summary>
-        private int GetUserId()
-        {
-            var userIdClaim = User.FindFirst("userId");
-            if (userIdClaim == null)
-                throw new UnauthorizedAccessException("JWT token'da 'userId' claim bulunamadı.");
-
-            return int.Parse(userIdClaim.Value);
-        }
+        command.UserId = GetUserId();
+        return await _mediator.Send(command);
     }
 }

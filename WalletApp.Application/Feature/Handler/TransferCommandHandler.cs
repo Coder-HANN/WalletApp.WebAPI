@@ -1,30 +1,33 @@
 ﻿using MediatR;
 using WalletApp.Application.Feature.Command;
 using WalletApp.Application.Feature.DTO;
-using WalletApp.Application.Services;
+
 
 namespace WalletApp.Application.Feature.Handler;
 
-public class TransferCommandHandler
-    : IRequestHandler<TransferCommand, TransactionRequestDTO>
+public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceResponse<TransactionResponseDTO>>
+
 {
-    private readonly WalletService _walletService;
+    public readonly WalletService _walletService;
 
     public TransferCommandHandler(WalletService walletService)
     {
         _walletService = walletService;
     }
 
-    public async Task<TransactionRequestDTO> Handle(TransferCommand cmd, CancellationToken ct)
+    public async Task<ServiceResponse<TransactionResponseDTO>> Handle(TransferCommand request, CancellationToken cancellationToken)
     {
-        var transaction = await _walletService.TransferAsync(cmd.SourceWalletId,cmd.TargetWalletId,cmd.Amount);
-        return transaction.ToString() == "null" ? null : new TransactionRequestDTO
-        {
-            WalletId = cmd.SourceWalletId,
-            Amount = cmd.Amount,
-            Type = transaction.Type
-        };
+        var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount);
 
+        if (transaction == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Transfer failed.");
+
+        return ServiceResponse<TransactionResponseDTO>.Ok(new TransactionResponseDTO
+        {
+            WalletId = request.SourceWalletId,
+            Amount = request.Amount,
+            Type = transaction.Type,
+            Description = transaction.Description
+        }, "Transfer successful.");
     }
 }
-
