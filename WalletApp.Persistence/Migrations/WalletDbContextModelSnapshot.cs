@@ -22,16 +22,33 @@ namespace WalletApp.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("WalletApp.Domain.Base.BankAccount", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Bilgiler")
+                    b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AppUserId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("Created")
                         .HasColumnType("uniqueidentifier");
@@ -40,6 +57,109 @@ namespace WalletApp.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Iban")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Information")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.ToTable("BankAccounts");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("Created")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppWallet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AppUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Assest")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("Created")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Currency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -53,20 +173,18 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("WalletId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<decimal>("TotalBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("AppUserId");
 
-                    b.ToTable("BankaHesaps");
+                    b.ToTable("Wallets");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.BankTransaction", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.BankTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -122,7 +240,7 @@ namespace WalletApp.Persistence.Migrations
                     b.ToTable("BankTransactions");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Payment", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.Payment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -163,7 +281,7 @@ namespace WalletApp.Persistence.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.ProviderBank", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.ProviderBank", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,7 +317,7 @@ namespace WalletApp.Persistence.Migrations
                     b.ToTable("ProviderBank");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Transaction", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -250,7 +368,7 @@ namespace WalletApp.Persistence.Migrations
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.User", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.UserDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -258,48 +376,8 @@ namespace WalletApp.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("Created")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("WalletApp.Domain.Base.UserDetail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("AppUserId")
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("BirthDay")
                         .HasColumnType("datetime2");
@@ -338,67 +416,15 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
+                    b.HasIndex("AppUserId")
                         .IsUnique();
 
                     b.ToTable("UserDetails");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Wallet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Assest")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("Created")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifiedUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalBalance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Wallets");
-                });
-
-            modelBuilder.Entity("WalletApp.Domain.Base.WalletTransfer", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.WalletTransfer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -451,28 +477,39 @@ namespace WalletApp.Persistence.Migrations
                     b.ToTable("WalletTransfers");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.BankAccount", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.User", "User")
+                    b.HasOne("WalletApp.Domain.Entities.AppUser", "User")
                         .WithMany("BankaHesap")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.BankTransaction", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppWallet", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.ProviderBank", "ProviderBank")
+                    b.HasOne("WalletApp.Domain.Entities.AppUser", "User")
+                        .WithMany("Wallet")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.BankTransaction", b =>
+                {
+                    b.HasOne("WalletApp.Domain.Entities.ProviderBank", "ProviderBank")
                         .WithMany("BankTransactions")
                         .HasForeignKey("SourceBankId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("WalletApp.Domain.Base.Transaction", "Transaction")
+                    b.HasOne("WalletApp.Domain.Entities.Transaction", "Transaction")
                         .WithOne("BankTransaction")
-                        .HasForeignKey("WalletApp.Domain.Base.BankTransaction", "TransactionId")
+                        .HasForeignKey("WalletApp.Domain.Entities.BankTransaction", "TransactionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -481,20 +518,20 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Payment", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.Payment", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.Transaction", "Transaction")
+                    b.HasOne("WalletApp.Domain.Entities.Transaction", "Transaction")
                         .WithOne("Payment")
-                        .HasForeignKey("WalletApp.Domain.Base.Payment", "TransactionId")
+                        .HasForeignKey("WalletApp.Domain.Entities.Payment", "TransactionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Transaction");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Transaction", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.Transaction", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.Wallet", "Wallet")
+                    b.HasOne("WalletApp.Domain.Entities.AppWallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -503,37 +540,26 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.UserDetail", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.UserDetail", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.User", "User")
+                    b.HasOne("WalletApp.Domain.Entities.AppUser", "User")
                         .WithOne("UserDetail")
-                        .HasForeignKey("WalletApp.Domain.Base.UserDetail", "UserId")
+                        .HasForeignKey("WalletApp.Domain.Entities.UserDetail", "AppUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Wallet", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.WalletTransfer", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Base.User", "User")
-                        .WithMany("Wallet")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("WalletApp.Domain.Base.WalletTransfer", b =>
-                {
-                    b.HasOne("WalletApp.Domain.Base.Transaction", "Transaction")
+                    b.HasOne("WalletApp.Domain.Entities.Transaction", "Transaction")
                         .WithMany("WalletTransfers")
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("WalletApp.Domain.Base.Wallet", "Wallet")
+                    b.HasOne("WalletApp.Domain.Entities.AppWallet", "Wallet")
                         .WithMany("WalletTransfers")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -544,23 +570,7 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.ProviderBank", b =>
-                {
-                    b.Navigation("BankTransactions");
-                });
-
-            modelBuilder.Entity("WalletApp.Domain.Base.Transaction", b =>
-                {
-                    b.Navigation("BankTransaction")
-                        .IsRequired();
-
-                    b.Navigation("Payment")
-                        .IsRequired();
-
-                    b.Navigation("WalletTransfers");
-                });
-
-            modelBuilder.Entity("WalletApp.Domain.Base.User", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppUser", b =>
                 {
                     b.Navigation("BankaHesap");
 
@@ -570,9 +580,25 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("WalletApp.Domain.Base.Wallet", b =>
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppWallet", b =>
                 {
                     b.Navigation("Transactions");
+
+                    b.Navigation("WalletTransfers");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.ProviderBank", b =>
+                {
+                    b.Navigation("BankTransactions");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.Transaction", b =>
+                {
+                    b.Navigation("BankTransaction")
+                        .IsRequired();
+
+                    b.Navigation("Payment")
+                        .IsRequired();
 
                     b.Navigation("WalletTransfers");
                 });

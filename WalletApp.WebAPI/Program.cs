@@ -6,12 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using WalletApp.Application.Feature.Command;
-using WalletApp.Application.Feature.Constence;
-using WalletApp.Application.Feature.Handler;
+using WalletApp.Application.Feature.Auth.Handlers;
+using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Handlers;
+using WalletApp.Application.Feature.BankAccount.Validations;
+using WalletApp.Application.Feature.User.Dtos;
+using WalletApp.Application.Feature.Wallet.Handlers;
+using WalletApp.Application.Feature.Wallet.Validations;
+using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Application.Services.Repositories;
-using WalletApp.Application.Services.Repositories.EntitysRepository;
-using WalletApp.Domain.Base;
+using WalletApp.Domain.Entities;
 using WalletApp.Infrastructure.Repositories;
 using WalletApp.Persistence;
 using WalletApp.Persistence.Base;
@@ -24,7 +28,7 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------------
 // Dependency Injection (DI)
 // -----------------------------
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddScoped<WalletService>();
 
 // Scoped olarak repository'leri ekle
@@ -46,8 +50,8 @@ builder.Services.AddDbContext<WalletDbContext>(options =>
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(
         typeof(RegisterUserCommandHandler).Assembly,
-        typeof(RegisterUserCommand).Assembly,
-        typeof(BankTransferCommand).Assembly
+        typeof(RegisterRequestDTO).Assembly,
+        typeof(BankTransferRequestDTO).Assembly
     ));
 // -----------------------------
 // JWT Authentication
@@ -76,6 +80,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
+
 builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
 
 builder.Services.AddDbContext<WalletDbContext>(options =>
@@ -84,8 +90,9 @@ builder.Services.AddDbContext<WalletDbContext>(options =>
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));
-builder.Services.AddValidatorsFromAssemblyContaining<CreateWalletCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers().AddJsonOptions(x =>
 {
     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
@@ -152,6 +159,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication(); // ➕ JWT doğrulaması
 app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<AppUserMiddleware>(); // 🧠 Burada devreye giriyor!
 
 app.MapControllers();
 

@@ -1,4 +1,4 @@
-﻿using WalletApp.Application.Feature.DTO;
+﻿using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Middleware
 {
@@ -12,7 +12,7 @@ namespace WalletApp.WebAPI.Middleware
             _next = next;
             _logger = logger;
         }
-
+        
         public async Task InvokeAsync(HttpContext context)
         {
             try

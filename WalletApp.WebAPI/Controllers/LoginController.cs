@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Feature.Command;
-using WalletApp.Application.Feature.DTO;
+using WalletApp.Application.Feature.User.Dtos;
+using WalletApp.Application.Feature.Wallet.Dtos;
 
 [ApiController]
 [Route("[controller]")]
@@ -11,7 +11,7 @@ public class LoginController : ControllerBase
     public LoginController(IMediator mediator) => _mediator = mediator;
 
     [HttpPost("login")]
-    public async Task<ServiceResponse<LoginResponseDTO>> Login([FromBody] LoginUserCommand command)
+    public async Task<ServiceResponse<LoginUserResponseDTO>> Login([FromBody] LoginUserRequestDTO command)
     {
         return await _mediator.Send(command);
     }

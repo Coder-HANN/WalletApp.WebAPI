@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WalletApp.Domain.Base;
+using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Migrations;
 
 namespace WalletApp.Persistence
@@ -8,10 +8,10 @@ namespace WalletApp.Persistence
     {
         public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
 
-        public DbSet<User> Users { get; set; }
+        public DbSet<AppUser> Users { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
-        public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<AppWallet> Wallets { get; set; }
+        public DbSet<AppBankAccount> BankAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WalletTransfer> WalletTransfers { get; set; }
         public DbSet<Payment> Payments { get; set; }
@@ -34,11 +34,11 @@ namespace WalletApp.Persistence
                 builder
                     .HasOne(ud => ud.User)
                     .WithOne(u => u.UserDetail)
-                    .HasForeignKey<UserDetail>(ud => ud.UserId);
+                    .HasForeignKey<UserDetail>(ud => ud.AppUserId);
             });
 
             
-            modelBuilder.Entity<User>(builder =>
+            modelBuilder.Entity<AppUser>(builder =>
             {
                 builder.HasKey(u => u.Id);
 
@@ -49,7 +49,7 @@ namespace WalletApp.Persistence
             });
 
           
-            modelBuilder.Entity<Wallet>(builder =>
+            modelBuilder.Entity<AppWallet>(builder =>
             { builder.HasKey(w => w.Id);
                 builder.Property(w => w.TotalBalance).HasPrecision(18, 2);
                 builder.Property(w => w.CreatedDate).IsRequired();
@@ -60,7 +60,7 @@ namespace WalletApp.Persistence
                 builder
                 .HasOne(w => w.User)
                 .WithMany(u => u.Wallet)
-                .HasForeignKey(w => w.UserId)
+                .HasForeignKey(w => w.AppUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
                 builder
@@ -71,14 +71,14 @@ namespace WalletApp.Persistence
             });
 
             
-            modelBuilder.Entity<BankAccount>(builder =>
+            modelBuilder.Entity<AppBankAccount>(builder =>
             {
                 builder.HasKey(ba => ba.Id);
                 builder.Property(ba => ba.Information).IsRequired().HasMaxLength(200);
                 builder
                     .HasOne(ba => ba.User)
                     .WithMany(u => u.BankaHesap)
-                    .HasForeignKey(bh => bh.UserId)
+                    .HasForeignKey(bh => bh.AppUserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
 
