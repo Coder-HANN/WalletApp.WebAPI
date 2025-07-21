@@ -6,7 +6,7 @@ using WalletApp.Application.Feature.User.Dtos.UserProfile;
 
 
 
-public class GetUserProfileQueryHandler : IRequestHandler<UserProfileQueryResponseDTO, ServiceResponse<UserProfileResponseDTO>>
+public class GetUserProfileQueryHandler : IRequestHandler<UserProfileRequestDTO, ServiceResponse<UserProfileResponseDTO>>
 {
     private readonly IUserDetailRepository _userDetailRepository;
 
@@ -15,7 +15,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<UserProfileQueryRespon
         _userDetailRepository = userDetailRepository;
     }
 
-    public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileQueryResponseDTO request, CancellationToken cancellationToken)
+    public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileRequestDTO request, CancellationToken cancellationToken)
     {
         var detail = await _userDetailRepository.GetAsync(x => x.AppUserId == request.AppUserId); // Corrected method call to use GetAsync with a predicate  
         if (detail == null)

@@ -38,11 +38,11 @@ namespace WalletApp.Application.Feature.Auth.Handlers
 
         public async Task<ServiceResponse<LoginUserResponseDTO>> Handle(LoginUserRequestDTO request, CancellationToken cancellationToken)
         {
-            var user = _entityRepository.Query().FirstOrDefault(u => u.Email == request.RequestDTO.Email);
+            var user = _entityRepository.Query().FirstOrDefault(u => u.Email == request.Email);
             if (user == null)
                 return ServiceResponse<LoginUserResponseDTO>.Fail("Email veya şifre hatalı.");
 
-            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.RequestDTO.Password);
+            var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (result == PasswordVerificationResult.Failed)
                 return ServiceResponse<LoginUserResponseDTO>.Fail("Email veya şifre hatalı.");
 
