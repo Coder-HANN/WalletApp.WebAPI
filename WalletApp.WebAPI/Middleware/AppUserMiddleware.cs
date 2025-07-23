@@ -1,4 +1,6 @@
-﻿namespace WalletApp.WebAPI.Middleware
+﻿using System.Security.Claims;
+
+namespace WalletApp.WebAPI.Middleware
 {
     public class AppUserMiddleware
     {
@@ -11,17 +13,39 @@
 
         public async Task InvokeAsync(HttpContext context)
         {
+            Console.WriteLine("🔵 AppUserMiddleware çalıştı.");
+
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                var claim = context.User.FindFirst("AppUserId");
-                if (claim != null && int.TryParse(claim.Value, out int userId))
+                Console.WriteLine("Claims listesi:");
+                foreach (var c in context.User.Claims)
                 {
-                    context.Items["AppUserId"] = userId;
+                    Console.WriteLine($"Claim Type: {c.Type}, Value: {c.Value}");
                 }
+
+                var claim = context.User.Claims.FirstOrDefault(c =>
+                    c.Type.Equals("userId", StringComparison.OrdinalIgnoreCase)
+                    || c.Type.Equals("AppUserId", StringComparison.OrdinalIgnoreCase)
+                    || c.Type.Equals(ClaimTypes.NameIdentifier, StringComparison.OrdinalIgnoreCase)
+                    || c.Type.Equals("sub", StringComparison.OrdinalIgnoreCase));
+
+                if (claim != null)
+                {
+                    context.Items["AppUserId"] = claim.Value;
+                    Console.WriteLine($"🟢 AppUserId bulundu: {claim.Value}");
+                }
+                else
+                {
+                    Console.WriteLine("🟠 AppUserId claim bulunamadı veya geçersiz.");
+                }
+   
+            }
+            else
+            {
+                Console.WriteLine("🔴 Kullanıcı authenticate değil.");
             }
 
             await _next(context);
         }
     }
-
 }

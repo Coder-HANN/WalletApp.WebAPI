@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -81,7 +82,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
-
 builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
 
 builder.Services.AddDbContext<WalletDbContext>(options =>
@@ -157,11 +157,11 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // ➕ JWT doğrulaması
-app.UseAuthorization();
+
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseMiddleware<AppUserMiddleware>(); // 🧠 Burada devreye giriyor!
+app.UseAuthorization();
+
 
 app.MapControllers();
 

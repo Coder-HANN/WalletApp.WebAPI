@@ -7,6 +7,6 @@ namespace WalletApp.Domain.Enums
         Withdraw = 1,
         Transfer = 2,
         BankTransfer = 3,
-        Payment = 4
+        Payment = 4,
     }
 }

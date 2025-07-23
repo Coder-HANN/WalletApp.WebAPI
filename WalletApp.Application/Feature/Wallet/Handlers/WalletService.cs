@@ -59,81 +59,159 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             return await _walletRepository.DeleteAsync(wallet);
         }
 
-        public async Task<TransactionResponseDTO> ProcessWalletTransactionAsync(Guid walletId, decimal amount, TransactionType type, string? description)
+        public async Task<List<TransactionResponseDTO>> ProcessWalletTransactionAsync(Guid walletId, TransferRequestDTO request)
         {
-            var wallet = await _walletRepository.GetAsync(w => w.Id == walletId)
+            var wallet = await _walletRepository.GetAsync(w => w.Id == request.SourceWalletId)
                          ?? throw new Exception("Cüzdan bulunamadı");
 
-            if (type == TransactionType.Withdraw && wallet.TotalBalance < amount)
+            if (request.Type == TransactionType.Withdraw && wallet.TotalBalance < request.Amount)
                 throw new Exception("Yetersiz bakiye");
 
-            if (type == TransactionType.Deposit)
-                wallet.TotalBalance += amount;
-            else if (type == TransactionType.Withdraw)
-                wallet.TotalBalance -= amount;
+            if (request.Type == TransactionType.Deposit)
+                wallet.TotalBalance += request.Amount;
+            else if (request.Type == TransactionType.Withdraw)
+                wallet.TotalBalance -= request.Amount;
 
             await _walletRepository.UpdateAsync(wallet);
 
-            var transaction = new Transaction
+            // Gödereceğiniz Transaction nesnesini oluşturun
+            var sourceTransaction = new Transaction
             {
-                WalletId = walletId,
-                Amount = amount,
-                Type = type,
-                Description = description
+                WalletId = request.SourceWalletId,
+                Amount = -request.Amount,
+                Type = TransactionType.Transfer,
+                Description = request.Description
             };
-
-            await _transactionRepository.AddAsync(transaction);
-
-            return new TransactionResponseDTO
+            
+            await _transactionRepository.AddAsync(sourceTransaction);
+            // Alan transaction nesnesini ekleyin
+            var targetTransaction = new Transaction
             {
-                Id = transaction.Id,
-                WalletId = transaction.WalletId,
-                Amount = transaction.Amount,
-                Type = transaction.Type,
-                Description = transaction.Description,
-                CreatedDate = transaction.CreatedDate
+                WalletId = request.TargetWalletId,
+                Amount = request.Amount,
+                Type = TransactionType.Transfer,
+                Description = request.Description
             };
+            await _transactionRepository.AddAsync(targetTransaction);
+
+            // İşlem no ile WalletTransfer nesnesi oluşturun
+            var islemNO = new Random().Next(100000, 999999);
+            var transfer = new WalletTransfer
+            {
+                WalletId = request.SourceWalletId,
+                SourceWalletId = request.SourceWalletId,
+                Target = request.TargetWalletId.ToString(),
+                TransactionId = sourceTransaction.Id,
+                IslemNo = islemNO
+            };
+            await _walletTransferRepository.AddAsync(transfer);
+
+            var result = new List<TransactionResponseDTO>
+            {
+                new TransactionResponseDTO
+                {
+                    Id = sourceTransaction.Id,
+                    WalletId = sourceTransaction.WalletId,
+                    Amount = sourceTransaction.Amount,
+                    Type = sourceTransaction.Type,
+                    Description = sourceTransaction.Description,
+                    CreatedDate = sourceTransaction.CreatedDate
+                },
+                new TransactionResponseDTO
+                {
+                    Id = targetTransaction.Id,
+                    WalletId = targetTransaction.WalletId,
+                    Amount = targetTransaction.Amount,
+                    Type = targetTransaction.Type,
+                    Description = targetTransaction.Description,
+                    CreatedDate = targetTransaction.CreatedDate
+                }
+            };
+            return result;
         }
 
-        public async Task<Transaction> TransferAsync(Guid sourceWalletId, Guid targetWalletId, decimal amount)
+        public async Task<List<TransactionResponseDTO>> TransferAsync(Guid sourceWalletId, Guid targetWalletId, decimal amount, string? description)
         {
-            var source = await _walletRepository.GetAsync(w => w.Id == sourceWalletId)
-                         ?? throw new Exception("Kaynak cüzdan bulunamadı");
+            var sourceWallet = await _walletRepository.GetAsync(w => w.Id == sourceWalletId)
+                ?? throw new Exception("Kaynak cüzdan bulunamadı.");
 
-            var target = await _walletRepository.GetAsync(w => w.Id == targetWalletId)
-                         ?? throw new Exception("Hedef cüzdan bulunamadı");
+            var targetWallet = await _walletRepository.GetAsync(w => w.Id == targetWalletId)
+                ?? throw new Exception("Hedef cüzdan bulunamadı.");
 
-            if (source.TotalBalance < amount)
-                throw new Exception("Yetersiz bakiye");
+            if (sourceWallet.TotalBalance < amount)
+                throw new Exception("Yetersiz bakiye.");
 
-            source.TotalBalance -= amount;
-            await _walletRepository.UpdateAsync(source);
+            sourceWallet.TotalBalance -= amount;
+            targetWallet.TotalBalance += amount;
 
-            target.TotalBalance += amount;
-            await _walletRepository.UpdateAsync(target);
+            await _walletRepository.UpdateAsync(sourceWallet);
+            await _walletRepository.UpdateAsync(targetWallet);
 
-            var transaction = new Transaction
+            // Transaction kayıtları
+            var sourceTransaction = new Transaction
             {
                 WalletId = sourceWalletId,
                 Amount = amount,
                 Type = TransactionType.Transfer,
-                Description = $"Cüzdanlar arası transfer: {targetWalletId}"
+                Description = $"Transfer to wallet: {targetWalletId}"
             };
 
-            await _transactionRepository.AddAsync(transaction);
+            var targetTransaction = new Transaction
+            {
+                WalletId = targetWalletId,
+                Amount = amount,
+                Type = TransactionType.Transfer,
+                Description = $"Transfer from wallet: {sourceWalletId}"
+            };
 
-            var transfer = new WalletTransfer
+            await _transactionRepository.AddAsync(sourceTransaction);
+            await _transactionRepository.AddAsync(targetTransaction);
+
+            // Ortak işlem numarası
+            var islemNo = new Random().Next(100000, 999999);
+
+            var transferFrom = new WalletTransfer
             {
                 WalletId = sourceWalletId,
                 SourceWalletId = sourceWalletId,
                 Target = targetWalletId.ToString(),
-                TransactionId = transaction.Id,
-                IslemNo = new Random().Next(100000, 999999)
+                TransactionId = sourceTransaction.Id,
+                IslemNo = islemNo
             };
 
-            await _walletTransferRepository.AddAsync(transfer);
+            var transferTo = new WalletTransfer
+            {
+                WalletId = targetWalletId,
+                SourceWalletId = sourceWalletId,
+                Target = targetWalletId.ToString(),
+                TransactionId = targetTransaction.Id,
+                IslemNo = islemNo
+            };
 
-            return transaction;
+            await _walletTransferRepository.AddAsync(transferFrom);
+            await _walletTransferRepository.AddAsync(transferTo);
+
+            return new List<TransactionResponseDTO>
+    {
+        new TransactionResponseDTO
+        {
+            Id = sourceTransaction.Id,
+            WalletId = sourceTransaction.WalletId,
+            Amount = sourceTransaction.Amount,
+            Type = sourceTransaction.Type,
+            Description = sourceTransaction.Description,
+            CreatedDate = sourceTransaction.CreatedDate
+        },
+        new TransactionResponseDTO
+        {
+            Id = targetTransaction.Id,
+            WalletId = targetTransaction.WalletId,
+            Amount = targetTransaction.Amount,
+            Type = targetTransaction.Type,
+            Description = targetTransaction.Description,
+            CreatedDate = targetTransaction.CreatedDate
+        }
+    };
         }
 
         public async Task<IEnumerable<Transaction>> GetTransactionHistoryAsync(Guid walletId)

@@ -27,7 +27,7 @@ public class WalletController : ControllerBase
     }
 
     [HttpPost("withdraw")]
-    public async Task<ServiceResponse<TransactionResponseDTO>> Withdraw([FromBody] WithdrawRequestDTO command)
+    public async Task<ServiceResponse<IList<TransactionResponseDTO>>> Withdraw([FromBody] WithdrawRequestDTO command)
     {
         return await _mediator.Send(command);
     }
@@ -44,8 +44,8 @@ public class WalletController : ControllerBase
         return await _mediator.Send(query);
     }
 
-    [HttpGet("{walletId:guid}/history")]
-    public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> GetHistory([FromRoute] GetUserWalletsHistoryQueryRequestDTO query)
+    [HttpPost("{walletId:guid}/history")]
+    public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> GetHistory([FromQuery] GetUserWalletsHistoryQueryRequestDTO query)
     {
         return await _mediator.Send(query);
     }

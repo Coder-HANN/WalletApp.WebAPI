@@ -1,6 +1,7 @@
 ﻿using MediatR;
-using WalletApp.Application.Feature.Wallet.Dtos;
 using Microsoft.AspNetCore.Http;
+using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Domain.Enums;
 
 
 namespace WalletApp.Application.Feature.Wallet.Handlers;
@@ -23,7 +24,7 @@ public class TransferCommandHandler : IRequestHandler<TransferRequestDTO, Servic
         if (userIdClaim == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Unauthorized access.");
 
-        var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount);
+        var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount, request.Description);
 
         if (transaction == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Transfer failed.");
@@ -32,8 +33,7 @@ public class TransferCommandHandler : IRequestHandler<TransferRequestDTO, Servic
         {
             WalletId = request.SourceWalletId,
             Amount = request.Amount,
-            Type = transaction.Type,
-            Description = transaction.Description
+            Type = TransactionType.Transfer,
         }, "Transfer successful.");
     }
 }

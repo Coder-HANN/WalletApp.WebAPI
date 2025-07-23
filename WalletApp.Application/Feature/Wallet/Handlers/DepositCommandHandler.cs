@@ -24,7 +24,8 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
     {
         // AppUserId çek
         var httpContext = _httpContextAccessor.HttpContext!;
-        if (!httpContext.Items.TryGetValue("AppUserId", out var userIdObj) || userIdObj is not int appUserId)
+        if (_httpContextAccessor.HttpContext?.Items.TryGetValue("AppUserId", out var userIdObj) == true
+            && int.TryParse(userIdObj?.ToString(), out var appUserId))
         {
             return ServiceResponse<TransactionResponseDTO>.Fail("User ID not found in request context.");
         }

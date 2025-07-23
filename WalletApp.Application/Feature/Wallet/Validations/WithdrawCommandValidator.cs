@@ -10,6 +10,5 @@ public class WithdrawCommandValidator : AbstractValidator<WithdrawRequestDTO>
     {
         RuleFor(x => x.WalletId).NotEmpty();
         RuleFor(x => x.Amount).GreaterThan(0).WithMessage("Tutar 0'dan büyük olmalı.");
-        RuleFor(x => x.RequestedBy).GreaterThan(0);
     }
 }
