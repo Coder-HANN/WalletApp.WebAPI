@@ -10,9 +10,7 @@ namespace WalletApp.Domain.Entities
         public string AccountName { get; set; }
         public string Iban { get; set; }
         public string BankName { get; set; }
-        public string BranchName { get; set; }
         public string AccountType { get; set; }
-        public string Information { get; set; }
         public decimal Balance { get; set; }
 
         public DateTime CreatedDate { get; set; }

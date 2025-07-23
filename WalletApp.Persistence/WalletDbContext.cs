@@ -74,7 +74,6 @@ namespace WalletApp.Persistence
             modelBuilder.Entity<AppBankAccount>(builder =>
             {
                 builder.HasKey(ba => ba.Id);
-                builder.Property(ba => ba.Information).IsRequired().HasMaxLength(200);
                 builder
                     .HasOne(ba => ba.User)
                     .WithMany(u => u.BankaHesap)

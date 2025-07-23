@@ -4,70 +4,103 @@ using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Persistence;
 
-
 namespace WalletApp.Persistence.Base
 {
     public class WalletTransferRepository : IWalletTransferRepository
     {
-        public readonly WalletDbContext _context;
+        private readonly WalletDbContext _context;
 
         public WalletTransferRepository(WalletDbContext context)
         {
             _context = context;
         }
+
+        public async Task<WalletTransfer> AddAsync(WalletTransfer entity)
+        {
+            await _context.WalletTransfers.AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
+
         public WalletTransfer Add(WalletTransfer entity)
         {
-            throw new NotImplementedException();
+            _context.WalletTransfers.Add(entity);
+            _context.SaveChanges();
+            return entity;
         }
-        public Task<WalletTransfer> AddAsync(WalletTransfer entity)
-        {
-            throw new NotImplementedException();
-        }
+
         public WalletTransfer Delete(WalletTransfer entity)
         {
-            throw new NotImplementedException();
+            _context.WalletTransfers.Remove(entity);
+            _context.SaveChanges();
+            return entity;
         }
-        public Task<WalletTransfer> DeleteAsync(WalletTransfer entity)
+
+        public async Task<WalletTransfer> DeleteAsync(WalletTransfer entity)
         {
-            throw new NotImplementedException();
+            _context.WalletTransfers.Remove(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
+
         public WalletTransfer Get(Expression<Func<WalletTransfer, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return _context.WalletTransfers.FirstOrDefault(predicate);
         }
+
         public IEnumerable<WalletTransfer> GetAll(Expression<Func<WalletTransfer, bool>> predicate = null)
         {
-            throw new NotImplementedException();
+            return predicate == null
+                ? _context.WalletTransfers
+                : _context.WalletTransfers.Where(predicate);
         }
-        public Task<IEnumerable<WalletTransfer>> GetAllAsync(Expression<Func<WalletTransfer, bool>> predicate = null)
+
+        public async Task<IEnumerable<WalletTransfer>> GetAllAsync(Expression<Func<WalletTransfer, bool>> predicate = null)
         {
-            throw new NotImplementedException();
+            return predicate == null
+                ? await _context.WalletTransfers.ToListAsync()
+                : await _context.WalletTransfers.Where(predicate).ToListAsync();
         }
-        public Task<WalletTransfer> GetAsync(Expression<Func<WalletTransfer, bool>> predicate, Func<IQueryable<WalletTransfer>, IQueryable<WalletTransfer>> include = null)
+
+        public async Task<WalletTransfer> GetAsync(
+            Expression<Func<WalletTransfer, bool>> predicate,
+            Func<IQueryable<WalletTransfer>, IQueryable<WalletTransfer>> include = null)
         {
-            throw new NotImplementedException();
+            IQueryable<WalletTransfer> query = _context.WalletTransfers;
+
+            if (include != null)
+                query = include(query);
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
+
         public IQueryable<WalletTransfer> Query()
         {
-            throw new NotImplementedException();
+            return _context.WalletTransfers.AsQueryable();
         }
-        public Task<int> SaveChangesAsync()
-        {
-            throw new NotImplementedException();
-        }
+
         public WalletTransfer Update(WalletTransfer entity)
         {
-            throw new NotImplementedException();
+            _context.WalletTransfers.Update(entity);
+            _context.SaveChanges();
+            return entity;
         }
-        public Task<WalletTransfer> UpdateAsync(WalletTransfer entity)
+
+        public async Task<WalletTransfer> UpdateAsync(WalletTransfer entity)
         {
-            throw new NotImplementedException();
+            _context.WalletTransfers.Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
-       
+
         public async Task<WalletTransfer?> GetByIdAsync(Guid id)
         {
             return await _context.WalletTransfers.FindAsync(id);
         }
-
     }
 }
