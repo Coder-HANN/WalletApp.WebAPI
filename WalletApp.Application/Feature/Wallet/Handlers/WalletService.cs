@@ -14,6 +14,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         private readonly IWalletTransferRepository _walletTransferRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+
 		public WalletService(
             IWalletRepository walletRepository,
             ITransactionRepository transactionRepository,

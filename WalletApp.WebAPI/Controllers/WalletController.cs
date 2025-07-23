@@ -27,7 +27,7 @@ public class WalletController : ControllerBase
     }
 
     [HttpPost("withdraw")]
-    public async Task<ServiceResponse<IList<TransactionResponseDTO>>> Withdraw([FromBody] WithdrawRequestDTO command)
+    public async Task<ServiceResponse<TransactionResponseDTO>> Withdraw([FromBody] WithdrawRequestDTO command)
     {
         return await _mediator.Send(command);
     }

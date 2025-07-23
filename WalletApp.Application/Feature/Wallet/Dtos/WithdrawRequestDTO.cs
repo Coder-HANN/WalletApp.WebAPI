@@ -5,12 +5,12 @@ using WalletApp.Domain.Enums;
 
 namespace WalletApp.Application.Feature.Wallet.Dtos    
 {
-    public record WithdrawRequestDTO : IRequest<ServiceResponse<IList<TransactionResponseDTO>>>
+    public record WithdrawRequestDTO : IRequest<ServiceResponse<TransactionResponseDTO>>
     {
         public Guid WalletId { get; set; }
+        public Guid AppBankAccountId { get; set; }
         public decimal Amount { get; set; }
         public string? Description { get; set; }
-        public TransactionType Type { get; set; }
+        
     }
-
 }

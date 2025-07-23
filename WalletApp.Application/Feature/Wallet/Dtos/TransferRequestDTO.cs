@@ -11,6 +11,6 @@ namespace WalletApp.Application.Feature.Wallet.Dtos
         public decimal Amount { get; set; }
         public string Description { get; set; }
         public TransactionType Type { get; set; } 
-
+        public Guid BankAccountId { get; set; } 
     }
 }

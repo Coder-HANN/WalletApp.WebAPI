@@ -84,6 +84,7 @@ namespace WalletApp.Persistence
             });
 
 
+
             modelBuilder.Entity<Transaction>(builder =>
             {
                 builder.HasKey(t => t.Id);
@@ -98,9 +99,13 @@ namespace WalletApp.Persistence
                     .WithMany(w => w.Transactions)
                     .HasForeignKey(t => t.WalletId)
                     .OnDelete(DeleteBehavior.Restrict);
+                builder
+                   .HasOne(t => t.AppBankAccount)
+                   .WithMany(t => t.Transactions)  
+                   .HasForeignKey(t => t.AppBankAccountId)
+                   .OnDelete(DeleteBehavior.Restrict);
             });
 
-            
             modelBuilder.Entity<Payment>(builder =>
             {
                 builder.HasKey(p => p.Id);

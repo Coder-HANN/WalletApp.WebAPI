@@ -17,5 +17,6 @@ namespace WalletApp.Domain.Entities
         public DateTime UpdatedDate { get; set; }
 
         public AppUser User { get; set; }
+        public ICollection<Transaction> Transactions { get; set; }
     }
 }

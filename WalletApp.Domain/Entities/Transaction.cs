@@ -6,6 +6,7 @@ namespace WalletApp.Domain.Entities
     {
         public Guid Id { get; set; }
         public Guid WalletId { get; set; }
+        public Guid AppBankAccountId { get; set; }
         public decimal Amount { get; set; }
         public decimal Currency { get; set; }
         public TransactionType Type { get; set; }
@@ -14,5 +15,8 @@ namespace WalletApp.Domain.Entities
         public ICollection<WalletTransfer> WalletTransfers { get; set; }
         public Payment Payment { get; set; }
         public BankTransaction BankTransaction { get; set; }
+        public AppBankAccount AppBankAccount { get; set; }
+        
+        
     }
 }
