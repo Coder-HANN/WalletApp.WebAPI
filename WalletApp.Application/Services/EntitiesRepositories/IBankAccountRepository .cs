@@ -6,5 +6,6 @@ namespace WalletApp.Application.Services.EntitiesRepositories
     public interface IBankAccountRepository : IEntityRepository<AppBankAccount>
     {
         Task AddAsync(AppBankAccount entity);
+       
     }
 }

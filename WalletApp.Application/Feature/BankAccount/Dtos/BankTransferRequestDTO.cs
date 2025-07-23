@@ -14,6 +14,7 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
         public int Iban { get; set; }
         public decimal Amount { get; set; }
         public string? Description { get; set; }
+
     }
 
 }

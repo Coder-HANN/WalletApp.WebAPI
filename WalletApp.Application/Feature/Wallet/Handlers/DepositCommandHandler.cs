@@ -41,6 +41,9 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
         if (wallet.AppUserId != request.RequestedBy)
             return ServiceResponse<TransactionResponseDTO>.Fail("You do not own this wallet.");
 
+        wallet.TotalBalance += request.Amount;
+        await _walletRepository.UpdateAsync(wallet);
+
         // İşlem
         var transaction = new Transaction
         {

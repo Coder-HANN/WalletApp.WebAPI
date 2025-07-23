@@ -32,9 +32,11 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 Balance = request.Balance,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
+
             };
 
             await _bankAccountRepository.AddAsync(entity);
+            await _bankAccountRepository.SaveChangesAsync();
 
             var dto = new BankAccountRequestDTO
             {
@@ -44,7 +46,9 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 AccountType = entity.AccountType,
                 Balance = entity.Balance,
                 CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                UpdatedDate = DateTime.UtcNow,
+                AppUserId = entity.AppUserId,
+                WalletId= entity.WalletId
             };
 
             return ServiceResponse<BankAccountRequestDTO>.Ok(dto, "Banka hesabı başarıyla eklendi.");

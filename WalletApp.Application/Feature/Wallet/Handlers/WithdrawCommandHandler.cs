@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Diagnostics;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Enums;
 
 
@@ -26,6 +27,8 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawRequestDTO, Servic
         {
             return ServiceResponse<IList<TransactionResponseDTO>>.Fail("User ID not found in request context.");
         }
+        
+
         var transaction = await _walletService.ProcessWalletTransactionAsync(
             request.WalletId,
             new TransferRequestDTO
