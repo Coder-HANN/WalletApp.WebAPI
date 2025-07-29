@@ -47,7 +47,7 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
             return ServiceResponse<TransactionResponseDTO>.Fail("You do not own this wallet.");
 
         // 5. Cüzdan bakiyesine yatırılacak miktarı ekle
-        wallet.TotalBalance += request.Amount;
+        wallet.TotalBalance += (decimal)request.Amount;
 
         // 6. Güncellenen cüzdan bilgilerini kaydet
         await _walletRepository.UpdateAsync(wallet);
@@ -56,7 +56,7 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
         var transaction = new Transaction
         {
             WalletId = request.WalletId,
-            Amount = request.Amount,
+            Amount = (decimal)request.Amount,
             Type = TransactionType.Deposit,
             Description = request.Description ?? "Deposit"
         };

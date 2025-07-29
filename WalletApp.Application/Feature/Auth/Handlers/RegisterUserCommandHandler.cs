@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
+using WalletApp.Application.Feature.User.Dtos;
+using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
-using WalletApp.Application.Feature.Wallet.Dtos;
-using WalletApp.Application.Feature.User.Dtos;
 
 
 namespace WalletApp.Application.Feature.Auth.Handlers
