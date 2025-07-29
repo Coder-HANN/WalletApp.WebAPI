@@ -12,7 +12,6 @@ namespace WalletApp.Application.Feature.Wallet.Dtos
         public TransactionType Type { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedDate { get; set; }
-
-        
+        public string? Suggestion { get; set; }
     }
 }

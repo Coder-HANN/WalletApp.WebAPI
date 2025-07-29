@@ -16,7 +16,7 @@ namespace WalletApp.Application.Feature.Auth.Handlers
         private readonly IUserRepository _userRepository;
         private readonly WalletService _walletService;
         
-        public RegisterUserCommandHandler(
+        public RegisterUserCommandHandler(  
             IWalletRepository walletRepository,
             IPasswordHasher<AppUser> passwordHasher,
             IUserRepository userRepository,

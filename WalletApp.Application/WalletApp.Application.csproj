@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Feature\Auth\Dtos\**" />
+    <Compile Remove="Feature\Auth\Queries\**" />
+    <EmbeddedResource Remove="Feature\Auth\Dtos\**" />
+    <EmbeddedResource Remove="Feature\Auth\Queries\**" />
+    <None Remove="Feature\Auth\Dtos\**" />
+    <None Remove="Feature\Auth\Queries\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="MediatR" Version="12.0.1" />
@@ -19,11 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WalletApp.Domain\WalletApp.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Feature\Auth\Dtos\" />
-    <Folder Include="Feature\Auth\Queries\" />
   </ItemGroup>
 
 </Project>

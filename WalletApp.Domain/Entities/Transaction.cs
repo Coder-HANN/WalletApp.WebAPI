@@ -14,7 +14,7 @@ namespace WalletApp.Domain.Entities
         public string? Description { get; set; }
         public AppWallet? Wallet { get; set; }
         public ICollection<WalletTransfer> WalletTransfers { get; set; }
-        public Payment Payment { get; set; }
+        public AppPayment AppPayment { get; set; }
         public BankTransaction BankTransaction { get; set; }
 
         [ForeignKey("AppBankAccountId")]
