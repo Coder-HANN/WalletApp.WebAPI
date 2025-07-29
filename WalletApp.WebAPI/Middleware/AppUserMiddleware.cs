@@ -24,10 +24,7 @@ namespace WalletApp.WebAPI.Middleware
                 }
 
                 var claim = context.User.Claims.FirstOrDefault(c =>
-                    c.Type.Equals("userId", StringComparison.OrdinalIgnoreCase)
-                    || c.Type.Equals("AppUserId", StringComparison.OrdinalIgnoreCase)
-                    || c.Type.Equals(ClaimTypes.NameIdentifier, StringComparison.OrdinalIgnoreCase)
-                    || c.Type.Equals("sub", StringComparison.OrdinalIgnoreCase));
+                c.Type.Equals("AppUserId", StringComparison.OrdinalIgnoreCase));
 
                 if (claim != null)
                 {
@@ -38,7 +35,7 @@ namespace WalletApp.WebAPI.Middleware
                 {
                     Console.WriteLine("🟠 AppUserId claim bulunamadı veya geçersiz.");
                 }
-   
+
             }
             else
             {

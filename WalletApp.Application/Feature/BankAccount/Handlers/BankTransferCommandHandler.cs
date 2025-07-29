@@ -1,86 +1,94 @@
 ﻿using MediatR;
 using WalletApp.Application.Feature.BankAccount.Commands;
-using WalletApp.Application.Feature.BankAccount.Handlers;
+using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
-using WalletApp.Application.Feature.Wallet.Dtos;
-using Microsoft.AspNetCore.Http;
 
-
-namespace WalletApp.Application.Feature.BankAccount.Handlers
+public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO, ServiceResponse<TransactionResponseDTO>>
 {
-    public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO, ServiceResponse<TransactionResponseDTO>>
+    private readonly IBankTransactionRepository _bankTransactionRepository;
+    private readonly ITransactionRepository _transactionRepository;
+    private readonly IProviderBankRepository _providerBankRepository;
+    private readonly IBankAccountRepository _bankAccountRepository;
+
+    public BankTransferCommandHandler(
+        IBankTransactionRepository bankTransactionRepository,
+        ITransactionRepository transactionRepository,
+        IProviderBankRepository providerBankRepository,
+        IBankAccountRepository bankAccountRepository)
     {
-        private readonly IWalletRepository _walletRepository;
-        private readonly ITransactionRepository _TransactionRepository;
-        private readonly IBankTransactionRepository _bankTransactionRepository;
-        private readonly IProviderBankRepository _providerBankRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        _bankTransactionRepository = bankTransactionRepository;
+        _transactionRepository = transactionRepository;
+        _providerBankRepository = providerBankRepository;
+        _bankAccountRepository = bankAccountRepository;
+    }
 
-        public BankTransferCommandHandler(
-            IWalletRepository walletRepository,
-            ITransactionRepository TransactionRepository,
-            IBankTransactionRepository bankTransactionRepository,
-            IProviderBankRepository providerBankRepository,
-            IHttpContextAccessor httpContextAccessor)
+    public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferRequestDTO dto, CancellationToken cancellationToken)
+    {
+        // Source bank hesabını al
+        var sourceBank = await _bankAccountRepository.GetByIdAsync(dto.SourceBankId);
+        if (sourceBank == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Gönderici banka hesabı bulunamadı.");
+
+        // Yetersiz bakiye kontrolü
+        if (sourceBank.Balance < dto.Amount)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Yetersiz bakiye");
+
+        // Target bank hesabını al
+        var targetBank = await _bankAccountRepository.GetByIdAsync(dto.TargetBankId);
+        if (targetBank == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Alıcı banka hesabı bulunamadı.");
+
+        // BankName kontrolü ve provider bankayı al veya oluştur
+        if (string.IsNullOrWhiteSpace(dto.BankName))
+            return ServiceResponse<TransactionResponseDTO>.Fail("BankName alanı zorunludur.");
+
+        var providerBank = await _providerBankRepository.GetAsync(p => p.BankName == dto.BankName);
+        if (providerBank == null)
         {
-            _walletRepository = walletRepository;
-            _TransactionRepository = TransactionRepository;
-            _bankTransactionRepository = bankTransactionRepository;
-            _providerBankRepository = providerBankRepository;
-            _httpContextAccessor = httpContextAccessor;
+            providerBank = new ProviderBank { BankName = dto.BankName };
+            await _providerBankRepository.AddAsync(providerBank);
+            await _providerBankRepository.SaveChangesAsync();
         }
 
-        public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferRequestDTO request, CancellationToken cancellationToken)
+        // Bakiye güncelle
+        sourceBank.Balance -= dto.Amount;
+        targetBank.Balance += dto.Amount;
+
+        await _bankAccountRepository.UpdateAsync(sourceBank);
+        await _bankAccountRepository.UpdateAsync(targetBank);
+
+        // Transaction oluştur
+        var transaction = new Transaction
         {
-            
-            var dto = request;
+            Amount = dto.Amount,
+            Type = TransactionType.BankTransfer,
+            Currency = 0,
+            Description = dto.Description ?? $"Banka transferi - {dto.Iban}"
+        };
+        await _transactionRepository.AddAsync(transaction);
 
-            var wallet = await _walletRepository.GetAsync(w => w.Id == dto.WalletId);
-            if (wallet == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bulunamadı");
+        // BankTransaction oluştur
+        var bankTransaction = new BankTransaction
+        {
+            TransactionId = transaction.Id,
+            ProviderBankId = providerBank.Id,
+            Iban = dto.Iban,
+            TargetBankId = dto.TargetBankId,
+            SourceBankId = sourceBank.ProviderBankId, // ✅
+            Commission = "0"
+        };
+        await _bankTransactionRepository.AddAsync(bankTransaction);
 
-            if (wallet.TotalBalance < dto.Amount)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Yetersiz bakiye");
+        // Dönüş DTO
+        var responseDto = new TransactionResponseDTO
+        { 
+            Amount = transaction.Amount,
+            Type = transaction.Type,
+            Description = transaction.Description
+        };
 
-            var providerBank = await _providerBankRepository.GetAsync(p => p.Id == dto.ProviderBankId);
-            if (providerBank == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Sağlayıcı banka bulunamadı");
-
-            wallet.TotalBalance -= dto.Amount;
-            await _walletRepository.UpdateAsync(wallet);
-
-            var transaction = new Transaction
-            {
-                WalletId = wallet.Id,
-                Amount = dto.Amount,
-                Type = TransactionType.BankTransfer,
-                Currency = 0,
-                Description = dto.Description ?? $"Banka transferi - {dto.Iban}"
-            };
-            await _TransactionRepository.AddAsync(transaction);
-
-            var bankTransaction = new BankTransaction
-            {
-                TransactionId = transaction.Id,
-                ProviderBankId = providerBank.Id,
-                Iban = dto.Iban,
-                TargetBankId = dto.TargetBankId,
-                SourceBankId = dto.SourceBankId,
-                Commission = "0"
-            };
-            await _bankTransactionRepository.AddAsync(bankTransaction);
-
-            var responseDto = new TransactionResponseDTO
-            {
-                WalletId = transaction.WalletId,
-                Amount = transaction.Amount,
-                Type = transaction.Type,
-                Description = transaction.Description
-            };
-
-            return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Banka transferi başarılı.");
-        }
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Banka transferi başarılı.");
     }
 }

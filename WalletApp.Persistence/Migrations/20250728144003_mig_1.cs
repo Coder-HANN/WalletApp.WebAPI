@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WalletApp.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class mig_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,14 +50,20 @@ namespace WalletApp.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BankaHesaps",
+                name: "BankAccounts",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AppUserId = table.Column<int>(type: "int", nullable: false),
                     WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Bilgiler = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ProviderBankId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Iban = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
@@ -66,9 +72,15 @@ namespace WalletApp.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BankaHesaps", x => x.Id);
+                    table.PrimaryKey("PK_BankAccounts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BankaHesaps_Users_AppUserId",
+                        name: "FK_BankAccounts_ProviderBank_ProviderBankId",
+                        column: x => x.ProviderBankId,
+                        principalTable: "ProviderBank",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BankAccounts_Users_AppUserId",
                         column: x => x.AppUserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -110,6 +122,7 @@ namespace WalletApp.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AppUserId = table.Column<int>(type: "int", nullable: false),
+                    SourceWalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TotalBalance = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Assest = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -137,6 +150,7 @@ namespace WalletApp.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AppBankAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Currency = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
@@ -152,6 +166,12 @@ namespace WalletApp.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Transactions_BankAccounts_AppBankAccountId",
+                        column: x => x.AppBankAccountId,
+                        principalTable: "BankAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Transactions_Wallets_WalletId",
                         column: x => x.WalletId,
                         principalTable: "Wallets",
@@ -166,7 +186,7 @@ namespace WalletApp.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TransactionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProviderBankId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Iban = table.Column<int>(type: "int", maxLength: 50, nullable: false),
+                    Iban = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TargetBankId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SourceBankId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Commission = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -254,9 +274,14 @@ namespace WalletApp.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BankaHesaps_AppUserId",
-                table: "BankaHesaps",
+                name: "IX_BankAccounts_AppUserId",
+                table: "BankAccounts",
                 column: "AppUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankAccounts_ProviderBankId",
+                table: "BankAccounts",
+                column: "ProviderBankId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BankTransactions_SourceBankId",
@@ -274,6 +299,11 @@ namespace WalletApp.Persistence.Migrations
                 table: "Payments",
                 column: "TransactionId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_AppBankAccountId",
+                table: "Transactions",
+                column: "AppBankAccountId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_WalletId",
@@ -306,9 +336,6 @@ namespace WalletApp.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BankaHesaps");
-
-            migrationBuilder.DropTable(
                 name: "BankTransactions");
 
             migrationBuilder.DropTable(
@@ -321,13 +348,16 @@ namespace WalletApp.Persistence.Migrations
                 name: "WalletTransfers");
 
             migrationBuilder.DropTable(
-                name: "ProviderBank");
-
-            migrationBuilder.DropTable(
                 name: "Transactions");
 
             migrationBuilder.DropTable(
+                name: "BankAccounts");
+
+            migrationBuilder.DropTable(
                 name: "Wallets");
+
+            migrationBuilder.DropTable(
+                name: "ProviderBank");
 
             migrationBuilder.DropTable(
                 name: "Users");

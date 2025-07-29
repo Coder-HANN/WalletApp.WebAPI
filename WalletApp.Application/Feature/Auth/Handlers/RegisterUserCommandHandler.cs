@@ -50,7 +50,9 @@ namespace WalletApp.Application.Feature.Auth.Handlers
             try
             {
                 _userRepository.Add(user);
-               
+
+                await _userRepository.SaveChangesAsync();
+
                 await _walletService.CreateWalletAsync(user.Id, "TL", CancellationToken.None);
             }
             catch (Exception ex)

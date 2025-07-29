@@ -23,7 +23,6 @@ using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Repositories;
 using WalletApp.WebAPI.Middleware;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // -----------------------------
@@ -34,26 +33,43 @@ builder.Services.AddScoped<WalletService>();
 
 // Scoped olarak repository'leri ekle
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
-builder.Services.AddScoped<WalletService>();
 builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
-
-
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Generic repository
 builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
 
-// DbContext
+// DbContext (sadece bir kere eklenmeli)
 builder.Services.AddDbContext<WalletDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure()
+    ));
 
-// MediatR
+
+// MediatR: sadece bir kez, tüm handler assembly'leri ekleniyor
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(
         typeof(RegisterUserCommandHandler).Assembly,
-        typeof(RegisterRequestDTO).Assembly,
-        typeof(BankTransferRequestDTO).Assembly
+        typeof(BankTransferCommandHandler).Assembly
     ));
+
+// Diğer repository'ler
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
+builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
+builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
+builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
+
+// Fluent Validation
+builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
+
+// Pipeline Behavior (Validation)
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+// HTTP Context Accessor
+builder.Services.AddHttpContextAccessor();
+
 // -----------------------------
 // JWT Authentication
 // -----------------------------
@@ -80,32 +96,15 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
-builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
-
-builder.Services.AddDbContext<WalletDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
-builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(BankTransferCommandHandler).Assembly));
-builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddControllers().AddJsonOptions(x =>
-{
-    x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-});
-
- builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
-
 
 // -----------------------------
 // Controllers & Swagger
 // -----------------------------
-builder.Services.AddControllers();
-
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -114,10 +113,9 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Wallet API",
         Version = "v1",
-        Description = "Sigorta Stajı İçin Wallet API Projesi"
+        Description = "Staj İçin Wallet API Projesi"
     });
 
-    // ➕ Swagger'a JWT için Authorization header ekle
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -140,7 +138,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
 // -----------------------------
 // App Pipeline
 // -----------------------------
@@ -154,14 +151,13 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Wallet API v1");
     });
 }
+
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseHttpsRedirection();
-
 
 app.UseAuthentication();
 app.UseMiddleware<AppUserMiddleware>(); // 🧠 Burada devreye giriyor!
 app.UseAuthorization();
-
 
 app.MapControllers();
 

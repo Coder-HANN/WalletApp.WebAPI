@@ -12,8 +12,8 @@ using WalletApp.Persistence;
 namespace WalletApp.Persistence.Migrations
 {
     [DbContext(typeof(WalletDbContext))]
-    [Migration("20250723143245_AddAppBankAccountIdToTransaction")]
-    partial class AddAppBankAccountIdToTransaction
+    [Migration("20250729083002_MakeWalletIdNullableInTransaction")]
+    partial class MakeWalletIdNullableInTransaction
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -73,6 +73,9 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("ProviderBankId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
@@ -82,6 +85,8 @@ namespace WalletApp.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AppUserId");
+
+                    b.HasIndex("ProviderBankId");
 
                     b.ToTable("BankAccounts");
                 });
@@ -201,9 +206,10 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Iban")
+                    b.Property<string>("Iban")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit");
@@ -324,7 +330,7 @@ namespace WalletApp.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("AppBankAccountId")
+                    b.Property<Guid?>("AppBankAccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("Created")
@@ -358,7 +364,7 @@ namespace WalletApp.Persistence.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("WalletId")
+                    b.Property<Guid?>("WalletId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -487,6 +493,14 @@ namespace WalletApp.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("WalletApp.Domain.Entities.ProviderBank", "ProviderBank")
+                        .WithMany()
+                        .HasForeignKey("ProviderBankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProviderBank");
+
                     b.Navigation("User");
                 });
 
@@ -534,16 +548,14 @@ namespace WalletApp.Persistence.Migrations
             modelBuilder.Entity("WalletApp.Domain.Entities.Transaction", b =>
                 {
                     b.HasOne("WalletApp.Domain.Entities.AppBankAccount", "AppBankAccount")
-                        .WithMany()
+                        .WithMany("Transactions")
                         .HasForeignKey("AppBankAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("WalletApp.Domain.Entities.AppWallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AppBankAccount");
 
@@ -578,6 +590,11 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Transaction");
 
                     b.Navigation("Wallet");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("WalletApp.Domain.Entities.AppUser", b =>
