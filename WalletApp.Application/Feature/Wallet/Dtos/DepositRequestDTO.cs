@@ -2,8 +2,17 @@
 
 namespace WalletApp.Application.Feature.Wallet.Dtos
 {
-    public record DepositRequestDTO(Guid WalletId, int AppUserId, decimal? Amount, string? Description) : IRequest<ServiceResponse<TransactionResponseDTO>>
+    public record DepositRequestDTO : IRequest<ServiceResponse<TransactionResponseDTO>>
     {
+      public Guid WalletId { get; set; }
+        public Guid SourceBankId { get; set; } 
+        public int AppUserId { get; set; }
+        public decimal Amount { get; set; }
+        public string? Description {  get; set; }
+        
        
     }
 }
+
+// para yatırma banka hesabından olmalı 
+// kart seç hangi cüzdaan tutar olmalı para yatırma için 

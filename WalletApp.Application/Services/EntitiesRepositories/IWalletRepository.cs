@@ -10,6 +10,7 @@ namespace WalletApp.Application.Services.EntitiesRepositories
         Task<AppWallet> AddAsync(AppWallet wallet);
         Task<AppWallet> DeleteAsync(AppWallet wallet);
         Task<IEnumerable<AppWallet>> GetAllByAppUserIdAsync(int AppUserId);
+        Task <int>SaveChangesAsync();
         Task<AppWallet> UpdateAsync(AppWallet wallet);
     }
 }

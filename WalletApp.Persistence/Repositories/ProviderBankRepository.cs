@@ -7,6 +7,11 @@ namespace WalletApp.Persistence.Repositories
     public class ProviderBankRepository : EfEntityRepositoryBase<ProviderBank>, IProviderBankRepository
     {
         public ProviderBankRepository(WalletDbContext context) : base(context) { }
+
+        Task IProviderBankRepository.SaveChangesAsync()
+        {
+            return SaveChangesAsync();
+        }
     }
 }
 

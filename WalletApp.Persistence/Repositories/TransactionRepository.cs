@@ -11,5 +11,15 @@ namespace WalletApp.Persistence.Base
         public TransactionRepository(WalletDbContext context) : base(context)
         {
         }
+
+        public Task SaveChangesAsync(Transaction transaction)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task ITransactionRepository.SaveChangesAsync()
+        {
+            return SaveChangesAsync();
+        }
     }
 }

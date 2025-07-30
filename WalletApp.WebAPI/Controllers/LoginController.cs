@@ -10,7 +10,7 @@ public class LoginController : ControllerBase
     private readonly IMediator _mediator;
     public LoginController(IMediator mediator) => _mediator = mediator;
 
-    [HttpPost("login")]
+    [HttpPost("Login")]
     public async Task<ServiceResponse<LoginUserResponseDTO>> Login([FromBody] LoginUserRequestDTO command)
     {
         return await _mediator.Send(command);

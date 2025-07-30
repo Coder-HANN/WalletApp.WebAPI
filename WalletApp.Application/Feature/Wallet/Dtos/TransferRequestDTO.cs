@@ -12,5 +12,5 @@ namespace WalletApp.Application.Feature.Wallet.Dtos
         public string Description { get; set; }
         public TransactionType Type { get; set; } 
         
-    }
-}
+    }   
+}       

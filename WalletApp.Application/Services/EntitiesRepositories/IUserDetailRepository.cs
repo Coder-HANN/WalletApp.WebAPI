@@ -7,6 +7,6 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface IUserDetailRepository : IEntityRepository<UserDetail>
     {
- 
+        Task SaveChangesAsync();
     }
 }

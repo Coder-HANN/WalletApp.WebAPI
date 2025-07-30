@@ -12,7 +12,7 @@ public class BankController : ControllerBase
     private readonly IMediator _mediator;
     public BankController(IMediator mediator) => _mediator = mediator;
 
-    [HttpPost("transfer")]
+    [HttpPost("Transfer")]
     public async Task<ServiceResponse<TransactionResponseDTO>> BankTransfer([FromBody] BankTransferRequestDTO command)
     {
         return await _mediator.Send(command);

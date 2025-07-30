@@ -7,7 +7,6 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface IProviderBankRepository : IEntityRepository<ProviderBank>
     {
-
- 
+        Task SaveChangesAsync();
     }
 }

@@ -12,5 +12,10 @@ namespace WalletApp.Persistence.Repositories
         {
 
         }
+
+        Task IUserDetailRepository.SaveChangesAsync()
+        {
+            return SaveChangesAsync();
+        }
     }
 }

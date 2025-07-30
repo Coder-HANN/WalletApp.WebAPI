@@ -7,6 +7,7 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface ITransactionRepository : IEntityRepository<Transaction>
     {
- 
+        Task SaveChangesAsync(Transaction transaction);
+        Task SaveChangesAsync();
     }
 }

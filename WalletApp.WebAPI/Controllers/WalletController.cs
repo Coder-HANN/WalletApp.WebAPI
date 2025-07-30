@@ -13,38 +13,38 @@ public class WalletController : ControllerBase
     public WalletController(IMediator mediator) => _mediator = mediator;
 
 
-    [HttpPost("create")]
+    [HttpPost("Create")]
     public async Task<ServiceResponse<AppWalletResponseDTO>> CreateWallet([FromBody] AppWalletRequestDTO command)
     {
         return await _mediator.Send(command);
          
     }
 
-    [HttpPost("deposit")]
+    [HttpPost("Deposit")]
     public async Task<ServiceResponse<TransactionResponseDTO>> Deposit([FromBody] DepositRequestDTO command)
     {
         return await _mediator.Send(command);
     }
 
-    [HttpPost("withdraw")]
+    [HttpPost("Withdraw")]
     public async Task<ServiceResponse<TransactionResponseDTO>> Withdraw([FromBody] WithdrawRequestDTO command)
     {
         return await _mediator.Send(command);
     }
 
-    [HttpPost("transfer")]
+    [HttpPost("Transfer")]
     public async Task<ServiceResponse<TransactionResponseDTO>> Transfer([FromBody] TransferRequestDTO command)
     {
         return await _mediator.Send(command);
     }
 
-    [HttpPost("all")]
+    [HttpPost("All")]
     public async Task<ServiceResponse<IEnumerable<AppWalletResponseDTO>>> GetUserWallets([FromBody] GetUserWalletsQueryRequestDTO query)
     {
         return await _mediator.Send(query);
     }
 
-    [HttpPost("{walletId:guid}/history")]
+    [HttpPost("{walletId:guid}/History")]
     public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> GetHistory([FromQuery] GetUserWalletsHistoryQueryRequestDTO query)
     {
         return await _mediator.Send(query);

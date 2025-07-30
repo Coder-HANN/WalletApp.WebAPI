@@ -55,6 +55,8 @@ builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
 builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 
 // Fluent Validation
 builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();

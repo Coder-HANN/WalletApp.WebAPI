@@ -14,7 +14,7 @@ namespace WalletApp.Persistence
         public DbSet<AppBankAccount> BankAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WalletTransfer> WalletTransfers { get; set; }
-        public DbSet<Payment> Payments { get; set; }
+        public DbSet<AppPayment> Payments { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         
 
@@ -107,15 +107,16 @@ namespace WalletApp.Persistence
                    .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<Payment>(builder =>
+            modelBuilder.Entity<AppPayment>(builder =>
             {
                 builder.HasKey(p => p.Id);
                 builder.Property(p => p.Institution).IsRequired();
-              
+                builder.Property(p => p.Amount).HasPrecision(18, 2);
+
                 builder
                     .HasOne(p => p.Transaction)
-                    .WithOne(t => t.Payment)  
-                    .HasForeignKey<Payment>(p => p.TransactionId)
+                    .WithOne(t => t.AppPayment)  
+                    .HasForeignKey<AppPayment>(p => p.TransactionId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

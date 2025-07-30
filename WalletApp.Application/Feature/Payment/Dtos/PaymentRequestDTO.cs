@@ -7,9 +7,19 @@ namespace WalletApp.Application.Feature.Payment.DTO
     {
         public Guid AppWalletId { get; set; }
         public string Institution { get; set; }
-        public string Amount { get; set; }
+        public decimal Amount { get; set; }
         public DateTime PaymentDate { get; set; }
+        public string? Description { get; set; }
+
+        public PaymentRequestDTO(Guid appWalletId, string institution, decimal amount, DateTime paymentDate)
+        {
+            AppWalletId = appWalletId;
+            Institution = institution;
+            Amount = amount;
+            PaymentDate = paymentDate;
+        }
+        public PaymentRequestDTO()
+        {
+        }
     }
-    
-        
 }

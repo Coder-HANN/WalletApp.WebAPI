@@ -13,7 +13,7 @@ public class BankAccountController : ControllerBase
     public BankAccountController(IMediator mediator) => _mediator = mediator;
 
 
-    [HttpPost("add")]
+    [HttpPost("Add")]
     public async Task<ServiceResponse<BankAccountRequestDTO>> AddBankAccount([FromBody] BankAccountRequestDTO command)
     {
         return await _mediator.Send(command);

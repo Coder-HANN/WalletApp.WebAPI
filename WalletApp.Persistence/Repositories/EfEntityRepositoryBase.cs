@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using WalletApp.Application.Services.Repositories;
+using WalletApp.Domain.Entities;
 
 
 namespace WalletApp.Persistence.Base
@@ -99,5 +100,6 @@ namespace WalletApp.Persistence.Base
         {
             return _context.SaveChangesAsync();
         }
+
     }
 }

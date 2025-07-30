@@ -13,7 +13,7 @@ namespace WalletApp.WebAPI.Controllers
             _mediator = mediator;
         } 
 
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDTO command)
         {
             return Ok(await _mediator.Send(command));

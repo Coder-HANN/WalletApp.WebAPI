@@ -10,68 +10,99 @@ namespace WalletApp.Application.Feature.Wallet.Handlers;
 public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceResponse<TransactionResponseDTO>>
 {
     private readonly IWalletRepository _walletRepository;
+    private readonly IBankAccountRepository _bankAccountRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    // Constructor - bağımlılıkları alır (Repository ve HttpContext erişimi)
-    public DepositCommandHandler(IWalletRepository walletRepository, ITransactionRepository transactionRepository, IHttpContextAccessor httpContextAccessor)
+    public DepositCommandHandler(
+        IWalletRepository walletRepository,
+        IBankAccountRepository bankAccountRepository,
+        ITransactionRepository transactionRepository,
+        IBankTransactionRepository bankTransactionRepository,
+        IHttpContextAccessor httpContextAccessor)
     {
         _walletRepository = walletRepository;
+        _bankAccountRepository = bankAccountRepository;
         _transactionRepository = transactionRepository;
+        _bankTransactionRepository = bankTransactionRepository;
         _httpContextAccessor = httpContextAccessor;
     }
 
-    // Handle metodu: Deposit isteği geldiğinde çalışır
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(DepositRequestDTO request, CancellationToken cancellationToken)
     {
-        // 1. Kullanıcı ID'sini (AppUserId) HttpContext.Items'dan alıyoruz
-        //    Eğer yoksa veya parse edilemiyorsa, hata dönüyoruz
-        var httpContext = _httpContextAccessor.HttpContext!;
+        // Kullanıcı doğrulaması
         if (!(_httpContextAccessor.HttpContext?.Items.TryGetValue("AppUserId", out var userIdObj) == true
             && int.TryParse(userIdObj?.ToString(), out var appUserId)))
         {
             return ServiceResponse<TransactionResponseDTO>.Fail("User ID not found in request context.");
         }
 
-        // 2. Gönderilen miktar 0 veya negatif ise hata dön
+        // Banka hesabı kontrolü
+        var bankAccount = await _bankAccountRepository.GetByIdAsync(request.SourceBankId);
+
+        if (bankAccount == null || bankAccount.AppUserId != appUserId)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Invalid bank account.");
+
+        // Tutar kontrolü
         if (request.Amount <= 0)
             return ServiceResponse<TransactionResponseDTO>.Fail("Amount must be greater than zero.");
 
-        // 3. İlgili cüzdanı (wallet) veritabanından getir
+        if (bankAccount.Balance < request.Amount)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Insufficient bank account balance.");
+
+        // Cüzdan kontrolü
         var wallet = await _walletRepository.GetByIdAsync(request.WalletId);
-        if (wallet == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Wallet not found.");
 
-        // 4. Cüzdanın sahibi API çağıran kullanıcı mı kontrol et
-        if (wallet.AppUserId != appUserId)
-            return ServiceResponse<TransactionResponseDTO>.Fail("You do not own this wallet.");
+        if (wallet == null || wallet.AppUserId != appUserId)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Wallet not found or not owned by user.");
 
-        // 5. Cüzdan bakiyesine yatırılacak miktarı ekle
-        wallet.TotalBalance += (decimal)request.Amount;
+        // Banka hesabından para düşülür
+        bankAccount.Balance -= request.Amount;
 
-        // 6. Güncellenen cüzdan bilgilerini kaydet
+        // Cüzdana para eklenir
+        wallet.TotalBalance += request.Amount;
+
+        // Veritabanı güncellemeleri
+        await _bankAccountRepository.UpdateAsync(bankAccount);
         await _walletRepository.UpdateAsync(wallet);
 
-        // 7. Yeni bir işlem (transaction) oluştur ve kaydet
+        // Transaction nesnesi oluşturulur ve eklenir
         var transaction = new Transaction
         {
-            WalletId = request.WalletId,
-            Amount = (decimal)request.Amount,
+            WalletId = wallet.Id,
+            Amount = request.Amount,
             Type = TransactionType.Deposit,
-            Description = request.Description ?? "Deposit"
+            Description = request.Description ?? "Deposit from bank account",
+            CreatedDate = DateTime.UtcNow // Eğer otomatik atanıyorsa bu satır opsiyonel
         };
         await _transactionRepository.AddAsync(transaction);
 
-        // 8. Yanıt için DTO oluştur
-        var dto = new TransactionResponseDTO
+        // BankTransaction nesnesi oluşturulur ve TransactionId bağlanır
+        var bankTransaction = new BankTransaction
         {
-            WalletId = transaction.WalletId,
-            Amount = transaction.Amount,
-            Type = transaction.Type,
-            Description = transaction.Description
+            TransactionId = transaction.Id,
+            ProviderBankId = bankAccount.ProviderBankId, // Banka sağlayıcı ID
+            Iban = bankAccount.Iban,
+            SourceBankId = bankAccount.Id,
+            TargetBankId = Guid.Empty, // Cüzdan olduğu için boş bırakabilir veya nullable yapabilirsin
+            Commission = "0", // Komisyon varsa ayarla, yoksa sıfır olarak bırak
+            Transaction = transaction
+        };
+        await _bankTransactionRepository.AddAsync(bankTransaction);
+
+        // DTO'yu oluştur
+        var responseDto = new TransactionResponseDTO
+        {
+            Id = transaction.Id,
+            WalletId = wallet.Id,
+            Amount = request.Amount,
+            Type = TransactionType.Deposit,
+            Description = transaction.Description,
+            CreatedDate = transaction.CreatedDate,
+            Suggestion = "Deposit completed successfully"
         };
 
-        // 9. Başarılı işlem sonucu dön
-        return ServiceResponse<TransactionResponseDTO>.Ok(dto, "Deposit successful.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Deposit successful.");
     }
 }

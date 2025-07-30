@@ -10,6 +10,11 @@ namespace WalletApp.Persistence.Repositories
         {
         }
 
+        public Task GetListAsync(Func<object, bool> value)
+        {
+            throw new NotImplementedException();
+        }
+
         Task IBankAccountRepository.AddAsync(AppBankAccount entity)
         {
             return AddAsync(entity);

@@ -14,3 +14,4 @@ namespace WalletApp.Application.Feature.Wallet.Dtos
         
     }
 }
+// cüzdan seç, kart seç tutar , açıklama 
