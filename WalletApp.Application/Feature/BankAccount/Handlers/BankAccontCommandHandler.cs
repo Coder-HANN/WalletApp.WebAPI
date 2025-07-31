@@ -50,7 +50,8 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 BankName = request.BankName,
                 AccountType = request.AccountType,
                 Balance = request.Balance,
-                ProviderBankId = providerBank.Id, // ❗ Buraya dikkat!
+                ProviderBankId = providerBank.Id, 
+                BankCode = request.Iban.Substring(4,5),
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
