@@ -11,7 +11,7 @@ namespace WalletApp.Application.Feature.Payment.Handler
         private readonly IPaymentRepository _paymentRepository;
         private readonly IWalletRepository _walletRepository;
         private readonly ITransactionRepository _transactionRepository;
-
+        
         public PaymentCommandHandler(
             IPaymentRepository paymentRepository,
             IWalletRepository walletRepository,
@@ -25,6 +25,7 @@ namespace WalletApp.Application.Feature.Payment.Handler
 
         public async Task<ServiceResponse<PaymentResponseDTO>> Handle(PaymentRequestDTO request, CancellationToken cancellationToken)
         {
+
             // ➤ Kontrol: Institution boş mu?
             if (string.IsNullOrWhiteSpace(request.Institution))
                 return ServiceResponse<PaymentResponseDTO>.Fail("Kuruluş adı boş olamaz.");

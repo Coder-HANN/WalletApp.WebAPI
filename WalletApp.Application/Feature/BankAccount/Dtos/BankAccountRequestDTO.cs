@@ -13,8 +13,9 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
         public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; } 
-        public int AppUserId { get; set; }
+        
         public Guid WalletId { get; set; }
+        public int AppUserId { get; set; }
 
         public BankAccountRequestDTO() { }
 

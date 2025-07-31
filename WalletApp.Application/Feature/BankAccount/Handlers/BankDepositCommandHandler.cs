@@ -16,21 +16,28 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
         private readonly IBankTransactionRepository _bankTransactionRepository;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUserService;
 
         public BankDepositCommandHandler(
             IBankTransactionRepository bankTransactionRepository,
             IBankAccountRepository bankAccountRepository,
             ITransactionRepository transactionRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUserService)
         {
             _bankTransactionRepository = bankTransactionRepository;
             _bankAccountRepository = bankAccountRepository;
             _transactionRepository = transactionRepository;
             _httpContextAccessor = httpContextAccessor;
+            _currentUserService = currentUserService;
         }
 
         public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankDepositRequestDTO request, CancellationToken cancellationToken)
         {
+            var currentUserId = _currentUserService.CurrentUser();
+            if (currentUserId == null)
+                return ServiceResponse<TransactionResponseDTO>.Fail("User not authenticated.");
+
             // Dış kaynak bankasının Id'si 
             Guid SourceBankId = new Guid("00000000-0000-0000-0000-000000000001"); // dışarıdan para gelince bu değeri veriyoruz
 

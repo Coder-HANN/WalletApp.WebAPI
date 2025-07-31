@@ -12,19 +12,27 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
         private readonly IBankAccountRepository _bankAccountRepository;
         private readonly IProviderBankRepository _providerBankRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly ICurrentUserService _currentUser;
         public BankAccountCommandHandler(
             IBankAccountRepository bankAccountRepository,
             IProviderBankRepository providerBankRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser)
+
         {
             _bankAccountRepository = bankAccountRepository;
             _providerBankRepository = providerBankRepository;
             _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
+
         }
 
         public async Task<ServiceResponse<BankAccountRequestDTO>> Handle(BankAccountRequestDTO request, CancellationToken cancellationToken)
         {
+            
+            var currentUserId = _currentUser.CurrentUser();
+            if (currentUserId == null)
+                return ServiceResponse<BankAccountRequestDTO>.Fail("Kullanıcı doğrulanamadı.");
             // BankName'e göre ProviderBank var mı kontrol et
             var providerBank = await _providerBankRepository.GetAsync(p => p.BankName == request.BankName);
 
@@ -43,7 +51,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             var entity = new AppBankAccount
             {
-                AppUserId = (int)request.AppUserId,
+                AppUserId = _currentUser.CurrentUser(),
                 WalletId = request.WalletId,
                 AccountName = request.AccountName,
                 Iban = request.Iban,
