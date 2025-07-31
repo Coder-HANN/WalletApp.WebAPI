@@ -7,40 +7,60 @@ using WalletApp.Domain.Enums;
 
 public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO, ServiceResponse<TransactionResponseDTO>>
 {
-    private readonly IBankTransactionRepository _bankTransactionRepository;
+    private const string VakifBankCode = "0015";
+    private const string ZiraatBankCode = "0010";
+    private const string GarantiBankCode = "0020";
+
+    private readonly IBankAccountRepository _bankAccountRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IProviderBankRepository _providerBankRepository;
-    private readonly IBankAccountRepository _bankAccountRepository;
+    private readonly IBankTransactionRepository _bankTransactionRepository;
+    private readonly ICurrentUserService _currentUser;
 
     public BankTransferCommandHandler(
-        IBankTransactionRepository bankTransactionRepository,
+        IBankAccountRepository bankAccountRepository,
         ITransactionRepository transactionRepository,
         IProviderBankRepository providerBankRepository,
-        IBankAccountRepository bankAccountRepository)
+        IBankTransactionRepository bankTransactionRepository,
+        ICurrentUserService currentUser)
     {
-        _bankTransactionRepository = bankTransactionRepository;
+        _bankAccountRepository = bankAccountRepository;
         _transactionRepository = transactionRepository;
         _providerBankRepository = providerBankRepository;
-        _bankAccountRepository = bankAccountRepository;
+        _bankTransactionRepository = bankTransactionRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferRequestDTO dto, CancellationToken cancellationToken)
     {
-        // Source bank hesabını al
-        var sourceBank = await _bankAccountRepository.GetByIdAsync(dto.SourceBankId);
-        if (sourceBank == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Gönderici banka hesabı bulunamadı.");
+        var currentUserId = _currentUser.CurrentUser();
+        ///TODO : User null kontrolü
+        // 1. IBAN'dan hedef banka kodunu al
+        if (string.IsNullOrWhiteSpace(dto.Iban) || dto.Iban.Length < 8)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz IBAN.");
 
-        // Yetersiz bakiye kontrolü
-        if (sourceBank.Balance < dto.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Yetersiz bakiye");
+        string targetBankCode = dto.Iban.Substring(4, 5);
 
-        // Target bank hesabını al
+        // 2. Kullanıcının tüm banka hesaplarını getir
+        var userAccounts = await _bankAccountRepository.GetUserAccountsAsync(currentUserId);
+        if (userAccounts == null || !userAccounts.Any())
+            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcının tanımlı banka hesabı yok.");
+
+        // 3. Kaynak hesabı seç
+        var sourceAccount = SelectSourceAccount(userAccounts, targetBankCode);
+        if (sourceAccount == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Uygun kaynak banka hesabı bulunamadı.");
+
+        // 4. Bakiye kontrolü
+        if (sourceAccount.Balance < dto.Amount)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Yetersiz bakiye.");
+
+        // 5. Alıcı banka hesabı
         var targetBank = await _bankAccountRepository.GetByIdAsync(dto.TargetBankId);
         if (targetBank == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Alıcı banka hesabı bulunamadı.");
 
-        // BankName kontrolü ve provider bankayı al veya oluştur
+        // 6. ProviderBank kontrolü
         if (string.IsNullOrWhiteSpace(dto.BankName))
             return ServiceResponse<TransactionResponseDTO>.Fail("BankName alanı zorunludur.");
 
@@ -52,43 +72,63 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
             await _providerBankRepository.SaveChangesAsync();
         }
 
-        // Bakiye güncelle
-        sourceBank.Balance -= dto.Amount;
+        // 7. Bakiye güncellemeleri
+        sourceAccount.Balance -= dto.Amount;
         targetBank.Balance += dto.Amount;
 
-        await _bankAccountRepository.UpdateAsync(sourceBank);
+        await _bankAccountRepository.UpdateAsync(sourceAccount);
         await _bankAccountRepository.UpdateAsync(targetBank);
+        await _bankAccountRepository.SaveChangesAsync();
 
-        // Transaction oluştur
+        // 8. Transaction oluştur
         var transaction = new Transaction
         {
             Amount = dto.Amount,
             Type = TransactionType.BankTransfer,
             Currency = 0,
-            Description = dto.Description ?? $"Banka transferi - {dto.Iban}"
+            Description = dto.Description ?? $"Banka transferi - {dto.Iban}",
+            CreatedDate = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(transaction);
+        await _transactionRepository.SaveChangesAsync();
 
-        // BankTransaction oluştur
+        // 9. BankTransaction oluştur
         var bankTransaction = new BankTransaction
         {
             TransactionId = transaction.Id,
             ProviderBankId = providerBank.Id,
             Iban = dto.Iban,
-            TargetBankId = dto.TargetBankId,
-            SourceBankId = sourceBank.ProviderBankId, // ✅
+            TargetBankId = targetBank.Id,
+            SourceBankId = sourceAccount.ProviderBankId,
             Commission = "0"
         };
         await _bankTransactionRepository.AddAsync(bankTransaction);
+        await _bankTransactionRepository.SaveChangesAsync();
 
-        // Dönüş DTO
+        // 10. Dönüş DTO’su
         var responseDto = new TransactionResponseDTO
-        { 
+        {
+            Id = transaction.Id,
             Amount = transaction.Amount,
             Type = transaction.Type,
-            Description = transaction.Description
+            Description = transaction.Description,
+            CreatedDate = transaction.CreatedDate
         };
 
-        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Banka transferi başarılı.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Banka transferi başarıyla gerçekleştirildi.");
+    }
+
+    private AppBankAccount? SelectSourceAccount(IEnumerable<AppBankAccount> accounts, string targetBankCode)
+    {
+        // 1. Aynı bankadan varsa onu kullan
+        var sameBank = accounts.FirstOrDefault(a => a.BankCode == targetBankCode);
+        if (sameBank != null) return sameBank;
+
+        // 2. Garanti ise Ziraat'tan gönder
+        if (targetBankCode == GarantiBankCode)
+            return accounts.FirstOrDefault(a => a.BankCode == ZiraatBankCode);
+
+        // 3. Diğer durumlarda Vakıfbank'tan gönder
+        return accounts.FirstOrDefault(a => a.BankCode == VakifBankCode);
     }
 }

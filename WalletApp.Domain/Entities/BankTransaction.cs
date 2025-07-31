@@ -8,7 +8,7 @@ namespace WalletApp.Domain.Entities
         public Guid ProviderBankId { get; set; }
         public string Iban { get; set; }
         public Guid TargetBankId { get; set; } 
-        public Guid SourceBankId { get; set; }
+        public Guid? SourceBankId { get; set; }
         public string Commission { get; set; }
         public Transaction Transaction { get; set; }
         public ProviderBank ProviderBank { get; set; } 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using WalletApp.Application.Feature.User.Dtos;
+
 namespace WalletApp.WebAPI.Controllers
 {
     [ApiController]

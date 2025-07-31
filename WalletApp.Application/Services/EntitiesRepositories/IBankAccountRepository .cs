@@ -7,6 +7,7 @@ namespace WalletApp.Application.Services.EntitiesRepositories
     {
         Task AddAsync(AppBankAccount entity);
         Task GetListAsync(Func<object, bool> value);
+        Task<IEnumerable<AppBankAccount>> GetUserAccountsAsync(int userId);
         Task <int>SaveChangesAsync();
     }
 }

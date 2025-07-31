@@ -10,7 +10,6 @@ namespace WalletApp.Persistence.Repositories
     {
         public UserDetailRepository(WalletDbContext context ) : base(context)
         {
-
         }
 
         Task IUserDetailRepository.SaveChangesAsync()

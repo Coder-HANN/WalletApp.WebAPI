@@ -7,9 +7,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using WalletApp.Application.Feature.Auth.Handlers;
+using WalletApp.Application.Feature.BankAccount.Handlers;
 using WalletApp.Application.Feature.BankAccount.Validations;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Feature.Wallet.Validations;
+using WalletApp.Application.Services;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Application.Services.Repositories;
 using WalletApp.Domain.Entities;
@@ -46,7 +48,8 @@ builder.Services.AddDbContext<WalletDbContext>(options =>
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssemblies(
         typeof(RegisterUserCommandHandler).Assembly,
-        typeof(BankTransferCommandHandler).Assembly
+        typeof(BankTransferCommandHandler).Assembly,
+       typeof(BankDepositCommandHandler).Assembly
     ));
 
 // Diğer repository'ler
@@ -58,6 +61,7 @@ builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 
+
 // Fluent Validation
 builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
@@ -67,6 +71,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 
 // HTTP Context Accessor
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // -----------------------------
 // JWT Authentication

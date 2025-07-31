@@ -7,6 +7,6 @@ public class CreateBankAccountRequestValidator : AbstractValidator<CreateBankAcc
     public CreateBankAccountRequestValidator()
     {
         RuleFor(x => x.WalletId).NotEmpty();
-        RuleFor(x => x.Bilgiler).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Information).NotEmpty().MaximumLength(500);
     }
 }

@@ -14,5 +14,3 @@ namespace WalletApp.Application.Feature.Wallet.Dtos
     }
 }
 
-// para yatırma banka hesabından olmalı 
-// kart seç hangi cüzdaan tutar olmalı para yatırma için 

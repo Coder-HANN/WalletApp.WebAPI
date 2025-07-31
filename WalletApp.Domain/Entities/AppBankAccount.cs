@@ -16,8 +16,11 @@ namespace WalletApp.Domain.Entities
         public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
+        public bool IsDelete { get; set; } = false;
+
         public AppUser User { get; set; }
         public ProviderBank ProviderBank { get; set; }
         public ICollection<Transaction> Transactions { get; set; }
+        public string BankCode { get; set; }
     }
 }
