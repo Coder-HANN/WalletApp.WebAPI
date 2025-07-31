@@ -26,5 +26,10 @@ namespace WalletApp.Persistence.Repositories
         {
             return AddAsync(entity);
         }
+        public async Task DeleteAsync(AppBankAccount bankAccount)
+        {
+            _context.BankAccounts.Remove(bankAccount);
+            await _context.SaveChangesAsync();
+        }
     }
 }

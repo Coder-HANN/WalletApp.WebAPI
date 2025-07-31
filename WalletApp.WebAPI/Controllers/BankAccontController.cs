@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
 [Authorize]
@@ -18,5 +19,11 @@ public class BankAccountController : ControllerBase
     {
         return await _mediator.Send(command);
     }
+    [HttpDelete("Delete")]
+    public async Task<ServiceResponse<string>> DeleteBankAccount([FromBody] DeleteBankAccountRequestDTO command)
+    {
+        return await _mediator.Send(command);
+    }
 }
+
 
