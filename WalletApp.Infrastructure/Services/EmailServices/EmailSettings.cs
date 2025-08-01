@@ -1,4 +1,4 @@
-﻿namespace Infrastructure.Email
+﻿namespace WalletApp.Infrastructure.Services.EmailServices
 {
     public class EmailSettings
     {

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Infrastructure.Email;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +16,7 @@ using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Application.Services.Repositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Infrastructure.Repositories;
+using WalletApp.Infrastructure.Services.EmailServices;
 using WalletApp.Persistence;
 using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Repositories;

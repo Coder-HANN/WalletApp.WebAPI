@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Mail;
 using WalletApp.Application.Services.EntitiesRepositories;
 
-namespace Infrastructure.Email
+namespace WalletApp.Infrastructure.Services.EmailServices
 {
     public class SmtpEmailService : IEmailService
     {
