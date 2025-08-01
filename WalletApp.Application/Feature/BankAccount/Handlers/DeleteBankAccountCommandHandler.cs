@@ -8,12 +8,10 @@ public class DeleteBankAccountCommandHandler : IRequestHandler<DeleteBankAccount
 {
     private readonly IBankAccountRepository _bankAccountRepository;
     private readonly ICurrentUserService _currentUser;
-    
 
     public DeleteBankAccountCommandHandler(
         IBankAccountRepository bankAccountRepository,
         ICurrentUserService currentUser)
-        
     {
         _bankAccountRepository = bankAccountRepository;
         _currentUser = currentUser;

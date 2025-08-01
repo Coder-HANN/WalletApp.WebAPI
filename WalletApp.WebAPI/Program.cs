@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Infrastructure.Email;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +27,8 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------------
 // Dependency Injection (DI)
 // -----------------------------
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddScoped<WalletService>();
 

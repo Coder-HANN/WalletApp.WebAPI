@@ -5,7 +5,7 @@ using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
-
+using Microsoft.Extensions.Caching.Memory;
 
 namespace WalletApp.Application.Feature.Auth.Handlers
 {
@@ -15,22 +15,27 @@ namespace WalletApp.Application.Feature.Auth.Handlers
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly IUserRepository _userRepository;
         private readonly WalletService _walletService;
-        
-        public RegisterUserCommandHandler(  
+        private readonly IEmailService _emailService;
+        private readonly IMemoryCache _cache;
+
+        public RegisterUserCommandHandler(
             IWalletRepository walletRepository,
             IPasswordHasher<AppUser> passwordHasher,
             IUserRepository userRepository,
-            WalletService walletService)
+            WalletService walletService,
+            IEmailService emailService,
+            IMemoryCache cache)
         {
             _walletRepository = walletRepository;
-            _passwordHasher = passwordHasher;  
+            _passwordHasher = passwordHasher;
             _userRepository = userRepository;
             _walletService = walletService;
+            _emailService = emailService;
+            _cache = cache;
         }
 
         public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
         {
-
             if (await _userRepository.EmailExistsAsync(request.Email, cancellationToken))
                 return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta zaten kayıtlı.");
 
@@ -50,10 +55,20 @@ namespace WalletApp.Application.Feature.Auth.Handlers
             try
             {
                 _userRepository.Add(user);
-
                 await _userRepository.SaveChangesAsync();
 
-                await _walletService.CreateWalletAsync(user.Id, "TL", CancellationToken.None);
+                await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);
+
+                // Doğrulama kodu oluştur ve cache'e kaydet
+                var code = new Random().Next(100000, 999999).ToString();
+                var cacheKey = $"email-verification-{user.Email}";
+                _cache.Set(cacheKey, code, TimeSpan.FromMinutes(2));
+
+                // E-posta gönder
+                var subject = "WalletApp Doğrulama Kodunuz";
+                var body = $"Merhaba {user.UserDetail.Name}," + $"\n\nDoğrulama kodunuz: {code}" + $"\nKod 2 dakika geçerlidir.";
+
+                await _emailService.SendAsync(user.Email, subject, body);
             }
             catch (Exception ex)
             {
@@ -65,9 +80,8 @@ namespace WalletApp.Application.Feature.Auth.Handlers
             {
                 Name = user.UserDetail.Name,
                 Email = user.Email,
-                Message = "Kayıt başarılı"
+                Message = "Kayıt başarılı, doğrulama kodu e-posta ile gönderildi."
             }, "Kayıt işlemi tamamlandı.");
         }
     }
 }
-
