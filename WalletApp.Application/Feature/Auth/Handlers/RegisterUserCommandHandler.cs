@@ -1,87 +1,104 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Memory;
 using WalletApp.Application.Feature.User.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
-using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
-using Microsoft.Extensions.Caching.Memory;
 
-namespace WalletApp.Application.Feature.Auth.Handlers
+public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, ServiceResponse<RegisterResponseDTO>>
 {
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, ServiceResponse<RegisterResponseDTO>>
+    private readonly IMemoryCache _cache;
+    private readonly IUserDetailRepository _userDetailRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IEmailService _emailService;
+
+    public RegisterUserCommandHandler(
+        IMemoryCache cache,
+        IUserDetailRepository userDetailRepository,
+        IUserRepository userRepository,
+        IEmailService emailService)
     {
-        private readonly IWalletRepository _walletRepository;
-        private readonly IPasswordHasher<AppUser> _passwordHasher;
-        private readonly IUserRepository _userRepository;
-        private readonly WalletService _walletService;
-        private readonly IEmailService _emailService;
-        private readonly IMemoryCache _cache;
+        _cache = cache;
+        _userDetailRepository = userDetailRepository;
+        _userRepository = userRepository;
+        _emailService = emailService;
+    }
+  
+    public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
+    {
+        var codeKey = $"email-verification-{request.Email}";
+        var dataKey = $"pending-register-{request.Email}";
 
-        public RegisterUserCommandHandler(
-            IWalletRepository walletRepository,
-            IPasswordHasher<AppUser> passwordHasher,
-            IUserRepository userRepository,
-            WalletService walletService,
-            IEmailService emailService,
-            IMemoryCache cache)
+        // Eğer doğrulama kodu boşsa → doğrulama kodu gönder
+        if (string.IsNullOrWhiteSpace(request.VerificationCode))
         {
-            _walletRepository = walletRepository;
-            _passwordHasher = passwordHasher;
-            _userRepository = userRepository;
-            _walletService = walletService;
-            _emailService = emailService;
-            _cache = cache;
-        }
+            // Doğrulama kodu üret
+            var verificationCode = new Random().Next(100000, 999999).ToString();
 
-        public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
-        {
-            if (await _userRepository.EmailExistsAsync(request.Email, cancellationToken))
-                return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta zaten kayıtlı.");
-
-            var user = new AppUser
-            {
-                Email = request.Email,
-                PasswordHash = _passwordHasher.HashPassword(null, request.Password),
-                UserDetail = new UserDetail
-                {
-                    Name = request.Name,
-                    BirthDay = request.BirthDay,
-                    PhoneNumber = request.PhoneNumber,
-                    Occupation = request.Occupation
-                }
-            };
+            // Kod ve kullanıcı bilgilerini cache’e kaydet (örneğin 10 dakika)
+            _cache.Set(codeKey, verificationCode, TimeSpan.FromMinutes(10));
+            _cache.Set(dataKey, request, TimeSpan.FromMinutes(10));
 
             try
             {
-                _userRepository.Add(user);
-                await _userRepository.SaveChangesAsync();
-
-                await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);
-
-                // Doğrulama kodu oluştur ve cache'e kaydet
-                var code = new Random().Next(100000, 999999).ToString();
-                var cacheKey = $"email-verification-{user.Email}";
-                _cache.Set(cacheKey, code, TimeSpan.FromMinutes(2));
-
-                // E-posta gönder
-                var subject = "WalletApp Doğrulama Kodunuz";
-                var body = $"Merhaba {user.UserDetail.Name}," + $"\n\nDoğrulama kodunuz: {code}" + $"\nKod 2 dakika geçerlidir.";
-
-                await _emailService.SendAsync(user.Email, subject, body);
+                // Doğrulama kodunu mail olarak gönder
+                await _emailService.SendAsync(
+                    to: request.Email,
+                    subject: "WalletApp - Doğrulama Kodu",
+                    body: $"Doğrulama kodunuz: {verificationCode}");
             }
             catch (Exception ex)
             {
-                var inner = ex.InnerException?.Message ?? ex.Message;
-                return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt sırasında hata oluştu: " + inner);
+                return ServiceResponse<RegisterResponseDTO>.Fail($"Mail gönderim hatası: {ex.Message}");
             }
 
             return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
             {
-                Name = user.UserDetail.Name,
-                Email = user.Email,
-                Message = "Kayıt başarılı, doğrulama kodu e-posta ile gönderildi."
-            }, "Kayıt işlemi tamamlandı.");
+                Message = "Doğrulama kodu gönderildi. Lütfen e-posta adresinizi kontrol edin."
+            });
         }
+
+        // Doğrulama kodu gelmiş, kontrol et
+        if (!_cache.TryGetValue(codeKey, out string? expectedCode) || expectedCode != request.VerificationCode)
+        {
+            return ServiceResponse<RegisterResponseDTO>.Fail("Geçersiz veya süresi dolmuş doğrulama kodu.");
+        }
+
+        // Cache’den kayıt verisini al
+        if (!_cache.TryGetValue(dataKey, out RegisterRequestDTO? pendingRegister))
+        {
+            return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt verisi bulunamadı veya süresi doldu.");
+        }
+
+        // Cache temizle
+        _cache.Remove(codeKey);
+        _cache.Remove(dataKey);
+
+        // Kayıt işlemi
+        await _userDetailRepository.AddAsync(new UserDetail
+        {
+            Name = pendingRegister.Name,
+            Surname = pendingRegister.Surname,
+            Occupation = pendingRegister.Occupation,
+            Address = pendingRegister.Address,
+            PhoneNumber = pendingRegister.PhoneNumber,
+            Gender = pendingRegister.Gender,
+            BirthDay = pendingRegister.BirthDay
+        });
+
+        await _userRepository.AddAsync(new AppUser
+        {
+            Email = pendingRegister.Email,
+            PasswordHash = pendingRegister.Password, // Burada hashlemeyi unutma!
+            EmailConfirmed = true
+        });
+
+        return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
+        {
+            Email = pendingRegister.Email,
+            Name = pendingRegister.Name,
+            Surname = pendingRegister.Surname,
+            Message = "Kayıt başarılı."
+        }, "Kayıt tamamlandı.");
     }
 }

@@ -38,20 +38,26 @@ namespace WalletApp.Application.Feature.User.Handlers
 
                 // Bilgileri güncelle
                 userDetail.Name = request.Name;
+                userDetail.Surname = request.Surname;
+                userDetail.Gender = request.Gender;
                 userDetail.BirthDay = request.BirthDay;
                 userDetail.Occupation = request.Occupation;
                 userDetail.PhoneNumber = request.PhoneNumber;
+                userDetail.Address = request.Address;
 
-                await _userDetailRepository.UpdateAsync(userDetail);
+            await _userDetailRepository.UpdateAsync(userDetail);
                 await _userDetailRepository.SaveChangesAsync();
 
                 // Response DTO oluştur
                 var dto = new UserProfileResponseDTO
                 {
                     Name = userDetail.Name,
+                    Surname = userDetail.Surname,
+                    Gender = userDetail.Gender,
                     BirthDay = request.BirthDay,
                     Occupation = userDetail.Occupation,
                     PhoneNumber = userDetail.PhoneNumber,
+                    Address = userDetail.Address,
                 };
 
                 return ServiceResponse<UserProfileResponseDTO>.Ok(dto);

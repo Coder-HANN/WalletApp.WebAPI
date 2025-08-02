@@ -26,9 +26,12 @@ namespace WalletApp.Persistence
                 
                 builder.HasKey(ud => ud.Id);
                 builder.Property(ud => ud.Name).IsRequired().HasMaxLength(50);
+                builder.Property(ud => ud.Surname).IsRequired().HasMaxLength(50);
                 builder.Property(ud => ud.BirthDay).IsRequired();
                 builder.Property(ud => ud.Occupation).IsRequired().HasMaxLength(50);
                 builder.Property(ud => ud.PhoneNumber).IsRequired();
+                builder.Property(ud => ud.Address).IsRequired().HasMaxLength(200);
+                builder.Property(ud => ud.Gender).IsRequired().HasMaxLength(10);
 
 
                 builder
@@ -79,11 +82,7 @@ namespace WalletApp.Persistence
                     .WithMany(u => u.BankaHesap)
                     .HasForeignKey(bh => bh.AppUserId)
                     .OnDelete(DeleteBehavior.Restrict);
-
-
             });
-
-
 
             modelBuilder.Entity<Transaction>(builder =>
             {

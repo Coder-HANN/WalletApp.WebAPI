@@ -14,11 +14,6 @@ namespace WalletApp.Infrastructure.Services.EmailServices
             _settings = options.Value;
         }
 
-        public void Remove(string cacheKey)
-        {
-            
-        }
-
         public async Task SendAsync(string to, string subject, string body)
         {
             try
@@ -42,7 +37,6 @@ namespace WalletApp.Infrastructure.Services.EmailServices
                 await client.SendMailAsync(mail);
 
                 Console.WriteLine("Mail gönderildi.");
-
             }
             catch (Exception ex)
             {
@@ -51,9 +45,5 @@ namespace WalletApp.Infrastructure.Services.EmailServices
             }
         }
 
-        public bool TryGetValue(string cacheKey, out string? storedCode)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

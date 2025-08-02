@@ -29,6 +29,8 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------------
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 builder.Services.AddScoped<WalletService>();
 

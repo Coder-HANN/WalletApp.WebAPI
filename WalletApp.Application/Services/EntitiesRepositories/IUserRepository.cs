@@ -12,6 +12,10 @@ namespace WalletApp.Application.Services.EntitiesRepositories
         Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken);
         Task<AppUser> GetAsync(Expression<Func<AppUser, bool>> predicate, Func<IQueryable<AppUser>, IQueryable<AppUser>> include = null);
         Task SaveChangesAsync();
+        Task DeleteAsync(AppUser user);
+        
+          
+        
     }
 
 }

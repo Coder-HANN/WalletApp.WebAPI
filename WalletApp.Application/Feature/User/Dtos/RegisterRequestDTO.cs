@@ -9,9 +9,12 @@ namespace WalletApp.Application.Feature.User.Dtos
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null;
         public string Name { get; set; } = null!;
+        public string Surname { get; set; } = null!;
+        public string Gender { get; set; } = null!;
         public DateTime BirthDay { get; set; } // kontrol olmalı 18 yaş için 
         public string Occupation { get; set; } = null!;
-        public string PhoneNumber { get; set; } = null!;  // TO DO: adress ve cinsiyet eklenecek , ilk başta patcha kontrolü beni hatırla olacak ilk login ekranında 
-                                                          // kontrollerde sms ve email doğrulamasında kutu kırmızı olsun
+        public string Address { get; set; } = null!;
+        public string PhoneNumber { get; set; } = null!;
+        public string? VerificationCode { get; set; }
     }
 }

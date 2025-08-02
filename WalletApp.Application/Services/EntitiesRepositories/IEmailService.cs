@@ -8,8 +8,8 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface IEmailService
     {
-        void Remove(string cacheKey);
+        
         Task SendAsync(string to, string subject, string body);
-        bool TryGetValue(string cacheKey, out string? storedCode);
+        
     }
 }

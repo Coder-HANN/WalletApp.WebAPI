@@ -1,37 +1,50 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using WalletApp.Application.Feature.Auth.Dtos;
+using WalletApp.Application.Feature.User.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Services.EntitiesRepositories;
 
-namespace WalletApp.Application.Feature.Auth.Handlers
+
+public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailRequestDTO, ServiceResponse<RegisterResponseDTO>>
 {
-    public class VerifyEmailRequestDTOHandler : IRequestHandler<VerifyEmailRequestDTO, ServiceResponse<string>>
+    private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
+
+    public VerifyEmailCommandHandler(IMemoryCache cache, IEmailService emailService)
     {
-        private readonly IMemoryCache _cache;
+        _cache = cache;
+        _emailService = emailService;
+    }
 
-        public VerifyEmailRequestDTOHandler(
-            IMemoryCache cache)
+    public async Task<ServiceResponse<RegisterResponseDTO>> Handle(VerifyEmailRequestDTO request, CancellationToken cancellationToken)
+    {
+        // 1. Doğrulama kodu oluştur
+        var verificationCode = new Random().Next(100000, 999999).ToString();
+
+        // 2. Doğrulama kodunu cache'e kaydet (örneğin 10 dakika)
+        _cache.Set($"email-verification-{request.Email}", verificationCode, TimeSpan.FromMinutes(10));
+
+        // 3. Kullanıcı bilgilerini de cache'e kaydet (json ya da direkt nesne)
+        _cache.Set($"pending-register-{request.Email}", request, TimeSpan.FromMinutes(10));
+
+        try
         {
-            _cache = cache;
+            // 4. Mail gönder
+            await _emailService.SendAsync(
+                to: request.Email,
+                subject: "WalletApp - E-posta Doğrulama Kodu",
+                body: $"Doğrulama kodunuz: {verificationCode}");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse<RegisterResponseDTO>.Fail($"Mail gönderim hatası: {ex.Message}");
         }
 
-        public Task<ServiceResponse<string>> Handle(VerifyEmailRequestDTO request, CancellationToken cancellationToken)
+        return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
         {
-            var cacheKey = $"email-verification-{request.Email}";
 
-            if (!_cache.TryGetValue(cacheKey, out string? storedCode))
-            {
-                return Task.FromResult(ServiceResponse<string>.Fail("Kod süresi dolmuş veya hiç gönderilmemiş."));
-            }
-
-            if (storedCode != request.VerificationCode)
-            {
-                return Task.FromResult(ServiceResponse<string>.Fail("Doğrulama kodu hatalı."));
-            }
-
-            _cache.Remove(cacheKey); // Kod doğru -> sil
-
-            return Task.FromResult(ServiceResponse<string>.Ok("E-posta doğrulandı."));
-        }
+            Message = "Doğrulama kodu gönderildi. Lütfen e-posta adresinizi kontrol edin."
+        });
     }
 }
