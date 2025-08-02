@@ -10,7 +10,6 @@ namespace WalletApp.Domain.Entities
         public int Id { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public bool EmailConfirmed { get; set; } = false;
         public UserDetail UserDetail { get; set; }
         public ICollection<AppWallet> Wallet { get; set; }
         public ICollection<AppBankAccount> BankaHesap { get; set; }
