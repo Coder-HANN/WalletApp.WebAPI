@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.User.Dtos.UserProfile;
 using WalletApp.Application.Feature.Wallet.Dtos;
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
-    [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
 
     public class UsersContreller : ControllerBase
     {

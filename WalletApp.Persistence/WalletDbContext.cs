@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 
 namespace WalletApp.Persistence
 {
-    public class WalletDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
+    public class WalletDbContext : DbContext
     {
         public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
 
+        public DbSet<AppUser> Users { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
         public DbSet<AppWallet> Wallets { get; set; }
         public DbSet<AppBankAccount> BankAccounts { get; set; }
@@ -29,7 +30,25 @@ namespace WalletApp.Persistence
             // AppUser config (sadece ek alanlar)
             modelBuilder.Entity<AppUser>(builder =>
             {
+                builder.HasKey(u => u.Id);
+                builder.Property(u => u.Email).IsRequired().HasMaxLength(100);
+                builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(256);
                 builder.Property(u => u.Role).IsRequired().HasMaxLength(20);
+
+                builder.HasOne(u => u.UserDetail)
+                       .WithOne(ud => ud.User)
+                       .HasForeignKey<UserDetail>(ud => ud.AppUserId)
+                       .OnDelete(DeleteBehavior.Cascade);
+
+                builder.HasMany(u => u.Wallet)
+                          .WithOne(w => w.User)
+                          .HasForeignKey(w => w.AppUserId)
+                          .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasMany(u => u.BankHesap)
+                            .WithOne(ba => ba.User)
+                            .HasForeignKey(ba => ba.AppUserId)
+                            .OnDelete(DeleteBehavior.Restrict);
             });
 
             // UserDetail configuration
@@ -75,7 +94,7 @@ namespace WalletApp.Persistence
                 builder.HasKey(ba => ba.Id);
 
                 builder.HasOne(ba => ba.User)
-                       .WithMany(u => u.BankaHesap)
+                       .WithMany(u => u.BankHesap)
                        .HasForeignKey(ba => ba.AppUserId)
                        .OnDelete(DeleteBehavior.Restrict);
             });

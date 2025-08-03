@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.BankAccount.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Admin
 {
+    [ApiController]
+    [Microsoft.AspNetCore.Components.Route("api/admin/[controller]")]
+    [ApiExplorerSettings(GroupName = "Admin")]
     [Authorize(Roles = "Admin")]
-    [Microsoft.AspNetCore.Components.Route("api/[controller]")]
-
     public class ProviderBankAccountController : ControllerBase
     {
         private readonly IMediator _mediator;

@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.User.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
     public class LoginController : ControllerBase
     {
         private readonly IMediator _mediator;

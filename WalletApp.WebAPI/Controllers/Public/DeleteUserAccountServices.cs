@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.Auth.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
     [ApiController]
-    [Route("api/[controller]")]
-
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
     public class DeleteUserAccountServices : ControllerBase
     {
         private readonly IMediator _mediator;

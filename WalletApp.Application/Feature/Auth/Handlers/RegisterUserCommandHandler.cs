@@ -10,24 +10,28 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
 {
     private readonly IUserDetailRepository _userDetailRepository;
     private readonly WalletService _walletService;
-    private readonly UserManager<AppUser> _userManager;
+    
 
     public RegisterUserCommandHandler(
         IUserDetailRepository userDetailRepository,
-        WalletService walletService,
-        UserManager<AppUser> userManager)
+        WalletService walletService)
     {
         _userDetailRepository = userDetailRepository;
         _walletService = walletService;
-        _userManager = userManager;
+        
     }
 
     public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
     {
         // Email zaten kayıtlı mı?
-        var existingUser = await _userManager.FindByEmailAsync(request.Email);
-        if (existingUser != null)
-            return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta zaten kayıtlı.");
+        if(await _userDetailRepository.ExistsAsync(request.Email))
+        {
+            return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta adresi zaten kayıtlı.");
+        }
+        if (!request.Email.Contains("@"))
+            return ServiceResponse<RegisterResponseDTO>.Fail("Geçersiz email formatı.");
+        if (request.PasswordHash.Length == 6)
+            return ServiceResponse<RegisterResponseDTO>.Fail("Şifre 6 karakter olmalıdır.");
 
         var user = new AppUser
         {
@@ -48,16 +52,6 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
 
         try
         {
-            // Kullanıcıyı UserManager ile oluştur
-            var result = await _userManager.CreateAsync(user, request.PasswordHash);
-            if (!result.Succeeded)
-            {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt sırasında hata oluştu: " + errors);
-            }
-
-            // Kullanıcıya "User" rolü ata
-            await _userManager.AddToRoleAsync(user, "User");
 
             // Wallet oluştur
             await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);

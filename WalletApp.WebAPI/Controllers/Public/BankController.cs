@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
-[Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/public/[controller]")]
+[ApiExplorerSettings(GroupName = "Public")]
 public class BankController : ControllerBase
 {
     private readonly IMediator _mediator;

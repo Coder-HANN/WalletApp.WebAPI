@@ -2,12 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.BankAccount.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
 
     [ApiController]
-    [Route("api/[controller]")]
-
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
     public class BankDepositController : ControllerBase
     {
         private readonly IMediator _mediator;

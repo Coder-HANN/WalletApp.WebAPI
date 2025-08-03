@@ -3,11 +3,12 @@ using MediatR;
 using WalletApp.Application.Feature.Payment.DTO;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
-    
-    [Route("api/[controller]")]
+
     [ApiController]
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
     public class PaymentControllers : ControllerBase
     {
         private readonly IMediator _mediator;

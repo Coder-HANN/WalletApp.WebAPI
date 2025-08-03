@@ -7,6 +7,7 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface IUserDetailRepository : IEntityRepository<UserDetail>
     {
+        Task<bool> ExistsAsync(string email);
         Task SaveChangesAsync();
     }
 }

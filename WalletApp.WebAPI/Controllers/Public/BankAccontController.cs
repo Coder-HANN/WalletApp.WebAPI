@@ -5,9 +5,9 @@ using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.BankAccount.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
-[Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/public/[controller]")]
+[ApiExplorerSettings(GroupName = "Public")]
 public class BankAccountController : ControllerBase
 {
     private readonly IMediator _mediator;

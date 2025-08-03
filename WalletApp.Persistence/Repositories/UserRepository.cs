@@ -67,6 +67,11 @@ namespace WalletApp.Persistence.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<AppUser> GetByEmailAsync(string email)
+        {
+            return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+        }
     }
+    
 }
 

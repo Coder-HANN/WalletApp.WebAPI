@@ -7,33 +7,37 @@ using System.Security.Claims;
 using System.Text;
 using WalletApp.Application.Feature.User.Dtos;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
 
 public class LoginUserCommandHandler : IRequestHandler<LoginUserRequestDTO, ServiceResponse<LoginUserResponseDTO>>
 {
-    private readonly UserManager<AppUser> _userManager;
     private readonly IPasswordHasher<AppUser> _passwordHasher;
     private readonly IConfiguration _configuration;
+    private readonly IUserRepository _userRepository;
 
     public LoginUserCommandHandler(
-        UserManager<AppUser> userManager,
         IPasswordHasher<AppUser> passwordHasher,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUserRepository userRepository)
     {
-        _userManager = userManager;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
+        _userRepository = userRepository;
     }
 
     public async Task<ServiceResponse<LoginUserResponseDTO>> Handle(LoginUserRequestDTO request, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null)
-            return ServiceResponse<LoginUserResponseDTO>.Fail("Email veya şifre hatalı.");
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            return ServiceResponse<LoginUserResponseDTO>.Fail("Email ve şifre boş olamaz.");
 
-        var passwordCheck = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
-        if (passwordCheck == PasswordVerificationResult.Failed)
-            return ServiceResponse<LoginUserResponseDTO>.Fail("Email veya şifre hatalı.");
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user == null)
+            return ServiceResponse<LoginUserResponseDTO>.Fail("Geçersiz email veya şifre.");
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+        if (verifyResult == PasswordVerificationResult.Failed)
+            return ServiceResponse<LoginUserResponseDTO>.Fail("Geçersiz email veya şifre.");
 
         var token = await GenerateJwtToken(user);
         var expiration = DateTime.UtcNow.AddHours(1);
@@ -60,12 +64,6 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserRequestDTO, Serv
             new Claim("email", user.Email),
             new Claim("AppUserId", user.Id.ToString())
         };
-
-        var roles = await _userManager.GetRolesAsync(user);
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],

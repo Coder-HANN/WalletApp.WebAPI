@@ -2,10 +2,11 @@
 using MediatR;
 using WalletApp.Application.Feature.User.Dtos;
 
-namespace WalletApp.WebAPI.Controllers
+namespace WalletApp.WebAPI.Controllers.Public
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/public/[controller]")]
+    [ApiExplorerSettings(GroupName = "Public")]
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;

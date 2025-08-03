@@ -2,20 +2,19 @@
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Reflection;
 using System.Text;
-using WalletApp.Application.Feature.Auth.Handlers;
-using WalletApp.Application.Feature.BankAccount.Handlers;
 using WalletApp.Application.Feature.BankAccount.Validations;
 using WalletApp.Application.Feature.Wallet.Handlers;
-using WalletApp.Application.Feature.Wallet.Validations;
-using WalletApp.Application.Services;
 using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Application.Services.Repositories;
 using WalletApp.Domain.Entities;
+using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Repositories;
 using WalletApp.Infrastructure.Services.EmailServices;
 using WalletApp.Persistence;
@@ -25,63 +24,47 @@ using WalletApp.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -----------------------------
-// Dependency Injection (DI)
-// -----------------------------
-builder.Services.AddMemoryCache();
+// 🔹 Swagger grup desteği
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("Admin", new OpenApiInfo { Title = "Admin API", Version = "v1" });
+    options.SwaggerDoc("Public", new OpenApiInfo { Title = "Public API", Version = "v1" });
 
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+    options.DocInclusionPredicate((group, api) =>
+    {
+        if (!api.TryGetMethodInfo(out var methodInfo)) return false;
+        var attr = methodInfo.DeclaringType?.GetCustomAttribute<ApiExplorerSettingsAttribute>();
+        return attr?.GroupName == group;
+    });
 
-builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
-builder.Services.AddScoped<WalletService>();
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Bearer token. Örn: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
 
-// Repository'ler
-builder.Services.AddScoped<IWalletRepository, WalletRepository>();
-builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
-builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
-builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
-builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
-// Generic repository
-builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
-
-// DbContext
+// 🔹 DbContext
 builder.Services.AddDbContext<WalletDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure()
-    ));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-
-
-// MediatR: Tüm handler'lar için assembly'leri ekle
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssemblies(
-        typeof(RegisterUserCommandHandler).Assembly,
-        typeof(BankTransferCommandHandler).Assembly,
-        typeof(BankDepositCommandHandler).Assembly
-    ));
-
-// FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<AppWalletCommandValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
-
-// Pipeline Behavior (Validation)
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
-// HTTP Context Accessor & Current User Service
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-// -----------------------------
-// JWT Authentication
-// -----------------------------
+// 🔹 JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
@@ -94,136 +77,96 @@ builder.Services.AddAuthentication(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidateLifetime = false, // İstersen true yapabilirsin
+        ValidateLifetime = false, // geliştirme ortamı için, prod'da true olmalı
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        RoleClaimType = ClaimTypes.Role
+        RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
 });
 
 builder.Services.AddAuthorization();
 
-// -----------------------------
-// Controllers & Swagger
-// -----------------------------
-builder.Services.AddIdentity<AppUser, IdentityRole<int>>(options =>
-{
-    options.Password.RequireDigit = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequiredLength = 6;
-})
-.AddEntityFrameworkStores<WalletDbContext>()
-.AddDefaultTokenProviders();
+// 🔹 E-posta ve diğer servisler
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<WalletService>();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-    {
-        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-    });
+// 🔹 Repositories
+builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Wallet API",
-        Version = "v1",
-        Description = "Staj İçin Wallet API Projesi"
-    });
+builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
+builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
+builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
+builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
 
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Tokenınızı Bearer olarak girin"
-    });
+// 🔹 MediatR + FluentValidation
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
+builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-// -----------------------------
-// Uygulama Pipeline
-// -----------------------------
+// 🔹 Ortak servisler
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 var app = builder.Build();
 
+// 🔹 Tek seferlik Admin seed
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<WalletDbContext>();
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AppUser>>();
+
+    var email = config["AdminUser:Email"];
+    var password = config["AdminUser:Password"];
+    var username = config["AdminUser:UserName"];
+
+    var adminExists = await dbContext.Users.AnyAsync(u => u.Email == email && u.Role == UserRole.Admin);
+
+    if (!adminExists)
+    {
+        var admin = new AppUser
+        {
+            Email = email,
+            Role = UserRole.Admin,
+            PasswordHash = passwordHasher.HashPassword(null, password), // ilk parametre user nesnesi olabilir null da olur
+            CreatedDate = DateTime.UtcNow
+        };
+
+        dbContext.Users.Add(admin);
+        await dbContext.SaveChangesAsync();
+    }
+}
+
+// 🔹 Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    app.UseSwaggerUI(options =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Wallet API v1");
+        options.SwaggerEndpoint("/swagger/Admin/swagger.json", "Admin API");
+        options.SwaggerEndpoint("/swagger/Public/swagger.json", "Public API");
     });
 }
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-
+app.UseMiddleware<AppUserMiddleware>();
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
-
-app.UseMiddleware<AppUserMiddleware>(); // Eğer varsa özel middleware'in
-
 app.UseAuthorization();
-
 app.MapControllers();
-
-
-// Rol ve admin kullanıcı otomatik oluşturma
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-
-    string[] roles = { "Admin", "User" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole<int>(role));
-        }
-    }
-
-    var adminEmail = "admin@walletapp.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    if (adminUser == null)
-    {
-        adminUser = new AppUser
-        {
-            Role = "Admin",
-            UserName = "Admin",
-            Email = adminEmail,
-            CreatedDate = DateTime.UtcNow
-        };
-
-        var result = await userManager.CreateAsync(adminUser, "123456");
-
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
-    }
-}
 
 app.Run();
