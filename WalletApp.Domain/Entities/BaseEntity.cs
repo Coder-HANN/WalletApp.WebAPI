@@ -9,6 +9,6 @@ namespace WalletApp.Domain.Entities
         public string ModifiedUser { get; set; }
         public bool IsDelete { get; set; }
         public string CreatedUser { get; set; }
-        public Guid Created { get; set; }
+        
     }
 }

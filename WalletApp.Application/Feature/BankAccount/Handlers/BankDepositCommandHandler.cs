@@ -63,7 +63,6 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 TransactionId = transaction.Id,
                 ProviderBankId = targetBank.ProviderBankId,
                 Iban = targetBank.Iban,
-                SourceBankId = SourceBankId,  // dış kaynak banka Id'si
                 TargetBankId = targetBank.Id,
                 Commission = "0",
                 Transaction = transaction

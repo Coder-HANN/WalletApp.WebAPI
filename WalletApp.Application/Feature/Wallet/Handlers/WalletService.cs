@@ -1,8 +1,9 @@
-﻿using WalletApp.Application.Services.EntitiesRepositories;
+﻿using Microsoft.AspNetCore.Http;
+using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
-using Microsoft.AspNetCore.Http;
-using WalletApp.Application.Feature.Wallet.Dtos;
+
 
 
 namespace WalletApp.Application.Feature.Wallet.Handlers
@@ -13,18 +14,24 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         private readonly ITransactionRepository _transactionRepository;
         private readonly IWalletTransferRepository _walletTransferRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IProviderBankRepository _providerBankRepository;
+        private readonly IBankTransactionRepository _bankTransactionRepository;
 
 
-		public WalletService(
+        public WalletService(
             IWalletRepository walletRepository,
             ITransactionRepository transactionRepository,
             IWalletTransferRepository walletTransferRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IProviderBankRepository providerBankRepository,
+            IBankTransactionRepository bankTransactionRepository)
         {
             _walletRepository = walletRepository;
             _transactionRepository = transactionRepository;
             _walletTransferRepository = walletTransferRepository;
             _httpContextAccessor = httpContextAccessor;
+            _providerBankRepository = providerBankRepository;
+            _bankTransactionRepository = bankTransactionRepository;
         }
 
         public async Task<AppWallet> CreateWalletAsync(int AppUserId, string assest, CancellationToken ct)
@@ -142,19 +149,34 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             if (sourceWallet.TotalBalance < amount)
                 throw new Exception("Yetersiz bakiye.");
 
+            // 💡 Provider Bankalar
+            var sourceProvider = await _providerBankRepository.GetByIdAsync(sourceWallet.SourceWalletId);
+            var targetProvider = await _providerBankRepository.GetByIdAsync(targetWallet.SourceWalletId);
+
+            if (sourceProvider == null || targetProvider == null)
+                throw new Exception("Provider banka bilgileri eksik.");
+
+            if (sourceProvider.TotalBalance < amount)
+                throw new Exception("Provider banka bakiyesi yetersiz.");
+
+            // Cüzdan ve Provider bakiyeleri güncelle
             sourceWallet.TotalBalance -= amount;
             targetWallet.TotalBalance += amount;
+            
 
             await _walletRepository.UpdateAsync(sourceWallet);
             await _walletRepository.UpdateAsync(targetWallet);
+            await _providerBankRepository.UpdateAsync(sourceProvider);
+            await _providerBankRepository.UpdateAsync(targetProvider);
 
             // Transaction kayıtları
             var sourceTransaction = new Transaction
             {
                 WalletId = sourceWalletId,
-                Amount = amount,
+                Amount = -amount,
                 Type = TransactionType.Transfer,
-                Description = $"Transfer to wallet: {targetWalletId}"
+                Description = description ?? $"Transfer to wallet: {targetWalletId}",
+                CreatedDate = DateTime.UtcNow
             };
 
             var targetTransaction = new Transaction
@@ -162,35 +184,43 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
                 WalletId = targetWalletId,
                 Amount = amount,
                 Type = TransactionType.Transfer,
-                Description = $"Transfer from wallet: {sourceWalletId}"
+                Description = description ?? $"Transfer from wallet: {sourceWalletId}",
+                CreatedDate = DateTime.UtcNow
             };
 
             await _transactionRepository.AddAsync(sourceTransaction);
             await _transactionRepository.AddAsync(targetTransaction);
 
-            // Ortak işlem numarası
+            // Transfer ilişkisi
             var islemNo = new Random().Next(100000, 999999);
 
-            var transferFrom = new WalletTransfer
+            await _walletTransferRepository.AddAsync(new WalletTransfer
             {
                 WalletId = sourceWalletId,
                 SourceWalletId = sourceWalletId,
                 Target = targetWalletId.ToString(),
                 TransactionId = sourceTransaction.Id,
                 IslemNo = islemNo
-            };
+            });
 
-            var transferTo = new WalletTransfer
+            await _walletTransferRepository.AddAsync(new WalletTransfer
             {
                 WalletId = targetWalletId,
                 SourceWalletId = sourceWalletId,
                 Target = targetWalletId.ToString(),
                 TransactionId = targetTransaction.Id,
                 IslemNo = islemNo
-            };
+            });
 
-            await _walletTransferRepository.AddAsync(transferFrom);
-            await _walletTransferRepository.AddAsync(transferTo);
+            // 💡 Provider BankTransaction oluştur
+            await _bankTransactionRepository.AddAsync(new BankTransaction
+            {
+                TransactionId = sourceTransaction.Id,
+                ProviderBankId = sourceProvider.Id,
+                TargetBankId = targetProvider.Id,
+                Commission = "0",
+                Iban = null // Cüzdanlar arası olduğundan IBAN olmayabilir
+            });
 
             return new List<TransactionResponseDTO>
     {

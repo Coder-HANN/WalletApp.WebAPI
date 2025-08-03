@@ -1,14 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WalletApp.Domain.Entities;
-//using WalletApp.Persistence.Migrations;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace WalletApp.Persistence
 {
-    public class WalletDbContext : DbContext
+    public class WalletDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     {
         public WalletDbContext(DbContextOptions<WalletDbContext> options) : base(options) { }
 
-        public DbSet<AppUser> Users { get; set; }
         public DbSet<UserDetail> UserDetails { get; set; }
         public DbSet<AppWallet> Wallets { get; set; }
         public DbSet<AppBankAccount> BankAccounts { get; set; }
@@ -16,14 +20,21 @@ namespace WalletApp.Persistence
         public DbSet<WalletTransfer> WalletTransfers { get; set; }
         public DbSet<AppPayment> Payments { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
-        
+        public DbSet<ProviderBank> ProviderBanks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            base.OnModelCreating(modelBuilder);
+
+            // AppUser config (sadece ek alanlar)
+            modelBuilder.Entity<AppUser>(builder =>
+            {
+                builder.Property(u => u.Role).IsRequired().HasMaxLength(20);
+            });
+
+            // UserDetail configuration
             modelBuilder.Entity<UserDetail>(builder =>
             {
-                
                 builder.HasKey(ud => ud.Id);
                 builder.Property(ud => ud.Name).IsRequired().HasMaxLength(50);
                 builder.Property(ud => ud.Surname).IsRequired().HasMaxLength(50);
@@ -33,57 +44,43 @@ namespace WalletApp.Persistence
                 builder.Property(ud => ud.Address).IsRequired().HasMaxLength(200);
                 builder.Property(ud => ud.Gender).IsRequired().HasMaxLength(10);
 
-
-                builder
-                    .HasOne(ud => ud.User)
-                    .WithOne(u => u.UserDetail)
-                    .HasForeignKey<UserDetail>(ud => ud.AppUserId);
+                builder.HasOne(ud => ud.User)
+                       .WithOne(u => u.UserDetail)
+                       .HasForeignKey<UserDetail>(ud => ud.AppUserId);
             });
 
-            
-            modelBuilder.Entity<AppUser>(builder =>
-            {
-                builder.HasKey(u => u.Id);
-
-                builder.Property(u => u.Email).IsRequired().HasMaxLength(100);
-                builder.Property(u => u.PasswordHash).IsRequired().HasMaxLength(100);
-                builder.Property(u => u.CreatedDate).IsRequired();
-                
-            });
-
-          
+            // Wallet configuration
             modelBuilder.Entity<AppWallet>(builder =>
-            { builder.HasKey(w => w.Id);
+            {
+                builder.HasKey(w => w.Id);
                 builder.Property(w => w.TotalBalance).HasPrecision(18, 2);
                 builder.Property(w => w.CreatedDate).IsRequired();
                 builder.Property(w => w.Currency);
                 builder.Property(w => w.Assest).IsRequired().HasMaxLength(50);
 
+                builder.HasOne(w => w.User)
+                       .WithMany(u => u.Wallet)
+                       .HasForeignKey(w => w.AppUserId)
+                       .OnDelete(DeleteBehavior.Restrict);
 
-                builder
-                .HasOne(w => w.User)
-                .WithMany(u => u.Wallet)
-                .HasForeignKey(w => w.AppUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-                builder
-                .HasMany(w => w.Transactions)
-                .WithOne(t => t.Wallet)
-                .HasForeignKey(t => t.WalletId)
-                .OnDelete(DeleteBehavior.Restrict);
+                builder.HasMany(w => w.Transactions)
+                       .WithOne(t => t.Wallet)
+                       .HasForeignKey(t => t.WalletId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            
+            // BankAccount configuration
             modelBuilder.Entity<AppBankAccount>(builder =>
             {
                 builder.HasKey(ba => ba.Id);
-                builder
-                    .HasOne(ba => ba.User)
-                    .WithMany(u => u.BankaHesap)
-                    .HasForeignKey(bh => bh.AppUserId)
-                    .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasOne(ba => ba.User)
+                       .WithMany(u => u.BankaHesap)
+                       .HasForeignKey(ba => ba.AppUserId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // Transaction configuration
             modelBuilder.Entity<Transaction>(builder =>
             {
                 builder.HasKey(t => t.Id);
@@ -93,91 +90,82 @@ namespace WalletApp.Persistence
                 builder.Property(t => t.Description).IsRequired().HasMaxLength(200);
                 builder.Property(t => t.CreatedDate).IsRequired();
 
-                builder
-                    .HasOne(t => t.Wallet)
-                    .WithMany(w => w.Transactions)
-                    .HasForeignKey(t => t.WalletId)
-                    .IsRequired(false)
-                    .OnDelete(DeleteBehavior.Restrict);
-                builder
-                   .HasOne(t => t.AppBankAccount)
-                   .WithMany(t => t.Transactions)  
-                   .HasForeignKey(t => t.AppBankAccountId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                builder.HasOne(t => t.Wallet)
+                       .WithMany(w => w.Transactions)
+                       .HasForeignKey(t => t.WalletId)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasOne(t => t.AppBankAccount)
+                       .WithMany(a => a.Transactions)
+                       .HasForeignKey(t => t.AppBankAccountId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // AppPayment configuration
             modelBuilder.Entity<AppPayment>(builder =>
             {
                 builder.HasKey(p => p.Id);
                 builder.Property(p => p.Institution).IsRequired();
                 builder.Property(p => p.Amount).HasPrecision(18, 2);
 
-                builder
-                    .HasOne(p => p.Transaction)
-                    .WithOne(t => t.AppPayment)  
-                    .HasForeignKey<AppPayment>(p => p.TransactionId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                builder.HasOne(p => p.Transaction)
+                       .WithOne(t => t.AppPayment)
+                       .HasForeignKey<AppPayment>(p => p.TransactionId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-
+            // BankTransaction configuration
             modelBuilder.Entity<BankTransaction>(builder =>
             {
-            builder.HasKey(bt => bt.Id);
-            builder.Property(bt => bt.Iban).IsRequired().HasMaxLength(50);
-            builder.Property(bt => bt.TargetBankId).IsRequired();
-            builder.Property(bt => bt.SourceBankId).IsRequired();
-            builder.Property(bt => bt.Commission).IsRequired();
+                builder.HasKey(bt => bt.Id);
+                builder.Property(bt => bt.Iban).IsRequired().HasMaxLength(50);
+                builder.Property(bt => bt.TargetBankId).IsRequired();
+                builder.Property(bt => bt.SourceBankId).IsRequired();
+                builder.Property(bt => bt.Commission).IsRequired();
 
-            builder
-            .HasOne(bt => bt.Transaction)
-                .WithOne(t => t.BankTransaction)
-                .HasForeignKey<BankTransaction>(p => p.TransactionId)  // Foreign key to Transaction. => Direkt string yerine kullanılmaz o yüzden bu yapı var 
-                .OnDelete(DeleteBehavior.Restrict);
+                builder.HasOne(bt => bt.Transaction)
+                       .WithOne(t => t.BankTransaction)
+                       .HasForeignKey<BankTransaction>(bt => bt.TransactionId)
+                       .OnDelete(DeleteBehavior.Restrict);
 
+                builder.HasOne(bt => bt.ProviderBank)
+                       .WithMany(pb => pb.BankTransactions)
+                       .HasForeignKey(bt => bt.TargetBankId)
+                       .OnDelete(DeleteBehavior.Restrict);
 
-                builder
-                .HasOne(t => t.ProviderBank)
-                    .WithMany(pbI => pbI.BankTransactions)
-                    .HasForeignKey(p => p.TargetBankId)
-                .OnDelete(DeleteBehavior.Restrict);
-                builder
-                .HasOne(t => t.ProviderBank)
-                    .WithMany(pbI => pbI.BankTransactions)
-                    .HasForeignKey(p => p.SourceBankId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                builder.HasOne(bt => bt.ProviderBank)
+                       .WithMany(pb => pb.BankTransactions)
+                       .HasForeignKey(bt => bt.SourceBankId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
-            
-            
+
+            // WalletTransfer configuration
             modelBuilder.Entity<WalletTransfer>(builder =>
             {
                 builder.HasKey(wt => wt.Id);
                 builder.Property(wt => wt.Target).IsRequired().HasMaxLength(100);
                 builder.Property(wt => wt.IslemNo).IsRequired().HasMaxLength(50);
-                builder.Property(wt => wt.SourceWalletId).IsRequired();   
-                builder 
-                    .HasOne(wt => wt.Transaction)
-                    .WithMany(t => t.WalletTransfers)
-                    .HasForeignKey(wt => wt.TransactionId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                builder
-                    .HasOne(wt => wt.Wallet)
-                    .WithMany(w => w.WalletTransfers)
-                    .HasForeignKey(wt => wt.WalletId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                builder.Property(wt => wt.SourceWalletId).IsRequired();
 
+                builder.HasOne(wt => wt.Transaction)
+                       .WithMany(t => t.WalletTransfers)
+                       .HasForeignKey(wt => wt.TransactionId)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasOne(wt => wt.Wallet)
+                       .WithMany(w => w.WalletTransfers)
+                       .HasForeignKey(wt => wt.WalletId)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
-            
+
+            // ProviderBank configuration
             modelBuilder.Entity<ProviderBank>(builder =>
             {
                 builder.HasKey(pb => pb.Id);
                 builder.Property(pb => pb.BankName).IsRequired().HasMaxLength(100);
-
-                
             });
-
-
-            base.OnModelCreating(modelBuilder);
         }
+
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker.Entries()
@@ -188,7 +176,7 @@ namespace WalletApp.Persistence
             {
                 var entity = (BaseEntity)entry.Entity;
                 var now = DateTime.UtcNow;
-                var user = "system"; // Giriş yapan kullanıcı adı ile değiştirilebilir
+                var user = "system"; // Bu kısmı istersen kullanıcıyla dinamikleştir
 
                 if (entry.State == EntityState.Added)
                 {
@@ -206,8 +194,5 @@ namespace WalletApp.Persistence
 
             return base.SaveChangesAsync(cancellationToken);
         }
-
     }
-
 }
-

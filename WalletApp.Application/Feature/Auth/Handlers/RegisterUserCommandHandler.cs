@@ -8,32 +8,32 @@ using WalletApp.Domain.Entities;
 
 public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, ServiceResponse<RegisterResponseDTO>>
 {
-    private readonly IUserRepository _userRepository;
     private readonly IUserDetailRepository _userDetailRepository;
     private readonly WalletService _walletService;
-    private readonly IPasswordHasher<AppUser> _passwordHasher;
+    private readonly UserManager<AppUser> _userManager;
 
     public RegisterUserCommandHandler(
-        IUserRepository userRepository,
         IUserDetailRepository userDetailRepository,
         WalletService walletService,
-        IPasswordHasher<AppUser> passwordHasher)
+        UserManager<AppUser> userManager)
     {
-        _userRepository = userRepository;
         _userDetailRepository = userDetailRepository;
         _walletService = walletService;
-        _passwordHasher = passwordHasher;
+        _userManager = userManager;
     }
 
     public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
     {
-        if (await _userRepository.EmailExistsAsync(request.Email, cancellationToken))
+        // Email zaten kayıtlı mı?
+        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+        if (existingUser != null)
             return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta zaten kayıtlı.");
 
         var user = new AppUser
         {
             Email = request.Email,
-            PasswordHash = _passwordHasher.HashPassword(null, request.PasswordHash),
+            PasswordHash = request.PasswordHash,
+            CreatedDate = DateTime.UtcNow,
             UserDetail = new UserDetail
             {
                 Name = request.Name,
@@ -48,21 +48,31 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
 
         try
         {
-            _userRepository.Add(user);
-            await _userRepository.SaveChangesAsync();
+            // Kullanıcıyı UserManager ile oluştur
+            var result = await _userManager.CreateAsync(user, request.PasswordHash);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt sırasında hata oluştu: " + errors);
+            }
+
+            // Kullanıcıya "User" rolü ata
+            await _userManager.AddToRoleAsync(user, "User");
+
+            // Wallet oluştur
             await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);
+
+            return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
+            {
+                Email = user.Email,
+                Name = user.UserDetail.Name,
+                Surname = user.UserDetail.Surname,
+                Message = "Kayıt başarılı."
+            }, "Kayıt başarılı.");
         }
         catch (Exception ex)
         {
             return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt sırasında hata oluştu: " + ex.Message);
         }
-
-        return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
-        {
-            Email = user.Email,
-            Name = user.UserDetail.Name,
-            Surname = user.UserDetail.Surname,
-            Message = "Kayıt başarılı."
-        }, "Kayıt başarılı.");
     }
 }

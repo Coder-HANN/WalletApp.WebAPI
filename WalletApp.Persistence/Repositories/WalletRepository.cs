@@ -142,5 +142,10 @@ namespace WalletApp.Infrastructure.Repositories
         }
 
        
+        // Buraya bakılacak 
+        public async Task<AppWallet> GetByUserIdAsync(int currentUserService)
+        {
+            return await GetAsync(w => w.AppUserId == currentUserService);
+        }
     }
 }

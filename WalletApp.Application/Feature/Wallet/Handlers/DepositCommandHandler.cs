@@ -84,7 +84,8 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
             TransactionId = transaction.Id,
             ProviderBankId = bankAccount.ProviderBankId, // Banka sağlayıcı ID
             Iban = bankAccount.Iban,
-            SourceBankId = bankAccount.Id,
+            SourceBankId = bankAccount.Id, // 💡 EKLENDİ: Hangi kullanıcı hesabından geldiğini göster
+            
             TargetBankId = Guid.Empty, // Cüzdan olduğu için boş bırakabilir veya nullable yapabilirsin
             Commission = "0", // Komisyon varsa ayarla, yoksa sıfır olarak bırak
             Transaction = transaction
