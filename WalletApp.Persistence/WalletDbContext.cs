@@ -213,5 +213,10 @@ namespace WalletApp.Persistence
 
             return base.SaveChangesAsync(cancellationToken);
         }
+
+        //public static implicit operator WalletDbContext(WalletDbContext v)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

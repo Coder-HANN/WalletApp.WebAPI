@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
 using WalletApp.Application.Services.EntitiesRepositories;
@@ -20,26 +21,32 @@ namespace WalletApp.Infrastructure.Services.EmailServices
             {
                 using var client = new SmtpClient(_settings.SmtpServer, _settings.SmtpPort)
                 {
-                    Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password),
+                    Credentials = new NetworkCredential(_settings.SenderName, _settings.Password),
                     EnableSsl = _settings.EnableSsl
                 };
 
                 var mail = new MailMessage
                 {
-                    From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
+                    //ben burayı bozdum
+                    
+                    From = new MailAddress(_settings.SenderEmail),
+                    To = { new MailAddress(to) },
                     Subject = subject,
                     Body = body,
-                    IsBodyHtml = false
+                    IsBodyHtml = true,
+
                 };
 
-                mail.To.Add(to);
 
+                Console.WriteLine(mail);
+                
                 await client.SendMailAsync(mail);
 
                 Console.WriteLine("Mail gönderildi.");
             }
             catch (Exception ex)
             {
+                Console.WriteLine("Mail gönderilirken hata oluştu: " + ex.Data);
                 Console.WriteLine($"Mail gönderme hatası: {ex.Message}");
                 throw;
             }

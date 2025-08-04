@@ -25,9 +25,9 @@ namespace WalletApp.Persistence.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
-        Task IUserRepository.SaveChangesAsync()
+        async Task<int> IUserRepository.SaveChangesAsync()
         {
-            return SaveChangesAsync();
+            return await SaveChangesAsync();
         }
         public async Task DeleteAsync(AppUser user)
         {

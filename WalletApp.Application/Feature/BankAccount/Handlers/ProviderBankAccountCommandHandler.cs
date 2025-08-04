@@ -32,6 +32,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             providerBank.BankName = request.BankName;
             providerBank.Iban = request.Iban;
+            
 
             await _providerBankRepository.UpdateAsync(providerBank);
             await _providerBankRepository.SaveChangesAsync();

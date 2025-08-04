@@ -115,6 +115,8 @@ builder.Services.AddMediatR(cfg =>
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddValidatorsFromAssemblyContaining<BankTransferRequestValidator>();
+
 
 // 🔹 Ortak servisler
 builder.Services.AddMemoryCache();

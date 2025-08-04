@@ -10,15 +10,17 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
 {
     private readonly IUserDetailRepository _userDetailRepository;
     private readonly WalletService _walletService;
-    
+    private readonly IEmailService _emailService;
+
 
     public RegisterUserCommandHandler(
         IUserDetailRepository userDetailRepository,
-        WalletService walletService)
+        WalletService walletService,
+        IEmailService emailService)
     {
         _userDetailRepository = userDetailRepository;
         _walletService = walletService;
-        
+        _emailService = emailService;
     }
 
     public async Task<ServiceResponse<RegisterResponseDTO>> Handle(RegisterRequestDTO request, CancellationToken cancellationToken)
@@ -30,8 +32,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
         }
         if (!request.Email.Contains("@"))
             return ServiceResponse<RegisterResponseDTO>.Fail("Geçersiz email formatı.");
-        if (request.PasswordHash.Length == 6)
-            return ServiceResponse<RegisterResponseDTO>.Fail("Şifre 6 karakter olmalıdır.");
+
 
         var user = new AppUser
         {
@@ -52,7 +53,13 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterRequestDTO, Se
 
         try
         {
+            await _emailService.SendAsync(
+                request.Email,
+                "Kayıt Başarılı",
+                $"Merhaba {request.Name}, kayıt işleminiz başarıyla tamamlandı. Hoş geldiniz! Kodunuz: 123456");
+            // Kullanıcı detaylarını ekle
 
+            await _userDetailRepository.AddAsync(user.UserDetail);
             // Wallet oluştur
             await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);
 

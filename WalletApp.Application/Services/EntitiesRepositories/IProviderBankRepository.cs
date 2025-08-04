@@ -7,8 +7,7 @@ namespace WalletApp.Application.Services.EntitiesRepositories
 {
     public interface IProviderBankRepository : IEntityRepository<ProviderBank>
     {
-        Task<IEnumerable<ProviderBank>> GetByUserIdAsync(int currentUserId);
-        Task GetProviderBankAsync(int currentUserId);
+        Task<ProviderBank> GetByIdAsync(object providerBankId);
         Task SaveChangesAsync();
     }
 }

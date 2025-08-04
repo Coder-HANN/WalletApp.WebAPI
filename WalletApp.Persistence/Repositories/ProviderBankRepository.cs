@@ -9,16 +9,11 @@ namespace WalletApp.Persistence.Repositories
     {
         public ProviderBankRepository(WalletDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<ProviderBank>> GetByUserIdAsync(int currentUserId)
+        public Task<ProviderBank> GetByIdAsync(object providerBankId)
         {
-            return await _context.ProviderBanks
-                .Where(x => x.AppUserId == currentUserId && !x.IsDelete) // IsDelete kontrolü opsiyonel ama genelde silinmiş hesaplar filtrelenir
-                .ToListAsync();
-        }
-
-        public Task GetProviderBankAsync(int currentUserId)
-        {
-            throw new NotImplementedException();
+            return _context.ProviderBanks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(pb => pb.Id == (Guid)providerBankId);
         }
 
         Task IProviderBankRepository.SaveChangesAsync()

@@ -11,6 +11,6 @@ namespace WalletApp.Domain.Entities
         public string Iban { get; set; }
         public string BankName { get; set; }
         public ICollection<BankTransaction> BankTransactions { get; set; }
-        public int AppUserId { get; set; }
+        
     }
 }
