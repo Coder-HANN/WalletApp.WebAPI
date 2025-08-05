@@ -10,11 +10,6 @@ namespace WalletApp.Persistence.Repositories
         public BankAccountRepository(WalletDbContext context) : base(context)
         {
         }
-
-        public Task GetListAsync(Func<object, bool> value)
-        {
-            throw new NotImplementedException();
-        }
         public async Task<IEnumerable<AppBankAccount>> GetUserAccountsAsync(int userId)
         {
             return await _context.BankAccounts

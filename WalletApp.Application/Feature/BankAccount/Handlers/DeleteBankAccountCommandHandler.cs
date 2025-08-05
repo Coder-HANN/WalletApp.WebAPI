@@ -8,6 +8,7 @@ public class DeleteBankAccountCommandHandler : IRequestHandler<DeleteBankAccount
 {
     private readonly IBankAccountRepository _bankAccountRepository;
     private readonly ICurrentUserService _currentUser;
+    
 
     public DeleteBankAccountCommandHandler(
         IBankAccountRepository bankAccountRepository,
@@ -19,6 +20,9 @@ public class DeleteBankAccountCommandHandler : IRequestHandler<DeleteBankAccount
 
     public async Task<ServiceResponse<string>> Handle(DeleteBankAccountRequestDTO request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUser.CurrentUser();
+        if (currentUserId == null)
+            return ServiceResponse<string>.Fail("Kullanıcı doğrulanamadı");
         var account = await _bankAccountRepository.GetAsync(x => x.Iban == request.Iban);
 
         if (account == null)

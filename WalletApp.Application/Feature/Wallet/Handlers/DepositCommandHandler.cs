@@ -14,34 +14,35 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public DepositCommandHandler(
         IWalletRepository walletRepository,
         IBankAccountRepository bankAccountRepository,
         ITransactionRepository transactionRepository,
         IBankTransactionRepository bankTransactionRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService)
     {
         _walletRepository = walletRepository;
         _bankAccountRepository = bankAccountRepository;
         _transactionRepository = transactionRepository;
         _bankTransactionRepository = bankTransactionRepository;
         _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
+
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(DepositRequestDTO request, CancellationToken cancellationToken)
     {
-        // Kullanıcı doğrulaması
-        if (!(_httpContextAccessor.HttpContext?.Items.TryGetValue("AppUserId", out var userIdObj) == true
-            && int.TryParse(userIdObj?.ToString(), out var appUserId)))
-        {
-            return ServiceResponse<TransactionResponseDTO>.Fail("User ID not found in request context.");
-        }
+        var currentUserId = _currentUserService.CurrentUser();
+        if(currentUserId == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı");
 
         // Banka hesabı kontrolü
         var bankAccount = await _bankAccountRepository.GetByIdAsync(request.SourceBankId);
 
-        if (bankAccount == null || bankAccount.AppUserId != appUserId)
+        if (bankAccount == null || bankAccount.AppUserId != currentUserId)
             return ServiceResponse<TransactionResponseDTO>.Fail("Invalid bank account.");
 
         // Tutar kontrolü
@@ -54,7 +55,7 @@ public class DepositCommandHandler : IRequestHandler<DepositRequestDTO, ServiceR
         // Cüzdan kontrolü
         var wallet = await _walletRepository.GetByIdAsync(request.WalletId);
 
-        if (wallet == null || wallet.AppUserId != appUserId)
+        if (wallet == null || wallet.AppUserId != currentUserId)
             return ServiceResponse<TransactionResponseDTO>.Fail("Wallet not found or not owned by user.");
 
         // Banka hesabından para düşülür

@@ -11,22 +11,24 @@ namespace WalletApp.Application.Feature.User.Handlers
         {
             private readonly IUserDetailRepository _userDetailRepository;
             private readonly IHttpContextAccessor _httpContextAccessor;
+            private readonly ICurrentUserService _currentUserService;
 
-            public GetUserProfileQueryHandler(IUserDetailRepository userDetailRepository, IHttpContextAccessor httpContextAccessor)
+            public GetUserProfileQueryHandler(
+                IUserDetailRepository userDetailRepository, 
+                IHttpContextAccessor httpContextAccessor,
+                ICurrentUserService currentUserService)
             {
                 _userDetailRepository = userDetailRepository;
                 _httpContextAccessor = httpContextAccessor;
+                _currentUserService = currentUserService;
             }
 
             public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileRequestDTO request, CancellationToken cancellationToken)
             {
-                // Token'dan AppUserId alma
-                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("AppUserId")?.Value;
-
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı doğrulanamadı");
-                }
+            // Token'dan AppUserId alma
+            var userId = _currentUserService.CurrentUser();
+            if (userId == null)
+                return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı bulunamadı");
 
                 // Kullanıcı detaylarını getir
                 var userDetail = await _userDetailRepository.GetAsync(x => x.AppUserId == userId);
@@ -63,6 +65,4 @@ namespace WalletApp.Application.Feature.User.Handlers
                 return ServiceResponse<UserProfileResponseDTO>.Ok(dto);
             }
         }
-
-    
 }

@@ -6,6 +6,8 @@ namespace WalletApp.Application.Feature.Auth.Dtos
 {
     public class DeleteUserAccountRequestDTO : IRequest<ServiceResponse<string>>
     {
-        public int UserId { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string Command { get; set; }
     }
 }

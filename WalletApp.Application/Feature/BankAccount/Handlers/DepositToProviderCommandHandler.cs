@@ -6,14 +6,22 @@ using WalletApp.Application.Services.EntitiesRepositories;
 public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProviderBankAccountRequestDTO, ServiceResponse<DepositToProviderBankAccountResponseDTO>>
 {
     private readonly IProviderBankRepository _providerBankRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DepositToProviderBankCommandHandler(IProviderBankRepository providerBankRepository)
+    public DepositToProviderBankCommandHandler(
+        IProviderBankRepository providerBankRepository,
+        ICurrentUserService currentUserService)
     {
         _providerBankRepository = providerBankRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResponse<DepositToProviderBankAccountResponseDTO>> Handle(DepositToProviderBankAccountRequestDTO request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.CurrentUser();
+        if (currentUserId == null)
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
+
         var providerBank = await _providerBankRepository.GetByIdAsync(request.ProviderBankId);
         if (providerBank == null)
             return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Provider banka bulunamadı.");

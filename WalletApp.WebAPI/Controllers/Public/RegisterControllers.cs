@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using WalletApp.Application.Feature.User.Dtos;
+using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Controllers.Public
 {
@@ -16,9 +17,9 @@ namespace WalletApp.WebAPI.Controllers.Public
         } 
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDTO command)
+        public async Task<ServiceResponse<RegisterResponseDTO>> Register([FromBody] RegisterRequestDTO command)
         {
-            return Ok(await _mediator.Send(command));
+            return await _mediator.Send(command);
         }
     }
 }

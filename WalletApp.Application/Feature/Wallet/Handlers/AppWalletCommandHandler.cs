@@ -4,23 +4,29 @@ using System.Threading.Tasks;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using Microsoft.AspNetCore.Http;
+using WalletApp.Application.Services.EntitiesRepositories;
 
 public class AppWalletCommandHandler : IRequestHandler<AppWalletRequestDTO, ServiceResponse<AppWalletResponseDTO>>
 {
     private readonly WalletService _walletService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
-	public AppWalletCommandHandler(WalletService walletService,IHttpContextAccessor httpContextAccessor)
+	public AppWalletCommandHandler(
+        WalletService walletService,
+        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService)
     {
         _walletService = walletService;
         _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
 	}
 
     public async Task<ServiceResponse<AppWalletResponseDTO>> Handle(AppWalletRequestDTO request, CancellationToken cancellationToken)
     {
-        var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("AppUserId");
-        if (userIdClaim == null)
-            return ServiceResponse<AppWalletResponseDTO>.Fail("Kullanıcı kimliği bulunamadı.");
+        var currentUserId = _currentUserService.CurrentUser();
+        if (currentUserId == null)
+            return ServiceResponse<AppWalletResponseDTO>.Fail("Kuullanıcı bulunamadı");
 
 		if (string.IsNullOrEmpty(request.Name))
             return ServiceResponse<AppWalletResponseDTO>.Fail("Cüzdan adı boş olamaz.");

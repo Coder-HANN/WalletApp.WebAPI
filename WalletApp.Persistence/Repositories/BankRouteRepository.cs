@@ -1,5 +1,4 @@
-﻿using System.Data.Entity;
-using WalletApp.Application.Services.EntitiesRepositories;
+﻿using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Persistence;
 using WalletApp.Persistence.Base;

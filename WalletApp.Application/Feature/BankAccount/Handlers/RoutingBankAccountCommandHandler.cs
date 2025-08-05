@@ -11,19 +11,25 @@ public class RoutingBankAccountRequestDTOHandler : IRequestHandler<RoutingBankAc
     private readonly IBankAccountRepository _bankAccountRepository;
     private readonly IProviderBankRepository _providerBankRepository;
     private readonly IBankRouteRepository _bankRouteRepository;
+    private readonly ICurrentUserService _currentUserService;
 
     public RoutingBankAccountRequestDTOHandler(
         IBankAccountRepository bankAccountRepository,
         IProviderBankRepository providerBankRepository,
-        IBankRouteRepository bankRouteRepository)
+        IBankRouteRepository bankRouteRepository,
+        ICurrentUserService currentUserService)
     {
         _bankAccountRepository = bankAccountRepository;
         _providerBankRepository = providerBankRepository;
         _bankRouteRepository = bankRouteRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResponse<RoutingBankAccountResponseDTO>> Handle(RoutingBankAccountRequestDTO request, CancellationToken cancellationToken)
     {
+        var currentUserId = _currentUserService.CurrentUser();
+        if (currentUserId == null)
+            return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
         // IBAN temizle
         var cleanedIban = request.Iban.Replace(" ", "");
 

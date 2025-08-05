@@ -107,6 +107,8 @@ builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>(
 builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
 builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IBankRouteRepository, BankRouteRepository>();
+
 builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
 
 // 🔹 MediatR + FluentValidation

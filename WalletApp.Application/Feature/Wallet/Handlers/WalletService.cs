@@ -16,6 +16,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IProviderBankRepository _providerBankRepository;
         private readonly IBankTransactionRepository _bankTransactionRepository;
+        private readonly ICurrentUserService _currentUserService;
 
 
         public WalletService(
@@ -24,7 +25,8 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             IWalletTransferRepository walletTransferRepository,
             IHttpContextAccessor httpContextAccessor,
             IProviderBankRepository providerBankRepository,
-            IBankTransactionRepository bankTransactionRepository)
+            IBankTransactionRepository bankTransactionRepository,
+            ICurrentUserService currentUserService)
         {
             _walletRepository = walletRepository;
             _transactionRepository = transactionRepository;
@@ -32,6 +34,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             _httpContextAccessor = httpContextAccessor;
             _providerBankRepository = providerBankRepository;
             _bankTransactionRepository = bankTransactionRepository;
+            _currentUserService = currentUserService;
         }
 
         public async Task<AppWallet> CreateWalletAsync(int AppUserId, string assest, CancellationToken ct)

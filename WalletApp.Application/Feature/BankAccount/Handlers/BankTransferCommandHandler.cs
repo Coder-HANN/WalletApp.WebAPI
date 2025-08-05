@@ -15,6 +15,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
     private readonly ITransactionRepository _transactionRepository;
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly ICurrentUserService _currentUser;
+    private readonly IBankRouteRepository _bankRouteRepository;
 
     public BankTransferCommandHandler(
         IWalletRepository walletRepository,
@@ -22,7 +23,8 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
         IBankAccountRepository bankAccountRepository,
         ITransactionRepository transactionRepository,
         IBankTransactionRepository bankTransactionRepository,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IBankRouteRepository bankRouteRepository)
     {
         _walletRepository = walletRepository;
         _providerBankRepository = providerBankRepository;
@@ -30,6 +32,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
         _transactionRepository = transactionRepository;
         _bankTransactionRepository = bankTransactionRepository;
         _currentUser = currentUser;
+        _bankRouteRepository = bankRouteRepository;
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferRequestDTO dto, CancellationToken cancellationToken)
@@ -76,7 +79,8 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
         if (providerBanks == null || !providerBanks.Any())
             return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bulunamadı.");
 
-        var sourceProviderBank = SelectSourceProviderBank(providerBanks, targetBankCode);
+        var sourceBankCode = await _bankRouteRepository.GetProviderBankCodeAsync(targetBankCode);
+        var sourceProviderBank = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode);
         if (sourceProviderBank == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Uygun provider banka bulunamadı.");
 
@@ -125,19 +129,4 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferRequestDTO
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
     }
 
-    private ProviderBank? SelectSourceProviderBank(IEnumerable<ProviderBank> accounts, string targetBankCode)
-    {
-        const string VakifBankCode = "0015";
-        const string ZiraatBankCode = "0010";
-        const string GarantiBankCode = "0020";
-
-        var sameBank = accounts.FirstOrDefault(x => x.BankCode == targetBankCode);
-        if (sameBank != null)
-            return sameBank;
-
-        if (targetBankCode == GarantiBankCode)
-            return accounts.FirstOrDefault(x => x.BankCode == ZiraatBankCode);
-
-        return accounts.FirstOrDefault(x => x.BankCode == VakifBankCode); 
-    }
 }

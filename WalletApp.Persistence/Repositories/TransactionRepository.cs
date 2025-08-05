@@ -1,6 +1,5 @@
 ﻿using WalletApp.Application.Services.EntitiesRepositories;
 using WalletApp.Domain.Entities;
-// using WalletApp.Persistence.Migrations;
 
 namespace WalletApp.Persistence.Base
 {
@@ -14,7 +13,7 @@ namespace WalletApp.Persistence.Base
 
         public Task SaveChangesAsync(Transaction transaction)
         {
-            throw new NotImplementedException();
+            return SaveChangesAsync();
         }
 
         Task ITransactionRepository.SaveChangesAsync()

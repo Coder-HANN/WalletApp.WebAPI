@@ -13,6 +13,7 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawRequestDTO, Servic
     private readonly IProviderBankRepository _providerBankRepository;
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public WithdrawCommandHandler(
         IWalletRepository walletRepository,
@@ -20,7 +21,8 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawRequestDTO, Servic
         IBankAccountRepository bankAccountRepository,
         IProviderBankRepository providerBankRepository,
         IBankTransactionRepository bankTransactionRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService)
     {
         _walletRepository = walletRepository;
         _transactionRepository = transactionRepository;
@@ -28,17 +30,17 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawRequestDTO, Servic
         _providerBankRepository = providerBankRepository;
         _bankTransactionRepository = bankTransactionRepository;
         _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(WithdrawRequestDTO request, CancellationToken cancellationToken)
     {
         // Kullanıcı doğrulama
-        var appUserIdObj = _httpContextAccessor.HttpContext?.Items["AppUserId"];
-        if (appUserIdObj == null || !int.TryParse(appUserIdObj.ToString(), out int parsedUserId))
-            return ServiceResponse<TransactionResponseDTO>.Fail("User not authenticated.");
-
-        // Cüzdan kontrol
-        var wallet = await _walletRepository.GetAsync(w => w.Id == request.WalletId && w.AppUserId == parsedUserId);
+        var currentUserId = _currentUserService.CurrentUser();
+        if (currentUserId == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+            // Cüzdan kontrol
+            var wallet = await _walletRepository.GetAsync(w => w.Id == request.WalletId && w.AppUserId == currentUserId);
         if (wallet == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Wallet not found.");
 
@@ -46,7 +48,7 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawRequestDTO, Servic
             return ServiceResponse<TransactionResponseDTO>.Fail("Insufficient wallet balance.");
 
         // Kullanıcının banka hesabı kontrol
-        var bankAccount = await _bankAccountRepository.GetAsync(b => b.Id == request.AppBankAccountId && b.AppUserId == parsedUserId);
+        var bankAccount = await _bankAccountRepository.GetAsync(b => b.Id == request.AppBankAccountId && b.AppUserId == currentUserId);
         if (bankAccount == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Bank account not found.");
 

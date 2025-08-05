@@ -7,7 +7,6 @@ namespace WalletApp.WebAPI.Controllers.Public
 {
     [ApiController]
     [Route("api/public/[controller]")]
-    [ApiExplorerSettings(GroupName = "Public")]
     public class LoginController : ControllerBase
     {
         private readonly IMediator _mediator;

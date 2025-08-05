@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Services.EntitiesRepositories;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers
 {
@@ -8,16 +9,25 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
     {
         private readonly WalletService _walletService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUserService;
 
-        public GetWalletHistoryQueryHandler(WalletService walletService, IHttpContextAccessor httpContextAccessor)
+        public GetWalletHistoryQueryHandler(
+            WalletService walletService,
+            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUserService)
         {
             _walletService = walletService;
             _httpContextAccessor = httpContextAccessor;
+            _currentUserService = currentUserService;
         }
 
         public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> Handle(GetUserWalletsHistoryQueryRequestDTO request, CancellationToken cancellationToken)
         {
-            var transactions = await _walletService.GetTransactionHistoryAsync(request.WalletId);
+            var currentUserId = _currentUserService.CurrentUser();
+            if (currentUserId == null)
+                return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Fail("Kullanıcı doğrulanamadı");
+
+                var transactions = await _walletService.GetTransactionHistoryAsync(request.WalletId);
 
             var dtoList = transactions.Select(t => new TransactionResponseDTO
             {

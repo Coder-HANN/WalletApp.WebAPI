@@ -11,20 +11,27 @@ namespace WalletApp.Application.Feature.Payment.Handler
         private readonly IPaymentRepository _paymentRepository;
         private readonly IWalletRepository _walletRepository;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly ICurrentUserService _currentUserService;
 
         public PaymentCommandHandler(
             IPaymentRepository paymentRepository,
             IWalletRepository walletRepository,
-            ITransactionRepository transactionRepository)
+            ITransactionRepository transactionRepository,
+            ICurrentUserService currentUserService)
         {
             _paymentRepository = paymentRepository;
             _walletRepository = walletRepository;
             _transactionRepository = transactionRepository;
+            _currentUserService = currentUserService;
+
         }
 
 
         public async Task<ServiceResponse<PaymentResponseDTO>> Handle(PaymentRequestDTO request, CancellationToken cancellationToken)
         {
+            var currentUserId = _currentUserService.CurrentUser();
+            if (currentUserId == null)
+                return ServiceResponse<PaymentResponseDTO>.Fail("Kullanıcı doğrulanamdı");
             // ➤ Kontrol: Institution boş mu?
             if (string.IsNullOrWhiteSpace(request.Institution))
                 return ServiceResponse<PaymentResponseDTO>.Fail("Kuruluş adı boş olamaz.");

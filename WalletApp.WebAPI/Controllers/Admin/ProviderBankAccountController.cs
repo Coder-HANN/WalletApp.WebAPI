@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using WalletApp.Application.Feature.BankAccount.Dtos;
+using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Controllers.Admin
 {
@@ -19,10 +20,10 @@ namespace WalletApp.WebAPI.Controllers.Admin
         }
 
         [HttpPost("AddProviderBankAccount")]
-        public async Task<IActionResult> AddProviderBankAccount([FromBody] ProviderBankAccountRequestDTO command)
+        public async Task<ServiceResponse<ProviderBankAccountResponseDTO>> AddProviderBankAccount([FromBody] ProviderBankAccountRequestDTO command)
         {
-            
-            return (IActionResult)await _mediator.Send(command);
+
+            return await _mediator.Send(command);
             
         }
     }
