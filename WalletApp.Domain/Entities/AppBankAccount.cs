@@ -1,5 +1,6 @@
 ﻿
 using System.ComponentModel.DataAnnotations.Schema;
+using WalletApp.Domain.Enums;
 
 namespace WalletApp.Domain.Entities
 {
@@ -12,7 +13,7 @@ namespace WalletApp.Domain.Entities
         public string AccountName { get; set; }
         public string Iban { get; set; }
         public string BankName { get; set; }
-        public string AccountType { get; set; }
+        public AccountType AccountType { get; set; }
         public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }

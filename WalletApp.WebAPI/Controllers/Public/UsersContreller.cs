@@ -1,7 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Feature.User.Dtos.UserProfile;
+using WalletApp.Application.DTOs.ProfileUpdate;
+using WalletApp.Application.Feature.ProfileUpdate.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 namespace WalletApp.WebAPI.Controllers.Public
 {
@@ -15,7 +16,7 @@ namespace WalletApp.WebAPI.Controllers.Public
         public UsersContreller(IMediator mediator) => _mediator = mediator;
 
         [HttpPut("ProfileUpdate")]
-        public async Task<ServiceResponse<UserProfileResponseDTO>> UpdateProfile([FromBody] UserProfileRequestDTO command)
+        public async Task<ServiceResponse<UserProfileResponseDTO>> UpdateProfile([FromBody] UserProfileUpdateCommand command)
         {
             return await _mediator.Send(command);
         }

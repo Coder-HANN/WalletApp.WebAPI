@@ -1,4 +1,9 @@
-﻿using WalletApp.Application.Feature.Wallet.Dtos;
+﻿using Microsoft.AspNetCore.Http;
+using Serilog;
+using System;
+using System.Net;
+using System.Threading.Tasks;
+using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Middleware
 {

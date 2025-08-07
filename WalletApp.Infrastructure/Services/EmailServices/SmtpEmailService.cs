@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using WalletApp.Application.Services.EntitiesRepositories;
+using WalletApp.Application.Abstraction.Services;
 
 namespace WalletApp.Infrastructure.Services.EmailServices
 {

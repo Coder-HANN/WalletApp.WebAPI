@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using WalletApp.Application.Services.EntitiesRepositories;
+using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Domain.Entities;
-using WalletApp.Persistence;
+using WalletApp.Persistence.Context;
 
 namespace WalletApp.Infrastructure.Repositories
 {

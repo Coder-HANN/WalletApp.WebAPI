@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using WalletApp.Application.Feature.Payment.DTO;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.DTOs.Payment;
 
 namespace WalletApp.WebAPI.Controllers.Public
 {
@@ -18,7 +18,7 @@ namespace WalletApp.WebAPI.Controllers.Public
         }
 
         [HttpPost("Payment")]
-        public async Task<ServiceResponse<PaymentResponseDTO>> Payment([FromBody] PaymentRequestDTO request)
+        public async Task<ServiceResponse<PaymentResponseDTO>> Payment([FromBody] PaymentCommand request)
         {
              return await _mediator.Send(request);
         }

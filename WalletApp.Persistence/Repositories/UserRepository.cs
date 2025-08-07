@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using WalletApp.Application.Services.EntitiesRepositories;
+using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Base;
+using WalletApp.Persistence.Context;
 
 namespace WalletApp.Persistence.Repositories
 {
@@ -70,6 +71,12 @@ namespace WalletApp.Persistence.Repositories
         public async Task<AppUser> GetByEmailAsync(string email)
         {
             return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task AddUserAsync(AppUser user)
+        {
+            await _context.Users.AddAsync(user);  // Users DbSet'i olmalı
+            await _context.SaveChangesAsync();
         }
     }
     

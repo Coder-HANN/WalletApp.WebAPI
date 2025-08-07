@@ -1,9 +1,8 @@
 ﻿using FluentValidation;
-using WalletApp.Application.Feature.Wallet.Dtos;
-
+using WalletApp.Application.Feature.Wallet.Commands;
 
 namespace WalletApp.Application.Feature.Wallet.Validations;
-public class TransferCommandValidator : AbstractValidator<TransferRequestDTO>
+public class TransferCommandValidator : AbstractValidator<TransferCommand>
 {
     public TransferCommandValidator()
     {

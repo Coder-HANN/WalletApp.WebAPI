@@ -1,5 +1,7 @@
 ﻿
 
+using WalletApp.Domain.Enums;
+
 namespace WalletApp.Domain.Entities
 {
     public class ProviderBank : BaseEntity
@@ -10,7 +12,8 @@ namespace WalletApp.Domain.Entities
         public string BankCode { get; set; }
         public string Iban { get; set; }
         public string BankName { get; set; }
+        public AccountType AccountType { get; set; }
         public ICollection<BankTransaction> BankTransactions { get; set; }
-        
+
     }
 }

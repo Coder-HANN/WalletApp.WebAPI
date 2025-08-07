@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
-using WalletApp.Application.Feature.User.Dtos;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using WalletApp.Application.DTOs.Auth;
+using WalletApp.Application.Feature.Auth.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Controllers.Public
@@ -14,10 +16,10 @@ namespace WalletApp.WebAPI.Controllers.Public
         public UserController(IMediator mediator)
         {
             _mediator = mediator;
-        } 
-
+        }
+        [AllowAnonymous]
         [HttpPost("Register")]
-        public async Task<ServiceResponse<RegisterResponseDTO>> Register([FromBody] RegisterRequestDTO command)
+        public async Task<ServiceResponse<RegisterResponseDTO>> Register([FromBody] RegisterCommand command)
         {
             return await _mediator.Send(command);
         }

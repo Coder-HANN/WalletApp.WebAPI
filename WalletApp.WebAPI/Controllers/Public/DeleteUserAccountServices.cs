@@ -1,7 +1,7 @@
 ﻿
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Feature.Auth.Dtos;
+using WalletApp.Application.Feature.User.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Controllers.Public
@@ -18,7 +18,7 @@ namespace WalletApp.WebAPI.Controllers.Public
         }
     
         [HttpDelete("DeleteUserAccount")]
-        public async Task<ServiceResponse<string>> DeleteUserAccount([FromBody] DeleteUserAccountRequestDTO command)
+        public async Task<ServiceResponse<string>> DeleteUserAccount([FromBody] DeleteUserAccountCommand command)
         {
             return await _mediator.Send(command);
 

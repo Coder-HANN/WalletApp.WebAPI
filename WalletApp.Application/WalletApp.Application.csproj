@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Feature\Auth\Queries\**" />
-    <EmbeddedResource Remove="Feature\Auth\Queries\**" />
-    <None Remove="Feature\Auth\Queries\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="MediatR" Version="12.0.1" />
@@ -26,6 +20,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WalletApp.Domain\WalletApp.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Feature\Auth\Validators\" />
+    <Folder Include="Feature\Payment\Validators\" />
+    <Folder Include="Feature\ProfileUpdate\Validators\" />
+    <Folder Include="Feature\User\Validators\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Feature\Payment\Commands\PaymentCommand.cs" />
   </ItemGroup>
 
 </Project>

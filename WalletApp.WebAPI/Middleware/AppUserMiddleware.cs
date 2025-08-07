@@ -13,36 +13,47 @@ namespace WalletApp.WebAPI.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            Console.WriteLine("🔵 AppUserMiddleware çalıştı.");
+            // ⛔ Bu yolları kontrol dışı bırak
+            var path = context.Request.Path.Value?.ToLower();
 
-            if (context.User.Identity?.IsAuthenticated == true)
+            if (path != null && (path.Contains("register") || path.Contains("login")))
             {
-                Console.WriteLine("Claims listesi:");
-                foreach (var c in context.User.Claims)
-                {
-                    Console.WriteLine($"Claim Type: {c.Type}, Value: {c.Value}");
-                }
-
-                var claim = context.User.Claims.FirstOrDefault(c =>
-                c.Type.Equals("AppUserId", StringComparison.OrdinalIgnoreCase));
-
-                if (claim != null)
-                {
-                    context.Items["AppUserId"] = claim.Value;
-                    Console.WriteLine($"🟢 AppUserId bulundu: {claim.Value}");
-                }
-                else
-                {
-                    Console.WriteLine("🟠 AppUserId claim bulunamadı veya geçersiz.");
-                }
-
+                Console.WriteLine($"⏭️ Middleware atlandı: {path}");
+                await _next(context);
             }
             else
             {
-                Console.WriteLine("🔴 Kullanıcı authenticate değil.");
-            }
 
-            await _next(context);
+                Console.WriteLine("🔵 AppUserMiddleware çalıştı.");
+
+                if (context.User.Identity?.IsAuthenticated == true)
+                {
+                    Console.WriteLine("Claims listesi:");
+                    foreach (var c in context.User.Claims)
+                    {
+                        Console.WriteLine($"Claim Type: {c.Type}, Value: {c.Value}");
+                    }
+
+                    var claim = context.User.Claims.FirstOrDefault(c =>
+                        c.Type.Equals("AppUserId", StringComparison.OrdinalIgnoreCase));
+
+                    if (claim != null)
+                    {
+                        context.Items["AppUserId"] = claim.Value;
+                        Console.WriteLine($"🟢 AppUserId bulundu: {claim.Value}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("🟠 AppUserId claim bulunamadı veya geçersiz.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("🔴 Kullanıcı authenticate değil.");
+                }
+
+                await _next(context);
+            }
         }
     }
 }

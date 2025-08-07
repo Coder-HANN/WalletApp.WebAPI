@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WalletApp.Application.Feature.BankAccount.Dtos;
+using WalletApp.Application.DTOs.Wallet;
+using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Controllers.Public
@@ -16,7 +17,7 @@ namespace WalletApp.WebAPI.Controllers.Public
     
 
     [HttpPost("BankDeposit")]
-        public async Task<ServiceResponse<TransactionResponseDTO>> BankDeposit([FromBody] BankDepositRequestDTO command)
+        public async Task<ServiceResponse<TransactionResponseDTO>> BankDeposit([FromBody] BankDepositCommand command)
         {
             return  await _mediator.Send(command);
 
