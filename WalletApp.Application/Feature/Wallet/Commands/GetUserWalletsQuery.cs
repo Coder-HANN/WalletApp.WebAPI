@@ -6,14 +6,13 @@ public class GetUserWalletsQuery: IRequest<ServiceResponse<IEnumerable<AppWallet
 {
     
     public Guid WalletId { get; set; }
-    
-    public int UserId { get; set; }
+  
 
     public GetUserWalletsQuery() { }
 
-    public GetUserWalletsQuery(Guid walletId, int userId)
+    public GetUserWalletsQuery(Guid walletId)
     {
         WalletId = walletId;
-        UserId = userId;
+        
     }
 }

@@ -48,7 +48,6 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Service
         {
             Token = token,
             Email = user.Email,
-            AppUserId = user.Id,
             TokenExpiration = expiration
         }, "Giriş başarılı.");
     }

@@ -29,13 +29,13 @@ namespace WalletApp.Application.Feature.Wallet.Queries
             if (currentUserId == null)
                 return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Fail("Kullanıcı doğrulanamadı");
 
-            var wallets = await _walletService.GetWalletsByAppUserIdAsync(request.UserId);
+            var wallets = await _walletService.GetMyWalletsAsync(currentUserId);
 
 
             var dtoList = wallets.Select(w => new AppWalletResponseDTO
             {
                 Id = w.Id,
-                AppUserId = w.AppUserId,
+                AppUserId = currentUserId,
                 TotalBalance = w.TotalBalance,
                 Assest = w.Assest,
                 

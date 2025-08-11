@@ -40,7 +40,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferCommand dto, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUser.CurrentUser();
-        if (currentUserId == null)
+        if (currentUserId == null || currentUserId == -1)
             return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
 
         var wallet = await _walletRepository.GetAsync(x => x.Id == dto.WalletId && x.AppUserId == currentUserId);
@@ -83,6 +83,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
         var sourceBankCode = await _bankRouteRepository.GetProviderBankCodeAsync(targetBankCode);
         var sourceProviderBank = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode);
+
         if (sourceProviderBank == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Uygun provider banka bulunamadı.");
 
@@ -110,16 +111,20 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
         var bankTransaction = new BankTransaction
         {
+            Id = Guid.NewGuid(),
             TransactionId = transaction.Id,
             ProviderBankId = sourceProviderBank.Id,
             Iban = cleanedIban,
             TargetBankId = targetBankAccount.Id,
-            Commission = "0"
+            Commission = "0",
+            SourceBankAccount = null, // Source bank account is not used in this context
         };
-        await _bankTransactionRepository.AddAsync(bankTransaction);
+
+         await _bankTransactionRepository.AddAsync(bankTransaction); // burada patladı
 
         var responseDto = new TransactionResponseDTO
         {
+            AppUserId = currentUserId,
             Id = transaction.Id,
             WalletId = wallet.Id,
             Amount = dto.Amount,
@@ -127,11 +132,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
         };
-
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
     }
-
 }
-
-
 // TODO: FACTORY DİZAYN PATTERN İLE SWİTCH TABLOSU OLUŞTUR KONTROLLERİ BANKCODE İLE DEĞİL PROVİDER ID İLE YAP ÖRNEK KULLANIMI İNCELE

@@ -29,7 +29,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(TransferCommand request, CancellationToken cancellationToken)
     {
         var currentUserId = _currentUserService.CurrentUser();
-        if (currentUserId == null)
+        if (currentUserId == null || currentUserId == -1)
             return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrualanamadı");
             var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount, request.Description.ToString());
 
@@ -38,6 +38,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
 
         return ServiceResponse<TransactionResponseDTO>.Ok(new TransactionResponseDTO
         {
+            AppUserId = currentUserId,
             WalletId = request.SourceWalletId,
             Amount = request.Amount,
             Type = TransactionType.Transfer,

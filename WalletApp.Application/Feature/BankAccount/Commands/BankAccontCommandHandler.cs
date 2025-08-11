@@ -34,20 +34,14 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
             if (currentUserId == null)
                 return ServiceResponse<BankAccountCommand>.Fail("Kullanıcı bulunamadı");
 
-            // BankName'e göre ProviderBank var mı kontrol et
-            var providerBank = await _providerBankRepository.GetAsync(p => p.BankName == request.BankName);
-
-            if (providerBank == null)
+            var bankCode = string.Empty;
+            if (!string.IsNullOrEmpty(request.Iban) && request.Iban.Length >= 9)
             {
-                providerBank = new ProviderBank
-                {
-                    Id = Guid.NewGuid(),
-                    BankName = request.BankName,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                await _providerBankRepository.AddAsync(providerBank);
-                await _providerBankRepository.SaveChangesAsync();
+                bankCode = request.Iban.Substring(5, 4); // IBAN’dan banka kodunu al
+            }
+            else
+            {
+                return ServiceResponse<BankAccountCommand>.Fail("Geçersiz IBAN numarası.");
             }
 
             var entity = new AppBankAccount
@@ -60,8 +54,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 BankName = request.BankName,
                 AccountType = request.AccountType,
                 Balance = request.Balance,
-                ProviderBankId = providerBank.Id,
-                BankCode = request.Iban.Substring(5, 4),
+                BankCode = bankCode,
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };
@@ -71,7 +64,6 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             var dto = new BankAccountCommand
             {
-                
                 AppUserId = entity.AppUserId,
                 AccountName = entity.AccountName,
                 Iban = entity.Iban,
@@ -85,5 +77,6 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             return ServiceResponse<BankAccountCommand>.Ok(dto, "Banka hesabı başarıyla eklendi.");
         }
+
     }
 }

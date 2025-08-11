@@ -14,6 +14,7 @@ namespace WalletApp.Application.Abstraction.Repositories
         Task DeleteAsync(AppUser user);
         Task<AppUser> GetByEmailAsync(string email);
         Task AddUserAsync(AppUser user);
+        Task<AppUser> GetByUserIdAsync(int userId);
     }
 
 }

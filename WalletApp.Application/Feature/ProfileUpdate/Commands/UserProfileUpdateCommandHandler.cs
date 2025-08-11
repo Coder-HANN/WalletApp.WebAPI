@@ -26,51 +26,104 @@ namespace WalletApp.Application.Feature.ProfileUpdate.Commands
                 _currentUserService = currentUserService;
                 _userRepository = userRepository;
         }
-
-            public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileUpdateCommand request, CancellationToken cancellationToken)
-            {
-            // Token'dan AppUserId alma
+        public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileUpdateCommand request, CancellationToken cancellationToken)
+        {
             var userId = _currentUserService.CurrentUser();
             if (userId == null)
                 return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı bulunamadı");
 
-                // Kullanıcı detaylarını getir
-                var userDetail = await _userDetailRepository.GetAsync(x => x.AppUserId == userId);
-                
-                if (userDetail == null)
-                {
-                    return ServiceResponse<UserProfileResponseDTO>.Fail("Profil bulunamadı");
-                }
-                var userEmail = await _userRepository.GetByEmailAsync(request.Email);
+            var userDetail = await _userDetailRepository.GetAsync(x => x.AppUserId == userId);
+            if (userDetail == null)
+                return ServiceResponse<UserProfileResponseDTO>.Fail("Profil bulunamadı");
 
+            var user = await _userRepository.GetByUserIdAsync(userId);
+            if (user == null)
+                return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı bilgisi bulunamadı");
 
-            // Bilgileri güncelle
-            userDetail.Name = request.Name;
-            userDetail.Surname = request.Surname;
-            userEmail.Email = request.Email;
-            userDetail.Gender = request.Gender;
-            userDetail.BirthDay = request.BirthDay;
-            userDetail.Occupation = request.Occupation;
-            userDetail.PhoneNumber = request.PhoneNumber;
-            userDetail.Address = request.Address;
+            bool isModified = false;
 
-            await _userDetailRepository.UpdateAsync(userDetail);
-                await _userDetailRepository.SaveChangesAsync();
+            // Her alanı karşılaştır ve değiştiyse güncelle
+            if (!string.IsNullOrWhiteSpace(request.Name) && request.Name != userDetail.Name)
+            {
+                userDetail.Name = request.Name;
+                isModified = true;
+            }
 
-                // Response DTO oluştur
-                var dto = new UserProfileResponseDTO
+            if (!string.IsNullOrWhiteSpace(request.Surname) && request.Surname != userDetail.Surname)
+            {
+                userDetail.Surname = request.Surname;
+                isModified = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Email) && request.Email != user.Email)
+            {
+                user.Email = request.Email;
+                isModified = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Gender) && request.Gender != userDetail.Gender)
+            {
+                userDetail.Gender = request.Gender;
+                isModified = true;
+            }
+
+            if (request.BirthDay != default && request.BirthDay != userDetail.BirthDay)
+            {
+                userDetail.BirthDay = request.BirthDay;
+                isModified = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Occupation) && request.Occupation != userDetail.Occupation)
+            {
+                userDetail.Occupation = request.Occupation;
+                isModified = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && request.PhoneNumber != userDetail.PhoneNumber)
+            {
+                userDetail.PhoneNumber = request.PhoneNumber;
+                isModified = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Address) && request.Address != userDetail.Address)
+            {
+                userDetail.Address = request.Address;
+                isModified = true;
+            }
+
+            if (!isModified)
+            {
+                return ServiceResponse<UserProfileResponseDTO>.Ok(new UserProfileResponseDTO
                 {
                     Name = userDetail.Name,
                     Surname = userDetail.Surname,
-                    Email = userEmail.Email,
+                    Email = user.Email,
                     Gender = userDetail.Gender,
-                    BirthDay = request.BirthDay,
+                    BirthDay = userDetail.BirthDay,
                     Occupation = userDetail.Occupation,
                     PhoneNumber = userDetail.PhoneNumber,
-                    Address = userDetail.Address,
-                };
-            
-                return ServiceResponse<UserProfileResponseDTO>.Ok(dto);
+                    Address = userDetail.Address
+                });
             }
+
+            await _userDetailRepository.UpdateAsync(userDetail);
+            await _userRepository.UpdateAsync(user);
+            await _userDetailRepository.SaveChangesAsync();
+
+            var dto = new UserProfileResponseDTO
+            {
+                Name = userDetail.Name,
+                Surname = userDetail.Surname,
+                Email = user.Email,
+                Gender = userDetail.Gender,
+                BirthDay = userDetail.BirthDay,
+                Occupation = userDetail.Occupation,
+                PhoneNumber = userDetail.PhoneNumber,
+                Address = userDetail.Address,
+            };
+
+            return ServiceResponse<UserProfileResponseDTO>.Ok(dto);
         }
+
+    }
 }

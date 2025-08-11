@@ -9,6 +9,6 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
         public string Iban { get; set; }
         public decimal Amount { get; set; }
         public string Description { get; set; }
-        public object ProviderBankId { get; internal set; }
+        
     }
 }

@@ -9,7 +9,7 @@ namespace WalletApp.Domain.Entities
         public Guid? WalletId { get; set; }
         public Guid? AppBankAccountId { get; set; }
         public decimal Amount { get; set; }
-        public decimal Currency { get; set; }
+        public CurrenclyType Currency { get; set; }
         public TransactionType Type { get; set; }
         public DescriptionType Description { get; set; }
         public AppWallet? Wallet { get; set; }

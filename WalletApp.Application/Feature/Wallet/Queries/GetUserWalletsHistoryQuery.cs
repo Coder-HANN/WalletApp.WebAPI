@@ -8,12 +8,11 @@ namespace WalletApp.Application.Feature.Wallet.Queries
     public class GetUserWalletsHistoryQuery : IRequest<ServiceResponse<IEnumerable<TransactionResponseDTO>>>
     {
         public Guid WalletId { get; set; }
-        public int UserId { get; set; }
-
-        public GetUserWalletsHistoryQuery(Guid walletId, int userId)
+        
+        public GetUserWalletsHistoryQuery(Guid walletId)
         {
             WalletId = walletId;
-            UserId = userId;
+            
         }
         public GetUserWalletsHistoryQuery() { }
     }

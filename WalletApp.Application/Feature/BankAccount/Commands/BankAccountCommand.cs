@@ -15,7 +15,7 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; } 
         public Guid WalletId { get; set; }
-        public int AppUserId { get; internal set; }
+        public int AppUserId { get;  set; }
 
         public BankAccountCommand() { }
 

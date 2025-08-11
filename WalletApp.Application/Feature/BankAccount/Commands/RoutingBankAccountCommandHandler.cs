@@ -32,13 +32,13 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
-        // IBAN temizle
+        
         var cleanedIban = request.Iban.Replace(" ", "");
 
-        // Banka kodunu IBAN'dan çıkar (örnek: TR15001500001234 → "0015")
+       
         var targetBankCode = cleanedIban.Substring(5, 4);
 
-        // Tüm provider bankaları çek
+        
         var providerBanks = await _providerBankRepository.GetAllAsync();
         if (!providerBanks.Any())
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Provider banka bulunamadı.");
@@ -46,12 +46,12 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         // Yönlendirme tablosundan uygun provider banka kodunu al
         var sourceBankCode = await _bankRouteRepository.GetProviderBankCodeAsync(targetBankCode);
 
-        // Provider bankayı bul
+        
         var sourceProvider = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode);
         if (sourceProvider == null)
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Yönlendirme için uygun provider banka bulunamadı.");
 
-        // Gerekirse hedef banka hesabını da çekebilirsin
+        
         var targetBankAccount = await _bankAccountRepository.GetAsync(x => x.Iban.Replace(" ", "") == cleanedIban);
 
         var response = new RoutingBankAccountResponseDTO

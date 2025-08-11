@@ -78,6 +78,11 @@ namespace WalletApp.Persistence.Repositories
             await _context.Users.AddAsync(user);  // Users DbSet'i olmalı
             await _context.SaveChangesAsync();
         }
+
+        public async Task<AppUser> GetByUserIdAsync(int userId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        }
     }
     
 }

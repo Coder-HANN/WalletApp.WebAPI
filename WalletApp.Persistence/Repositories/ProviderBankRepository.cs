@@ -1,8 +1,8 @@
 ﻿using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Base;
-using System.Data.Entity;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace WalletApp.Persistence.Repositories
 {
@@ -12,9 +12,7 @@ namespace WalletApp.Persistence.Repositories
 
         public Task<ProviderBank> GetByIdAsync(object providerBankId)
         {
-            return _context.ProviderBanks
-                .AsNoTracking()
-                .FirstOrDefaultAsync(pb => pb.Id == (Guid)providerBankId);
+            return _context.ProviderBanks.FirstOrDefaultAsync(pb => pb.Id == (Guid)providerBankId);
         }
 
         Task IProviderBankRepository.SaveChangesAsync()

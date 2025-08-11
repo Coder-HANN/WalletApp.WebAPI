@@ -33,7 +33,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 var columnOptions = new ColumnOptions();
-columnOptions.Store.Remove(StandardColumn.Properties); // opsiyonel, json props’u kaldırır
+columnOptions.Store.Remove(StandardColumn.Properties); // json props’u kaldırır
 columnOptions.Store.Add(StandardColumn.LogEvent);
 
 Log.Logger = new LoggerConfiguration()

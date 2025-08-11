@@ -6,7 +6,7 @@ namespace WalletApp.Application.Feature.Wallet.Commands
 {
     public class AppWalletCommand : IRequest<ServiceResponse<AppWalletResponseDTO>>
     {
-        public int AppUserId { get; set; }
+     
         public string Name { get; set; }
         public decimal TotalBalance { get; set; }
         public string Asset { get; set; }

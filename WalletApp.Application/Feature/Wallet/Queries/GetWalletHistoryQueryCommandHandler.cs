@@ -25,11 +25,10 @@ namespace WalletApp.Application.Feature.Wallet.Queries
 
         public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> Handle(GetUserWalletsHistoryQuery request, CancellationToken cancellationToken)
         {
-            var currentUserId = _currentUserService.CurrentUser();
-            if (currentUserId == null)
-                return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Fail("Kullanıcı doğrulanamadı");
+            var transactions = await _walletService.GetWalletTransactionHistoryAsync(request.WalletId);
 
-                var transactions = await _walletService.GetTransactionHistoryAsync(request.WalletId);
+            if (!transactions.Any())
+                return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Fail("İşlem geçmişi bulunamadı.");
 
             var dtoList = transactions.Select(t => new TransactionResponseDTO
             {
@@ -43,5 +42,8 @@ namespace WalletApp.Application.Feature.Wallet.Queries
 
             return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Ok(dtoList, "İşlem geçmişi getirildi.");
         }
+
+
+
     }
 }

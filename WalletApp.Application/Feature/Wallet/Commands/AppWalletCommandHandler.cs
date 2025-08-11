@@ -28,12 +28,12 @@ public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, Service
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<AppWalletResponseDTO>.Fail("Kuullanıcı bulunamadı");
+            return ServiceResponse<AppWalletResponseDTO>.Fail("Kullanıcı bulunamadı");
 
 		if (string.IsNullOrEmpty(request.Name))
             return ServiceResponse<AppWalletResponseDTO>.Fail("Cüzdan adı boş olamaz.");
 
-        var result = await _walletService.CreateWalletAsync(request.AppUserId, request.Currency, cancellationToken);
+        var result = await _walletService.CreateWalletAsync( request.Currency, cancellationToken);
 
         if (result == null)
             return ServiceResponse<AppWalletResponseDTO>.Fail("Cüzdan oluşturulamadı.");
@@ -41,7 +41,7 @@ public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, Service
         var dto = new AppWalletResponseDTO
         {
             Id = result.Id,
-            AppUserId = result.AppUserId,
+            AppUserId = currentUserId,
             TotalBalance = result.TotalBalance,
             Assest = result.Assest 
         };

@@ -8,10 +8,9 @@ namespace WalletApp.Application.Feature.Wallet.Commands
     public record DepositCommand : IRequest<ServiceResponse<TransactionResponseDTO>>
     {
       public Guid WalletId { get; set; }
-        public Guid SourceBankId { get; set; } 
-       
-        public decimal Amount { get; set; }
-        public DescriptionType Description {  get; set; }
+      public Guid SourceBankId { get; set; } 
+      public decimal Amount { get; set; }
+      public DescriptionType Description {  get; set; }
         
        
     }

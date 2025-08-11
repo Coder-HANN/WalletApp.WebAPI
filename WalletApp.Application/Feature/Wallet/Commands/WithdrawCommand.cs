@@ -6,7 +6,7 @@ using WalletApp.Domain.Enums;
 
 namespace WalletApp.Application.Feature.Wallet.Commands    
 {
-    public record WithdrawCommand : IRequest<ServiceResponse<TransactionResponseDTO>>
+    public class WithdrawCommand : IRequest<ServiceResponse<TransactionResponseDTO>>
     {
         public Guid WalletId { get; set; }
         public Guid AppBankAccountId { get; set; }

@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WalletApp.Domain.Entities;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace WalletApp.Persistence.Context
 {
@@ -97,6 +92,7 @@ namespace WalletApp.Persistence.Context
                        .WithMany(u => u.BankHesap)
                        .HasForeignKey(ba => ba.AppUserId)
                        .OnDelete(DeleteBehavior.Restrict);
+                
             });
 
             // Transaction configuration
@@ -133,28 +129,49 @@ namespace WalletApp.Persistence.Context
                        .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // BankTransaction configuration
             modelBuilder.Entity<BankTransaction>(builder =>
             {
                 builder.HasKey(bt => bt.Id);
-                builder.Property(bt => bt.Iban).IsRequired().HasMaxLength(50);
-                builder.Property(bt => bt.TargetBankId).IsRequired();
-                builder.Property(bt => bt.SourceBankId).IsRequired();
-                builder.Property(bt => bt.Commission).IsRequired();
 
+                builder.Property(bt => bt.Iban)
+                       .IsRequired(false)
+                       .HasMaxLength(50);
+                       
+
+                builder.Property(bt => bt.TargetBankId)
+                       .IsRequired(false);
+
+                builder.Property(bt => bt.SourceBankId)
+                       .IsRequired(false);
+
+                builder.Property(bt => bt.Commission)
+                       .IsRequired();
+
+
+                // Transaction ile birebir ilişki (1-1)
                 builder.HasOne(bt => bt.Transaction)
                        .WithOne(t => t.BankTransaction)
                        .HasForeignKey<BankTransaction>(bt => bt.TransactionId)
                        .OnDelete(DeleteBehavior.Restrict);
 
+                // ProviderBank ilişkisi (kaynak banka)
                 builder.HasOne(bt => bt.ProviderBank)
                        .WithMany(pb => pb.BankTransactions)
-                       .HasForeignKey(bt => bt.TargetBankId)
+                       .HasForeignKey(bt => bt.ProviderBankId)
                        .OnDelete(DeleteBehavior.Restrict);
 
-                builder.HasOne(bt => bt.ProviderBank)
-                       .WithMany(pb => pb.BankTransactions)
-                       .HasForeignKey(bt => bt.SourceBankId)
+                
+                 builder.HasOne(bt => bt.SourceBankAccount)
+                        .WithMany()
+                        .HasForeignKey(bt => bt.SourceBankId)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+
+                // TargetBankId opsiyonel, eğer başka ProviderBank ise ilişkisi (isteğe bağlı)
+                builder.HasOne<ProviderBank>()
+                       .WithMany()
+                       .HasForeignKey(bt => bt.TargetBankId)
+                       .IsRequired(false)
                        .OnDelete(DeleteBehavior.Restrict);
             });
 

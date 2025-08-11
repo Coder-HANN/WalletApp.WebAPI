@@ -7,7 +7,6 @@ using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
-using WalletApp.Application.Feature.Wallet.Validations;
 
 public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceResponse<TransactionResponseDTO>>
 {
@@ -37,79 +36,80 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         _currentUserService = currentUserService;
     }
 
+
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(WithdrawCommand request, CancellationToken cancellationToken)
     {
-        var validator = new WithdrawCommandValidator();
-
-        // Kullanıcı doğrulama
+        // 1️⃣ Kullanıcı doğrulama
         var currentUserId = _currentUserService.CurrentUser();
-        if (currentUserId == null)
+        if (currentUserId == null || currentUserId == -1)
             return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
-            // Cüzdan kontrol
-            var wallet = await _walletRepository.GetAsync(w => w.Id == request.WalletId && w.AppUserId == currentUserId);
+
+        // 2️⃣ Cüzdan kontrolü
+        var wallet = await _walletRepository.GetAsync(x => x.Id == request.WalletId && x.AppUserId == currentUserId);
         if (wallet == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan ıd boş olamaz");
+            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bulunamadı.");
 
         if (wallet.TotalBalance < request.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Insufficient wallet balance.");
+            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bakiyesi yetersiz.");
 
-        // Kullanıcının banka hesabı kontrol
-        var bankAccount = await _bankAccountRepository.GetAsync(b => b.Id == request.AppBankAccountId && b.AppUserId == currentUserId);
-        if (bankAccount == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Bank account not found.");
+        // 3️⃣ Kullanıcı banka hesabı kontrolü
+        var userBankAccount = await _bankAccountRepository.GetAsync(
+            x => x.Id == request.AppBankAccountId && x.AppUserId == currentUserId);
+        if (userBankAccount == null)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Banka hesabı bulunamadı veya size ait değil.");
 
-        // Provider bankayı bul (kullanıcının hesabı hangi sağlayıcıya bağlı?)
-        var providerBank = await _providerBankRepository.GetByIdAsync(bankAccount.ProviderBankId);
+        // 4️⃣ IBAN’dan banka kodu çıkar
+        var cleanIban = userBankAccount.Iban.Replace(" ", "");
+        if (cleanIban.Length < 9)
+            return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz IBAN.");
+        var bankCode = cleanIban.Substring(5, 4);
+
+        // 5️⃣ Provider bank seçimi (önce aynısı, yoksa 0015 VakıfBank)
+        var providerBanks = await _providerBankRepository.GetAllAsync();
+
+        var providerBank = providerBanks.FirstOrDefault(pb => pb.BankCode == bankCode) ?? providerBanks.FirstOrDefault(pb => pb.BankCode == "0015");
+
+        var providerBankAccount = await _bankAccountRepository.GetAsync(x => x.ProviderBankId == providerBank.Id);
+
         if (providerBank == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider bank not found.");
+            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bulunamadı.");
 
         if (providerBank.TotalBalance < request.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider bank balance is insufficient.");
+            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bakiyesi yetersiz.");
 
-        // Bakiye güncelle
-        wallet.TotalBalance -= request.Amount; // cüzdandan düş
-        providerBank.TotalBalance -= request.Amount; // provider bankadan düş
-        bankAccount.Balance += request.Amount; // kullanıcının banka hesabına ekle
-
+        
+        wallet.TotalBalance -= request.Amount;
         await _walletRepository.UpdateAsync(wallet);
-        await _providerBankRepository.UpdateAsync(providerBank);
-        await _bankAccountRepository.UpdateAsync(bankAccount);
 
-        // Transaction oluştur
+        // 7️⃣ Provider banktan gerçek düşüş
+        providerBank.TotalBalance -= request.Amount;
+        await _providerBankRepository.UpdateAsync(providerBank);
+
+        // 8️⃣ Transaction kaydı
         var transaction = new Transaction
         {
-            Id = Guid.NewGuid(),
             WalletId = wallet.Id,
-            Amount = -request.Amount,
+            Amount = request.Amount,
             Type = TransactionType.Withdraw,
             Description = request.Description,
-            CreatedDate = DateTime.UtcNow
+            CreatedDate = DateTime.UtcNow,
+            AppBankAccountId = request.AppBankAccountId
         };
         await _transactionRepository.AddAsync(transaction);
-
-        // BankTransaction kaydı
-        var bankTransaction = new BankTransaction
-        {
-            TransactionId = transaction.Id,
-            ProviderBankId = providerBank.Id,
-            SourceBankId = bankAccount.Id,     // Kullanıcının hesabı
-            TargetBankId = bankAccount.Id,            // Para gönderilen hesap
-            Iban = bankAccount.Iban,
-            Commission = "0"
-        };
-        await _bankTransactionRepository.AddAsync(bankTransaction);
-
-        // DTO dönüş
+        await _transactionRepository.SaveChangesAsync();
+        
         var responseDto = new TransactionResponseDTO
         {
             Id = transaction.Id,
-            WalletId = transaction.WalletId,
-            Amount = transaction.Amount,
+            AppUserId = currentUserId,
+            WalletId = wallet.Id,
+            Amount = request.Amount,
             Type = transaction.Type,
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
         };
 
-        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Withdraw successful.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para çekme işlemi başarılı.");
     }
+
 }

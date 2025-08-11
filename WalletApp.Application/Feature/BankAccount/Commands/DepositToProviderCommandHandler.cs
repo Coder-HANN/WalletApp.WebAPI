@@ -22,11 +22,14 @@ public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProv
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
 
-        var providerBank = await _providerBankRepository.GetByIdAsync(request.ProviderBankId);
+        if (string.IsNullOrWhiteSpace(request.Iban))
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("IBAN boş olamaz.");
+
+        var providerBank = await _providerBankRepository.GetAsync(p => p.Iban == request.Iban);
         if (providerBank == null)
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Provider banka bulunamadı.");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("IBAN’a ait banka hesabı bulunamadı.");
 
         if (request.Amount <= 0)
             return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Yatırılacak tutar pozitif olmalı.");
@@ -38,11 +41,12 @@ public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProv
 
         var response = new DepositToProviderBankAccountResponseDTO
         {
-            Iban = request.Iban,
+            Iban = providerBank.Iban,
             Amount = request.Amount,
-            Description = request.Description 
+            Description = request.Description
         };
 
-        return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Ok(response,"Provider banka bakiyesi başarıyla güncellendi.");
+        return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Ok(response, "Provider banka bakiyesi başarıyla güncellendi.");
     }
+
 }

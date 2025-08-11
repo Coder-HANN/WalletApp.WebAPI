@@ -5,7 +5,7 @@
 namespace WalletApp.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIsDeleteToAppBankAccount : Migration
+    public partial class RemoveTargetBankIdForeignKey : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

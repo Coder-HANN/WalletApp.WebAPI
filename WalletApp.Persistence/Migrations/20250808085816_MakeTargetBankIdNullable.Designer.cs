@@ -12,8 +12,8 @@ using WalletApp.Persistence.Context;
 namespace WalletApp.Persistence.Migrations
 {
     [DbContext(typeof(WalletDbContext))]
-    [Migration("20250806074103_migration3")]
-    partial class migration3
+    [Migration("20250808085816_MakeTargetBankIdNullable")]
+    partial class MakeTargetBankIdNullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -73,7 +73,7 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProviderBankId")
+                    b.Property<Guid?>("ProviderBankId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("UpdatedDate")
@@ -264,7 +264,7 @@ namespace WalletApp.Persistence.Migrations
                     b.Property<Guid>("SourceBankId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("TargetBankId")
+                    b.Property<Guid?>("TargetBankId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("TransactionId")
@@ -273,6 +273,8 @@ namespace WalletApp.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SourceBankId");
+
+                    b.HasIndex("TargetBankId");
 
                     b.HasIndex("TransactionId")
                         .IsUnique();
@@ -347,13 +349,12 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Currency")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("Currency")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
+                    b.Property<int>("Description")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit");
@@ -508,9 +509,7 @@ namespace WalletApp.Persistence.Migrations
 
                     b.HasOne("WalletApp.Domain.Entities.ProviderBank", "ProviderBank")
                         .WithMany()
-                        .HasForeignKey("ProviderBankId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProviderBankId");
 
                     b.Navigation("ProviderBank");
 
@@ -541,11 +540,16 @@ namespace WalletApp.Persistence.Migrations
 
             modelBuilder.Entity("WalletApp.Domain.Entities.BankTransaction", b =>
                 {
-                    b.HasOne("WalletApp.Domain.Entities.ProviderBank", "ProviderBank")
-                        .WithMany("BankTransactions")
+                    b.HasOne("WalletApp.Domain.Entities.AppBankAccount", "SourceBankAccount")
+                        .WithMany()
                         .HasForeignKey("SourceBankId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("WalletApp.Domain.Entities.ProviderBank", "ProviderBank")
+                        .WithMany("BankTransactions")
+                        .HasForeignKey("TargetBankId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("WalletApp.Domain.Entities.Transaction", "Transaction")
                         .WithOne("BankTransaction")
@@ -554,6 +558,8 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("ProviderBank");
+
+                    b.Navigation("SourceBankAccount");
 
                     b.Navigation("Transaction");
                 });

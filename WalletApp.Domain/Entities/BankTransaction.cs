@@ -1,16 +1,24 @@
-﻿
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace WalletApp.Domain.Entities
 {
     public class BankTransaction : BaseEntity
     {
         public Guid Id { get; set; }
         public Guid TransactionId { get; set; }
-        public Guid ProviderBankId { get; set; }
-        public string Iban { get; set; }
-        public Guid TargetBankId { get; set; } 
+        public Guid? ProviderBankId { get; set; }
         public Guid? SourceBankId { get; set; }
+        public Guid? TargetBankId { get; set; }
+
+        public string Iban { get; set; }
+        
         public string Commission { get; set; }
+            
+        public ProviderBank ProviderBank { get; set; }
+
+        [ForeignKey("SourceBankId")]
+        public AppBankAccount? SourceBankAccount { get; set; }
         public Transaction Transaction { get; set; }
-        public ProviderBank ProviderBank { get; set; } 
     }
 }

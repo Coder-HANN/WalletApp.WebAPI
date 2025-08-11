@@ -21,23 +21,30 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
             _currentUserService = currentUserService;
         }
 
-        public async Task<ServiceResponse<ProviderBankAccountResponseDTO>> Handle(
-            ProviderBankAccountCommand request, CancellationToken cancellationToken)
+        public async Task<ServiceResponse<ProviderBankAccountResponseDTO>> Handle(ProviderBankAccountCommand request, CancellationToken cancellationToken)
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
                 return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
 
-            var providerBank = await _providerBankRepository.GetAsync(p => p.BankName == request.BankName);
-            if (providerBank == null)
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Banka bulunamadı.");
+            var existing = await _providerBankRepository.GetAsync(p => p.BankName == request.BankName);
+            if (existing != null)
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Bu banka zaten eklenmiş.");
 
-            providerBank.BankName = request.BankName;
-            providerBank.Iban = request.Iban;
-            providerBank.AccountType = request.AccountType;
+            // IBAN'dan BankCode çıkarılıyor
+            var bankCode = ExtractBankCodeFromIban(request.Iban);
+            if (string.IsNullOrEmpty(bankCode))
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Geçersiz IBAN, BankCode alınamadı.");
 
+            var providerBank = new Domain.Entities.ProviderBank
+            {
+                BankName = request.BankName,
+                Iban = request.Iban,
+                AccountType = request.AccountType,
+                BankCode = bankCode
+            };
 
-            await _providerBankRepository.UpdateAsync(providerBank);
+            await _providerBankRepository.AddAsync(providerBank);
             await _providerBankRepository.SaveChangesAsync();
 
             var response = new ProviderBankAccountResponseDTO
@@ -47,7 +54,16 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 AccountType = providerBank.AccountType
             };
 
-            return ServiceResponse<ProviderBankAccountResponseDTO>.Ok(response, "Banka hesabı başarıyla güncellendi.");
+            return ServiceResponse<ProviderBankAccountResponseDTO>.Ok(response, "Banka hesabı başarıyla eklendi.");
         }
+
+        private string ExtractBankCodeFromIban(string iban)
+        {
+            if (string.IsNullOrWhiteSpace(iban) || iban.Length < 6)
+                return null;
+
+            return iban.Substring(5,4); // 5. ve 6. karakterler (index 4 ve 5)
+        }
+
     }
 }

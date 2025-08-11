@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Linq;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
-
-
 
 namespace WalletApp.Application.Feature.Wallet.Handlers
 {
@@ -19,7 +18,6 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         private readonly IProviderBankRepository _providerBankRepository;
         private readonly IBankTransactionRepository _bankTransactionRepository;
         private readonly ICurrentUserService _currentUserService;
-
 
         public WalletService(
             IWalletRepository walletRepository,
@@ -39,11 +37,15 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             _currentUserService = currentUserService;
         }
 
-        public async Task<AppWallet> CreateWalletAsync(int AppUserId, string assest, CancellationToken ct)
+        public async Task<AppWallet> CreateWalletAsync(string assest, CancellationToken ct)
         {
+            var currentUserId = _currentUserService.CurrentUser();
+            if (currentUserId == null || currentUserId == -1)
+                throw new Exception("Kullanıcı doğrulanamadı");
+
             var wallet = new AppWallet
             {
-                AppUserId = AppUserId,
+                AppUserId = currentUserId,
                 Assest = assest,
                 TotalBalance = 0
             };
@@ -51,16 +53,16 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             return await _walletRepository.AddAsync(wallet);
         }
 
-        public async Task<IEnumerable<AppWallet>> GetWalletsByAppUserIdAsync(int AppUserId)
+        public async Task<IEnumerable<AppWallet>> GetMyWalletsAsync(int currentUserId)
         {
-            return (IEnumerable<AppWallet>)await _walletRepository.GetAllAsync(w => w.AppUserId == AppUserId);
+
+            if (currentUserId == null || currentUserId == -1)
+                throw new Exception("Kullanıcı doğrulanamadı");
+
+            return await _walletRepository.GetAllAsync(w => w.AppUserId == currentUserId);
         }
 
-        public async Task<AppWallet> GetWalletByIdAsync(Guid walletId)
-        {
-            AppWallet wallet = await _walletRepository.GetAsync(w => w.Id == walletId);
-            return wallet;
-        }
+        
 
         public async Task<AppWallet> UpdateWalletAsync(AppWallet wallet)
         {
@@ -87,27 +89,28 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
 
             await _walletRepository.UpdateAsync(wallet);
 
-            // Gödereceğiniz Transaction nesnesini oluşturun
             var sourceTransaction = new Transaction
             {
                 WalletId = request.SourceWalletId,
                 Amount = -request.Amount,
                 Type = TransactionType.Transfer,
-                Description = request.Description
+                Description = request.Description,
+                CreatedDate = DateTime.UtcNow
             };
-            
+
             await _transactionRepository.AddAsync(sourceTransaction);
-            // Alan transaction nesnesini ekleyin
+
             var targetTransaction = new Transaction
             {
                 WalletId = request.TargetWalletId,
                 Amount = request.Amount,
                 Type = TransactionType.Transfer,
-                Description = request.Description
+                Description = request.Description,
+                CreatedDate = DateTime.UtcNow
             };
+
             await _transactionRepository.AddAsync(targetTransaction);
 
-            // İşlem no ile WalletTransfer nesnesi oluşturun
             var islemNO = new Random().Next(100000, 999999);
             var transfer = new WalletTransfer
             {
@@ -154,33 +157,18 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             if (sourceWallet.TotalBalance < amount)
                 throw new Exception("Yetersiz bakiye.");
 
-            // 💡 Provider Bankalar
-            var sourceProvider = await _providerBankRepository.GetByIdAsync(sourceWallet.SourceWalletId);
-            var targetProvider = await _providerBankRepository.GetByIdAsync(targetWallet.SourceWalletId);
-
-            if (sourceProvider == null || targetProvider == null)
-                throw new Exception("Provider banka bilgileri eksik.");
-
-            if (sourceProvider.TotalBalance < amount)
-                throw new Exception("Provider banka bakiyesi yetersiz.");
-
-            // Cüzdan ve Provider bakiyeleri güncelle
             sourceWallet.TotalBalance -= amount;
             targetWallet.TotalBalance += amount;
-            
 
             await _walletRepository.UpdateAsync(sourceWallet);
             await _walletRepository.UpdateAsync(targetWallet);
-            await _providerBankRepository.UpdateAsync(sourceProvider);
-            await _providerBankRepository.UpdateAsync(targetProvider);
 
-            // Transaction kayıtları
             var sourceTransaction = new Transaction
             {
                 WalletId = sourceWalletId,
                 Amount = -amount,
                 Type = TransactionType.Transfer,
-                
+                Description = DescriptionType.BireyselOdeme,
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -189,14 +177,13 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
                 WalletId = targetWalletId,
                 Amount = amount,
                 Type = TransactionType.Transfer,
-                Description = sourceTransaction.Description,
+                Description = DescriptionType.BireyselOdeme,
                 CreatedDate = DateTime.UtcNow
             };
 
             await _transactionRepository.AddAsync(sourceTransaction);
             await _transactionRepository.AddAsync(targetTransaction);
 
-            // Transfer ilişkisi
             var islemNo = new Random().Next(100000, 999999);
 
             await _walletTransferRepository.AddAsync(new WalletTransfer
@@ -217,47 +204,40 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
                 IslemNo = islemNo
             });
 
-            // 💡 Provider BankTransaction oluştur
-            await _bankTransactionRepository.AddAsync(new BankTransaction
-            {
-                TransactionId = sourceTransaction.Id,
-                ProviderBankId = sourceProvider.Id,
-                TargetBankId = targetProvider.Id,
-                Commission = "0",
-                Iban = null // Cüzdanlar arası olduğundan IBAN olmayabilir
-            });
-
             return new List<TransactionResponseDTO>
-    {
-        new TransactionResponseDTO
-        {
-            Id = sourceTransaction.Id,
-            WalletId = sourceTransaction.WalletId,
-            Amount = sourceTransaction.Amount,
-            Type = sourceTransaction.Type,
-            Description = sourceTransaction.Description,
-            CreatedDate = sourceTransaction.CreatedDate
-        },
-        new TransactionResponseDTO
-        {
-            Id = targetTransaction.Id,
-            WalletId = targetTransaction.WalletId,
-            Amount = targetTransaction.Amount,
-            Type = targetTransaction.Type,
-            Description = targetTransaction.Description,
-            CreatedDate = targetTransaction.CreatedDate
+            {
+                new TransactionResponseDTO
+                {
+                    Id = sourceTransaction.Id,
+                    WalletId = sourceTransaction.WalletId,
+                    Amount = sourceTransaction.Amount,
+                    Type = sourceTransaction.Type,
+                    Description = sourceTransaction.Description,
+                    CreatedDate = sourceTransaction.CreatedDate
+                },
+                new TransactionResponseDTO
+                {
+                    Id = targetTransaction.Id,
+                    WalletId = targetTransaction.WalletId,
+                    Amount = targetTransaction.Amount,
+                    Type = targetTransaction.Type,
+                    Description = targetTransaction.Description,
+                    CreatedDate = targetTransaction.CreatedDate
+                }
+            };
         }
-    };
-        }
+        public async Task<IEnumerable<Transaction>> GetWalletTransactionHistoryAsync(Guid walletId)
+        {
+            var currentUserId = _currentUserService.CurrentUser();
+            if (currentUserId == null || currentUserId == -1)
+                throw new Exception("Kullanıcı doğrulanamadı");
 
-        public async Task<IEnumerable<Transaction>> GetTransactionHistoryAsync(Guid walletId)
-        {
+            var wallet = await _walletRepository.GetAsync(w => w.Id == walletId && w.AppUserId == currentUserId);
+            if (wallet == null)
+                throw new Exception("Bu cüzdan size ait değil.");
+
             return await _transactionRepository.GetAllAsync(t => t.WalletId == walletId);
         }
 
-        public async Task ProcessWalletTransactionAsync(Guid walletId, decimal amount, string v, string? description)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

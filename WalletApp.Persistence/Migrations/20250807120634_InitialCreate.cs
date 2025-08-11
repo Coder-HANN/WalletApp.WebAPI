@@ -6,27 +6,30 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WalletApp.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class mig_1 : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ProviderBank",
+                name: "ProviderBanks",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TotalBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Iban = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AccountType = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProviderBank", x => x.Id);
+                    table.PrimaryKey("PK_ProviderBanks", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -36,13 +39,13 @@ namespace WalletApp.Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Role = table.Column<int>(type: "int", maxLength: 20, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,23 +63,23 @@ namespace WalletApp.Persistence.Migrations
                     AccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Iban = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AccountType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountType = table.Column<int>(type: "int", nullable: false),
                     Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDelete = table.Column<bool>(type: "bit", nullable: false),
+                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BankAccounts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BankAccounts_ProviderBank_ProviderBankId",
+                        name: "FK_BankAccounts_ProviderBanks_ProviderBankId",
                         column: x => x.ProviderBankId,
-                        principalTable: "ProviderBank",
+                        principalTable: "ProviderBanks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -95,15 +98,17 @@ namespace WalletApp.Persistence.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     AppUserId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Surname = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     BirthDay = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Occupation = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -130,8 +135,7 @@ namespace WalletApp.Persistence.Migrations
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -149,18 +153,17 @@ namespace WalletApp.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     AppBankAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Currency = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<int>(type: "int", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<int>(type: "int", maxLength: 200, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -194,16 +197,15 @@ namespace WalletApp.Persistence.Migrations
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BankTransactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BankTransactions_ProviderBank_SourceBankId",
+                        name: "FK_BankTransactions_ProviderBanks_SourceBankId",
                         column: x => x.SourceBankId,
-                        principalTable: "ProviderBank",
+                        principalTable: "ProviderBanks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -221,12 +223,12 @@ namespace WalletApp.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TransactionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Institution = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -253,8 +255,7 @@ namespace WalletApp.Persistence.Migrations
                     ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ModifiedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDelete = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Created = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CreatedUser = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -357,7 +358,7 @@ namespace WalletApp.Persistence.Migrations
                 name: "Wallets");
 
             migrationBuilder.DropTable(
-                name: "ProviderBank");
+                name: "ProviderBanks");
 
             migrationBuilder.DropTable(
                 name: "Users");

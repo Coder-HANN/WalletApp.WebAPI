@@ -27,5 +27,11 @@ namespace WalletApp.Persistence.Repositories
             _context.BankAccounts.Remove(bankAccount);
             await _context.SaveChangesAsync();
         }
+
+        public Task<AppBankAccount> GetByIdAsync(object sourceBankAccountId)
+        {
+            return _context.BankAccounts
+                .FirstOrDefaultAsync(x => x.Id == (Guid)sourceBankAccountId && !x.IsDelete);
+        }
     }
 }

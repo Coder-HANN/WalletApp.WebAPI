@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WalletApp.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class MakeWalletIdNullableInTransaction : Migration
+    public partial class MakeTargetBankIdNullable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<Guid>(
-                name: "WalletId",
-                table: "Transactions",
+                name: "TargetBankId",
+                table: "BankTransactions",
                 type: "uniqueidentifier",
                 nullable: true,
                 oldClrType: typeof(Guid),
@@ -24,8 +24,8 @@ namespace WalletApp.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<Guid>(
-                name: "WalletId",
-                table: "Transactions",
+                name: "TargetBankId",
+                table: "BankTransactions",
                 type: "uniqueidentifier",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),

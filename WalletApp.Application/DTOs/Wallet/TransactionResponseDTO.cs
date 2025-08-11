@@ -7,6 +7,7 @@ namespace WalletApp.Application.DTOs.Wallet
     
     {
         public Guid Id { get; set; }
+        public int AppUserId { get; set; }
         public Guid? WalletId { get; set; }
         public decimal Amount { get; set; }
         public TransactionType Type { get; set; }

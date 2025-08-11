@@ -1,5 +1,5 @@
-﻿
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 using WalletApp.Domain.Enums;
 
 namespace WalletApp.Domain.Entities
@@ -9,7 +9,7 @@ namespace WalletApp.Domain.Entities
         public Guid Id { get; set; }
         public int AppUserId { get; set; }
         public Guid WalletId { get; set; }
-        public Guid ProviderBankId { get; set; }
+        public Guid? ProviderBankId { get; set; }
         public string AccountName { get; set; }
         public string Iban { get; set; }
         public string BankName { get; set; }

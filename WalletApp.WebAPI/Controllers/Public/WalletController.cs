@@ -47,7 +47,7 @@ public class WalletController : ControllerBase
         return await _mediator.Send(query);
     }
 
-    [HttpPost("{walletId:guid}/History")]
+    [HttpPost("Wallet/History")]
     public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> GetHistory([FromQuery] GetUserWalletsHistoryQuery query)
     {
         return await _mediator.Send(query);

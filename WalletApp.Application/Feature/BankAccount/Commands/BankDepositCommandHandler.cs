@@ -68,8 +68,9 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
             // BankTransaction oluştur, source bank dış kaynak, target bank kullanıcı bankası
             var bankTransaction = new BankTransaction
             {
+
+                SourceBankId = null,
                 TransactionId = transaction.Id,
-                ProviderBankId = targetBank.ProviderBankId,
                 Iban = targetBank.Iban,
                 TargetBankId = targetBank.Id,
                 Commission = "0",

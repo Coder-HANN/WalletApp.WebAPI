@@ -6,7 +6,7 @@ public class AppWalletCommandValidator : AbstractValidator<AppWalletCommand>
 {
     public AppWalletCommandValidator()
     {
-        RuleFor(x => x.AppUserId).GreaterThan(0);
+       
         RuleFor(x => x.Asset).NotEmpty().MaximumLength(10);
     }
 }

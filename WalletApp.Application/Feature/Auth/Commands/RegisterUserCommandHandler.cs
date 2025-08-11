@@ -84,7 +84,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
 
           
             // Wallet oluştur
-            await _walletService.CreateWalletAsync(user.Id, "TL", cancellationToken);
+            await _walletService.CreateWalletAsync( "TL", cancellationToken);
 
             return ServiceResponse<RegisterResponseDTO>.Ok(new RegisterResponseDTO
             {
