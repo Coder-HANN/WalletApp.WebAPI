@@ -25,9 +25,6 @@
 
   <ItemGroup>
     <Folder Include="Feature\Auth\Validators\" />
-    <Folder Include="Feature\ProfileUpdate\Validators\" />
-    <Folder Include="Feature\User\Validators\" />
-    <Folder Include="Feature\Validations\" />
   </ItemGroup>
 
   <ItemGroup>
