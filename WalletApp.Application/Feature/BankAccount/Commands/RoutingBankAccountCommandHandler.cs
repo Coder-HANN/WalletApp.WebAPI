@@ -4,7 +4,6 @@ using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.DTOs.BankAccount;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
-using WalletApp.Domain.Entities;
 
 namespace WalletApp.Application.Feature.BankAccount.Handlers;
 
@@ -34,10 +33,8 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
         
         var cleanedIban = request.Iban.Replace(" ", "");
-
        
         var targetBankCode = cleanedIban.Substring(5, 4);
-
         
         var providerBanks = await _providerBankRepository.GetAllAsync();
         if (!providerBanks.Any())
@@ -46,12 +43,10 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         // Yönlendirme tablosundan uygun provider banka kodunu al
         var sourceBankCode = await _bankRouteRepository.GetProviderBankCodeAsync(targetBankCode);
 
-        
         var sourceProvider = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode);
         if (sourceProvider == null)
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Yönlendirme için uygun provider banka bulunamadı.");
 
-        
         var targetBankAccount = await _bankAccountRepository.GetAsync(x => x.Iban.Replace(" ", "") == cleanedIban);
 
         var response = new RoutingBankAccountResponseDTO

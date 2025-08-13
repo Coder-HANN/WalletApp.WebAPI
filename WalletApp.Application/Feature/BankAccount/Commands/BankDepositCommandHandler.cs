@@ -72,7 +72,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 SourceBankId = null,
                 TransactionId = transaction.Id,
                 Iban = targetBank.Iban,
-                TargetBankId = targetBank.Id,
+                TargetAppBankAccountId = targetBank.Id,
                 Commission = "0",
                 Transaction = transaction
             };

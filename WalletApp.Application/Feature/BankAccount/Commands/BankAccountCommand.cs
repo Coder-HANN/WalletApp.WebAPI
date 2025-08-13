@@ -10,12 +10,11 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
         public string AccountName { get; set; }
         public string Iban { get; set; }
         public string BankName { get; set; }
-        public AccountType AccountType { get; set; } // Örnek: "Vadesiz", "Vadeli"
+        public AccountType AccountType { get; set; } 
         public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; } 
         public Guid WalletId { get; set; }
-        public int AppUserId { get;  set; }
 
         public BankAccountCommand() { }
 

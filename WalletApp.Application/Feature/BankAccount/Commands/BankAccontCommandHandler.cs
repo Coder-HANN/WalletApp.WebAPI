@@ -64,7 +64,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             var dto = new BankAccountCommand
             {
-                AppUserId = entity.AppUserId,
+               
                 AccountName = entity.AccountName,
                 Iban = entity.Iban,
                 BankName = entity.BankName,

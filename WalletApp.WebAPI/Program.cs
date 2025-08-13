@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -165,12 +166,11 @@ builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositor
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
 
-builder.Services.AddValidatorsFromAssemblyContaining<CreateBankAccountRequestValidator>();
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-builder.Services.AddValidatorsFromAssemblyContaining<BankTransferRequestValidator>();
+builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 
 // MemoryCache
 builder.Services.AddMemoryCache();
+
 
 var app = builder.Build();
 

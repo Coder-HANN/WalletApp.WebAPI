@@ -4,9 +4,9 @@ using WalletApp.Domain.Enums;
 
 namespace WalletApp.Application.Feature.BankAccount.Validations;
 
-public class BankTransferRequestValidator : AbstractValidator<BankTransferCommand>
+public class BankTransferValidation : AbstractValidator<BankTransferCommand>
 {
-    public BankTransferRequestValidator()
+    public BankTransferValidation()
     {
         RuleFor(x => x.WalletId)
             .NotEmpty().WithMessage("Cüzdan bilgisi zorunludur.");

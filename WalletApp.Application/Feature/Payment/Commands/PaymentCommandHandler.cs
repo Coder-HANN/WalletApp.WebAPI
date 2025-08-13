@@ -27,8 +27,7 @@ namespace WalletApp.Application.Feature.Payment.Handler
 
         }
 
-
-        public async Task<ServiceResponse<PaymentResponseDTO>> Handle(PaymentCommand request, CancellationToken cancellationToken)
+         public async Task<ServiceResponse<PaymentResponseDTO>> Handle(PaymentCommand request, CancellationToken cancellationToken)
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)

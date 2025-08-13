@@ -136,17 +136,9 @@ namespace WalletApp.Persistence.Context
                 builder.Property(bt => bt.Iban)
                        .IsRequired(false)
                        .HasMaxLength(50);
-                       
-
-                builder.Property(bt => bt.TargetBankId)
-                       .IsRequired(false);
-
-                builder.Property(bt => bt.SourceBankId)
-                       .IsRequired(false);
 
                 builder.Property(bt => bt.Commission)
                        .IsRequired();
-
 
                 // Transaction ile birebir ilişki (1-1)
                 builder.HasOne(bt => bt.Transaction)
@@ -160,18 +152,22 @@ namespace WalletApp.Persistence.Context
                        .HasForeignKey(bt => bt.ProviderBankId)
                        .OnDelete(DeleteBehavior.Restrict);
 
-                
-                 builder.HasOne(bt => bt.SourceBankAccount)
-                        .WithMany()
-                        .HasForeignKey(bt => bt.SourceBankId)
-                        .OnDelete(DeleteBehavior.Restrict);
-
-
-                // TargetBankId opsiyonel, eğer başka ProviderBank ise ilişkisi (isteğe bağlı)
-                builder.HasOne<ProviderBank>()
+                // Kaynak banka hesabı (AppBankAccount)
+                builder.HasOne(bt => bt.SourceBankAccount)
                        .WithMany()
-                       .HasForeignKey(bt => bt.TargetBankId)
-                       .IsRequired(false)
+                       .HasForeignKey(bt => bt.SourceBankId)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                // Hedef banka ProviderBank
+                builder.HasOne(bt => bt.TargetProviderBank)
+                       .WithMany()
+                       .HasForeignKey(bt => bt.TargetProviderBankId)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                // Hedef banka AppBankAccount
+                builder.HasOne(bt => bt.TargetAppBankAccount)
+                       .WithMany()
+                       .HasForeignKey(bt => bt.TargetAppBankAccountId)
                        .OnDelete(DeleteBehavior.Restrict);
             });
 

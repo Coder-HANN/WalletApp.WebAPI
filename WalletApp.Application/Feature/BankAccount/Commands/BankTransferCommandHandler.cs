@@ -108,6 +108,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             CreatedDate = DateTime.UtcNow
         };
         await _transactionRepository.AddAsync(transaction);
+        await _transactionRepository.SaveChangesAsync();
 
         var bankTransaction = new BankTransaction
         {
@@ -115,12 +116,14 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             TransactionId = transaction.Id,
             ProviderBankId = sourceProviderBank.Id,
             Iban = cleanedIban,
-            TargetBankId = targetBankAccount.Id,
+            TargetAppBankAccountId = targetBankAccount.Id,
             Commission = "0",
             SourceBankAccount = null, // Source bank account is not used in this context
+
         };
 
-         await _bankTransactionRepository.AddAsync(bankTransaction); // burada patladı
+        await _bankTransactionRepository.AddAsync(bankTransaction); 
+        await _bankTransactionRepository.SaveChangesAsync();
 
         var responseDto = new TransactionResponseDTO
         {
@@ -131,8 +134,11 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             Type = transaction.Type,
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
+
         };
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
     }
+
 }
+
 // TODO: FACTORY DİZAYN PATTERN İLE SWİTCH TABLOSU OLUŞTUR KONTROLLERİ BANKCODE İLE DEĞİL PROVİDER ID İLE YAP ÖRNEK KULLANIMI İNCELE
