@@ -23,6 +23,7 @@ using WalletApp.Infrastructure.Repositories;
 using WalletApp.Infrastructure.Services.EmailServices;
 using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Context;
+using WalletApp.Persistence.Extensions;
 using WalletApp.Persistence.Repositories;
 using WalletApp.WebAPI.Middleware;
 
@@ -146,21 +147,8 @@ builder.Services.AddSwaggerGen(options =>
 // Email ve diğer servisler
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-builder.Services.AddScoped<WalletService>();
 
-// Repositories & Services
-builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
-builder.Services.AddScoped<IWalletRepository, WalletRepository>();
-builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
-builder.Services.AddScoped<IUserDetailRepository, UserDetailRepository>();
-builder.Services.AddScoped<IWalletTransferRepository, WalletTransferRepository>();
-builder.Services.AddScoped<IBankTransactionRepository, BankTransactionRepository>();
-builder.Services.AddScoped<IProviderBankRepository, ProviderBankRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IBankRouteRepository, BankRouteRepository>();
-builder.Services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
+builder.Services.AddApplicationServices();
 
 // MediatR + FluentValidation
 builder.Services.AddMediatR(cfg =>
