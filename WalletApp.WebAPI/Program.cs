@@ -1,6 +1,7 @@
 ﻿using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
@@ -8,11 +9,13 @@ using WalletApp.Infrastructure.Services.EmailServices;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
 using WalletApp.WebAPI.Middleware;
+using YourNamespace;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- SERILOG CONFIGURATION ---
-builder.Host.AddLogService();
+builder.Services.AddLogService(builder.Configuration);
+builder.Host.UseSerilog();
 
 // Kestrel IP ayarı
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -107,14 +110,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<AppUserMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.MapControllers();
 

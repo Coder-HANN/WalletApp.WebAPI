@@ -1,79 +1,57 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
-using Serilog.AspNetCore;
-using Microsoft.Extensions.Configuration;
 using System.Collections.ObjectModel;
 using System.Data;
 
-
-
-namespace WalletApp.Persistence.Extensions
+namespace YourNamespace
 {
     public static class LogServiceRegistration
     {
-        public static IHostBuilder AddLogService(this IHostBuilder hostBuilder)
+        public static void AddLogService(this IServiceCollection services, IConfiguration configuration)
         {
-            hostBuilder.UseSerilog((ctx, services, loggerConfig) =>
+            var columnOptions = new ColumnOptions
             {
-                var connectionString = ctx.Configuration.GetConnectionString("DefaultConnection");
-
-                var columnOptions = new ColumnOptions();
-
-                // Gereksiz standart kolonları kaldır
-                columnOptions.Store.Remove(StandardColumn.Properties);
-                columnOptions.Store.Remove(StandardColumn.Level);
-                columnOptions.Store.Remove(StandardColumn.MessageTemplate);
-                columnOptions.Store.Remove(StandardColumn.Exception);
-                columnOptions.Store.Remove(StandardColumn.LogEvent);
-
-                // Kullanıcı adımı tablosu için özel kolonlar
-                columnOptions.AdditionalColumns = new Collection<SqlColumn>
+                Store = new Collection<StandardColumn>
+                {
+                    StandardColumn.TimeStamp
+                },
+                AdditionalColumns = new List<SqlColumn>
                 {
                     new SqlColumn { ColumnName = "UserId", DataType = SqlDbType.NVarChar, DataLength = 100 },
-                    new SqlColumn { ColumnName = "Action", DataType = SqlDbType.NVarChar, DataLength = 100 },
-                    new SqlColumn { ColumnName = "Description", DataType = SqlDbType.NVarChar, DataLength = 250 },
+                    new SqlColumn { ColumnName = "Action", DataType = SqlDbType.NVarChar, DataLength = 255 },
+                    new SqlColumn { ColumnName = "Method", DataType = SqlDbType.NVarChar, DataLength = 10 },
+                    new SqlColumn { ColumnName = "Path", DataType = SqlDbType.NVarChar, DataLength = 255 },
+                    new SqlColumn { ColumnName = "StatusCode", DataType = SqlDbType.Int },
+                    new SqlColumn { ColumnName = "DurationMs", DataType = SqlDbType.BigInt },
                     new SqlColumn { ColumnName = "IpAddress", DataType = SqlDbType.NVarChar, DataLength = 50 },
-                    new SqlColumn { ColumnName = "RequestTime", DataType = SqlDbType.DateTime2 },
-                    new SqlColumn { ColumnName = "DurationMs", DataType = SqlDbType.Int }
-                };
+                    new SqlColumn { ColumnName = "TraceId", DataType = SqlDbType.NVarChar, DataLength = 50 },
+                    new SqlColumn { ColumnName = "RequestBody", DataType = SqlDbType.NVarChar, DataLength = -1 },
+                    new SqlColumn { ColumnName = "ResponseBody", DataType = SqlDbType.NVarChar, DataLength = -1 },
+                    new SqlColumn { ColumnName = "Description", DataType = SqlDbType.NVarChar, DataLength = -1 },
+                    new SqlColumn { ColumnName = "MachineName", DataType = SqlDbType.NVarChar, DataLength = 100 }
+                }
+            };
 
-                // Logger konfigürasyonu
-                loggerConfig
-                    .MinimumLevel.Information()
-                    .WriteTo.Console()
-                    .WriteTo.MSSqlServer(
-                        connectionString: connectionString,
-                        sinkOptions: new MSSqlServerSinkOptions
-                        {
-                            TableName = "UserActions",
-                            AutoCreateSqlTable = true
-                        },
-                        columnOptions: columnOptions
-                    )
-                    .Enrich.FromLogContext()
-                    .Enrich.WithMachineName();
-            });
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.MSSqlServer(
+                    connectionString: configuration.GetConnectionString("DefaultConnection"),
+                    sinkOptions: new MSSqlServerSinkOptions
+                    {
+                        TableName = "Logs",
+                        AutoCreateSqlTable = false
+                    },
+                    restrictedToMinimumLevel: LogEventLevel.Information,
+                    columnOptions: columnOptions
+                )
+                .CreateLogger();
 
-            return hostBuilder;
-        }
-
-        // Kullanıcı adımı loglama methodu
-        public static void LogUserAction(
-            string userId,
-            string action,
-            string description = null,
-            string ipAddress = null,
-            DateTime? requestTime = null,
-            int? durationMs = null)
-        {
-            Log.ForContext("UserId", userId)
-               .ForContext("Action", action)
-               .ForContext("Description", description ?? string.Empty)
-               .ForContext("IpAddress", ipAddress ?? string.Empty)
-               .ForContext("RequestTime", requestTime ?? DateTime.UtcNow)
-               .ForContext("DurationMs", durationMs ?? 0)
-               .Information("User action recorded");
+            services.AddSingleton(Log.Logger);
         }
     }
 }
