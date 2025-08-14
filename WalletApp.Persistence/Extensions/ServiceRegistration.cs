@@ -14,8 +14,6 @@ namespace WalletApp.Persistence.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-
-
             // Repositories & Services
 
             services.AddScoped<WalletService>();

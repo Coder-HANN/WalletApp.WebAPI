@@ -1,59 +1,18 @@
-﻿using FluentValidation;
-using FluentValidation.AspNetCore;
-using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Serilog;
-using Serilog.Sinks.MSSqlServer;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Reflection;
-using System.Security.Claims;
-using System.Text;
-using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
-using WalletApp.Application.Feature.BankAccount.Validations;
-using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
-using WalletApp.Infrastructure.Repositories;
 using WalletApp.Infrastructure.Services.EmailServices;
-using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
-using WalletApp.Persistence.Repositories;
 using WalletApp.WebAPI.Middleware;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- SERILOG CONFIGURATION ---
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-var columnOptions = new ColumnOptions();
-columnOptions.Store.Remove(StandardColumn.Properties); // json props’u kaldırır
-columnOptions.Store.Add(StandardColumn.LogEvent);
-
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.MSSqlServer(
-        connectionString: connectionString,
-        sinkOptions: new MSSqlServerSinkOptions
-        {
-            TableName = "Logs",
-            AutoCreateSqlTable = true
-        },
-        columnOptions: columnOptions)
-    .Enrich.FromLogContext()
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
+builder.Host.AddLogService();
 
 // Kestrel IP ayarı
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -74,95 +33,42 @@ builder.Services.AddCors(options =>
 
 // DbContext
 builder.Services.AddDbContext<WalletDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // HttpContextAccessor ve CurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// JWT Authentication ayarları
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        RoleClaimType = ClaimTypes.Role
-    };
-});
-
+// JWT service
+builder.Services.AddJwtService(builder.Configuration);
 builder.Services.AddAuthorization();
 
 // Controllers
 builder.Services.AddControllers();
+builder.Services.AddControllersWithViews()
+       .AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 
-// Swagger ayarları
+// Swagger + Role-based API Docs
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("Admin", new OpenApiInfo { Title = "Admin API", Version = "v1" });
-    options.SwaggerDoc("Public", new OpenApiInfo { Title = "Public API", Version = "v1" });
-
-    options.DocInclusionPredicate((group, api) =>
-    {
-        if (!api.TryGetMethodInfo(out var methodInfo)) return false;
-        var attr = methodInfo.DeclaringType?.GetCustomAttribute<ApiExplorerSettingsAttribute>();
-        return attr?.GroupName == group;
-    });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Bearer token. Örn: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            new string[] { }
-        }
-    });
-});
+builder.Services.AddRoleServices();
 
 // Email ve diğer servisler
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
+// Repositories & Services
 builder.Services.AddApplicationServices();
 
-// MediatR + FluentValidation
+// MediatR
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
-
-builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 
 // MemoryCache
 builder.Services.AddMemoryCache();
 
-
 var app = builder.Build();
 
-// Admin user seed (örnek)
+// Admin user seed
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<WalletDbContext>();
@@ -171,7 +77,6 @@ await using (var scope = app.Services.CreateAsyncScope())
 
     var email = config["AdminUser:Email"];
     var password = config["AdminUser:Password"];
-    var username = config["AdminUser:UserName"];
 
     var adminExists = await dbContext.Users.AnyAsync(u => u.Email == email && u.Role == UserRole.Admin);
 
@@ -209,7 +114,6 @@ app.UseMiddleware<AppUserMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Burada Serilog loglama middleware’ini çağırıyoruz:
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.MapControllers();
