@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Feature\Auth\Validators\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Feature\Payment\Commands\PaymentCommand.cs" />
   </ItemGroup>
 
