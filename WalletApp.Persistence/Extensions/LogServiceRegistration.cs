@@ -6,7 +6,7 @@ using Serilog.Sinks.MSSqlServer;
 using System.Collections.ObjectModel;
 using System.Data;
 
-namespace YourNamespace
+namespace WalletApp.Persistence.Extensions
 {
     public static class LogServiceRegistration
     {
@@ -43,9 +43,10 @@ namespace YourNamespace
                     connectionString: configuration.GetConnectionString("DefaultConnection"),
                     sinkOptions: new MSSqlServerSinkOptions
                     {
-                        TableName = "Logs",
+                        TableName = "Log",
                         AutoCreateSqlTable = false
                     },
+
                     restrictedToMinimumLevel: LogEventLevel.Information,
                     columnOptions: columnOptions
                 )

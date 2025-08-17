@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
@@ -17,7 +16,7 @@ namespace WalletApp.WebAPI.Middleware
             _next = next;
             _logger = logger;
         }
-        
+
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -27,16 +26,24 @@ namespace WalletApp.WebAPI.Middleware
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Beklenmeyen bir hata oluştu.");
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = 500;
 
-                var response = new ServiceResponse<string>
+                if (!context.Response.HasStarted) // response başlamışsa yazma
                 {
-                    Success = false,
-                    Message = "Sunucu hatası: " + ex.Message
-                };
+                    context.Response.ContentType = "application/json";
+                    context.Response.StatusCode = 500;
 
-                await context.Response.WriteAsJsonAsync(response);
+                    var response = new ServiceResponse<string>
+                    {
+                        Success = false,
+                        Message = "Sunucu hatası: " + ex.Message
+                    };
+
+                    await context.Response.WriteAsJsonAsync(response);
+                }
+                else
+                {
+                    _logger.LogWarning("Response başladı, hata mesajı yazılamadı.");
+                }
             }
         }
     }

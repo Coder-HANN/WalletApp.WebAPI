@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WalletApp.Domain.Entities;
+using WalletApp.Logging.Models;
 
 
 namespace WalletApp.Persistence.Context
@@ -17,7 +18,7 @@ namespace WalletApp.Persistence.Context
         public DbSet<AppPayment> Payments { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<ProviderBank> ProviderBanks { get; set; }
-
+        public DbSet<ApplicationLog> ApplicationLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -195,6 +196,18 @@ namespace WalletApp.Persistence.Context
             {
                 builder.HasKey(pb => pb.Id);
                 builder.Property(pb => pb.BankName).IsRequired().HasMaxLength(100);
+            });
+
+            // ApplicationLog configuration
+            modelBuilder.Entity<ApplicationLog>(builder =>
+            {
+                builder.HasKey(l => l.Id);
+                builder.Property(l => l.Level).IsRequired().HasMaxLength(20);
+                builder.Property(l => l.Message).HasMaxLength(1000);
+                builder.Property(l => l.Exception).HasMaxLength(2000);
+                builder.Property(l => l.RequestPath).HasMaxLength(500);
+                builder.Property(l => l.IpAddress).HasMaxLength(50);
+                builder.Property(l => l.MachineName).HasMaxLength(100);
             });
         }
 

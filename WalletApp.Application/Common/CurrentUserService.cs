@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using WalletApp.Application.Abstraction.Services;
-using System.Security.Claims;
 
 
+namespace WalletApp.Application.Common;
 public class CurrentUserService : ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -12,7 +12,6 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-   
     public int CurrentUser()
     {
 
