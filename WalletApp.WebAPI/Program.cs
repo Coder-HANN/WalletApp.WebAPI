@@ -16,68 +16,69 @@ using WalletApp.Application.Common;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Services.EmailServices;
-using WalletApp.Logging.Middleware;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
 using WalletApp.WebAPI.Middleware;
 
-
+// ----------------- Builder -----------------
 var builder = WebApplication.CreateBuilder(args);
 
-// --- SERILOG CONFIGURATION ---
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+// 1️⃣ JSON'dan Serilog ayarlarını oku
+var serilogConfig = builder.Configuration.GetSection("LoggingConfig:Providers:Serilog");
+var columnOptionsSection = serilogConfig.GetSection("WriteTo:1:Args:columnOptionsSection");
 var columnOptions = new ColumnOptions();
-columnOptions.Store.Remove(StandardColumn.Properties); // json props’u kaldırır
-columnOptions.Store.Add(StandardColumn.LogEvent);
+columnOptionsSection.Bind(columnOptions);
 
+// 2️⃣ Serilog config
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
+    .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
     .WriteTo.MSSqlServer(
-        connectionString: connectionString,
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
         sinkOptions: new MSSqlServerSinkOptions
         {
-            TableName = "ApplicationLogs",
-            AutoCreateSqlTable = true
+            TableName = serilogConfig.GetValue<string>("WriteTo:1:Args:tableName"),
+            AutoCreateSqlTable = serilogConfig.GetValue<bool>("WriteTo:1:Args:autoCreateSqlTable")
         },
-        columnOptions: columnOptions)
-    .Enrich.FromLogContext()
+        columnOptions: columnOptions,
+        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug
+    )
     .CreateLogger();
 
+Log.Information("Test log to DB");
+
+// ----------------- Services -----------------
+builder.Logging.ClearProviders();
 builder.Host.UseSerilog();
 
+// Logging servislerini DI'a ekle
+builder.Services.AddSingleton<SerilogLogger>();
+builder.Services.AddSingleton<ILogService, CompositeLogger>();
 
-// Kestrel IP ayarı
-builder.WebHost.ConfigureKestrel(serverOptions =>
+builder.WebHost.ConfigureKestrel(options =>
 {
-    serverOptions.Listen(System.Net.IPAddress.Any, 5000);
+    options.Listen(System.Net.IPAddress.Any, 5000);
 });
 
-// CORS politikası
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
 // DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<WalletDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// HttpContextAccessor ve CurrentUserService
+// HttpContext ve CurrentUser
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// JWT Authentication ayarları
+// JWT Auth
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -97,13 +98,10 @@ builder.Services.AddAuthentication(options =>
         RoleClaimType = ClaimTypes.Role
     };
 });
-
 builder.Services.AddAuthorization();
 
-// Controllers
+// Controllers & Swagger
 builder.Services.AddControllers();
-
-// Swagger ayarları
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -138,24 +136,19 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Email ve diğer servisler
+// Email & diğer servisler
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddApplicationServices();
-
-// MediatR + FluentValidation
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
-
 builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
-
-// MemoryCache
 builder.Services.AddMemoryCache();
 
-
+// ----------------- App -----------------
 var app = builder.Build();
 
-// Admin user seed (örnek)
+// Admin seed
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<WalletDbContext>();
@@ -166,19 +159,15 @@ await using (var scope = app.Services.CreateAsyncScope())
     var password = config["AdminUser:Password"];
     var username = config["AdminUser:UserName"];
 
-    var adminExists = await dbContext.Users.AnyAsync(u => u.Email == email && u.Role == UserRole.Admin);
-
-    if (!adminExists)
+    if (!await dbContext.Users.AnyAsync(u => u.Email == email && u.Role == UserRole.Admin))
     {
-        var admin = new AppUser
+        dbContext.Users.Add(new AppUser
         {
             Email = email,
             Role = UserRole.Admin,
             PasswordHash = passwordHasher.HashPassword(null, password),
             CreatedDate = DateTime.UtcNow
-        };
-
-        dbContext.Users.Add(admin);
+        });
         await dbContext.SaveChangesAsync();
     }
 }
@@ -195,16 +184,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<AppUserMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Burada Serilog loglama middleware’ini çağırıyoruz:
+// ✅ Logging middleware en sona değil, auth'dan önce
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.MapControllers();
-
 app.Run();

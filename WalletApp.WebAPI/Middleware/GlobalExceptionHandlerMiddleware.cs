@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using WalletApp.Application.Feature.Wallet.Dtos;
+﻿using WalletApp.Application.Feature.Wallet.Dtos;
 
 namespace WalletApp.WebAPI.Middleware
 {

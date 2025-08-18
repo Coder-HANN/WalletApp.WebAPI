@@ -13,14 +13,20 @@ public class BankRouteRepository : EfEntityRepositoryBase<BankRoute>, IBankRoute
 
     public Task<string> GetProviderBankCodeAsync(string targetBankCode)
     {
-        string providerBankCode = targetBankCode switch
-        {
-            "0010" => "0010", // Ziraat → Ziraat
-            "0015" => "0015", // Vakıf → Vakıf
-            "0020" => "0010", // Garanti → Ziraat
-            _ => "0015"       // Varsayılan: Vakıf
-        };
-
-        return Task.FromResult(providerBankCode);
+        throw new NotImplementedException();
     }
+
+    public class VakifBankCode 
+    {
+        public const string Code = "0015";
+    }
+    public class ZiraatBankCode
+    {
+        public const string Code = "0010";
+    }
+    public class GarantiBankCode
+    {
+        public const string Code = "0020";
+    }
+
 }
