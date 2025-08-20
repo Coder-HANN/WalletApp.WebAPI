@@ -23,38 +23,23 @@ using WalletApp.WebAPI.Middleware;
 // ----------------- Builder -----------------
 var builder = WebApplication.CreateBuilder(args);
 
-// 1️⃣ JSON'dan Serilog ayarlarını oku
-var serilogConfig = builder.Configuration.GetSection("LoggingConfig:Providers:Serilog");
-var columnOptionsSection = serilogConfig.GetSection("WriteTo:1:Args:columnOptionsSection");
-var columnOptions = new ColumnOptions();
-columnOptionsSection.Bind(columnOptions);
 
-// 2️⃣ Serilog config
+// ----------------- Serilog -----------------
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .WriteTo.Console()
-    .WriteTo.MSSqlServer(
-        connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
-        sinkOptions: new MSSqlServerSinkOptions
-        {
-            TableName = serilogConfig.GetValue<string>("WriteTo:1:Args:tableName"),
-            AutoCreateSqlTable = serilogConfig.GetValue<bool>("WriteTo:1:Args:autoCreateSqlTable")
-        },
-        columnOptions: columnOptions,
-        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug
-    )
+    .ReadFrom.Configuration(builder.Configuration) // appsettings.json'dan al
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
     .CreateLogger();
 
-Log.Information("Test log to DB");
-
-// ----------------- Services -----------------
+// ASP.NET Core default logger’ları temizle
 builder.Logging.ClearProviders();
 builder.Host.UseSerilog();
 
-// Logging servislerini DI'a ekle
-builder.Services.AddSingleton<SerilogLogger>();
-builder.Services.AddSingleton<ILogService, CompositeLogger>();
-
+// DI servislerine ekle
+builder.Services.AddScoped<SerilogLogger>();
+builder.Services.AddScoped<ILogService, SerilogLogger>();
+builder.Services.AddScoped<ILogService, CompositeLogger>();
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(System.Net.IPAddress.Any, 5000);
@@ -184,13 +169,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-app.UseMiddleware<AppUserMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
-// ✅ Logging middleware en sona değil, auth'dan önce
-app.UseMiddleware<RequestResponseLoggingMiddleware>();
-
+app.UseMiddleware<AppUserMiddleware>();
 app.MapControllers();
 app.Run();

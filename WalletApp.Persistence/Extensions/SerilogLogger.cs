@@ -1,55 +1,77 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Serilog;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using ILogger = Serilog.ILogger;
+using WalletApp.Application.Abstraction.Services;
+using System;
 using System.Collections.Generic;
 
 public class SerilogLogger : ILogService
 {
-    private readonly ILogger _logger;
+    private readonly Serilog.ILogger _logger;
+    private readonly ICurrentUserService _currentUserService;
 
-    public SerilogLogger(IConfiguration configuration)
+    public SerilogLogger(IConfiguration configuration, ICurrentUserService currentUserService)
     {
-        var serilogConfig = configuration.GetSection("LoggingConfig:Providers:Serilog");
-        if (!serilogConfig.GetValue<bool>("Enabled"))
-            return;
-
-        _logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .CreateLogger();
+        _logger = Serilog.Log.Logger;
+        _currentUserService = currentUserService;
     }
 
-    public void Log(LogLevel level, string message, Exception? ex = null, string? source = null, int? userId = null, string? requestPath = null, object? additionalData = null)
+    public void Log(
+        LogLevel level,
+        string message,
+        Exception? ex = null,
+        string? source = null,
+        int? userId = null,
+        string? requestPath = null,
+        object? additionalData = null)
     {
-        // additionalData'yi dictionary olarak kullan
         var data = additionalData as IDictionary<string, object> ?? new Dictionary<string, object>();
 
-        var logEvent = new
-        {
-            Level = level.ToString(),
-            Message = message,
-            Exception = ex?.ToString(),
-            RequestPath = requestPath,
-            UserId = userId ?? (data.ContainsKey("UserId") ? data["UserId"]  : null),
-            RequestBody = data.ContainsKey("RequestBody") ? data["RequestBody"] : null,
-            ResponseBody = data.ContainsKey("ResponseBody") ? data["ResponseBody"] : null,
-            StatusCode = data.ContainsKey("StatusCode") ? data["StatusCode"] : null,
-            IpAddress = data.ContainsKey("IpAddress") ? data["IpAddress"] : null,
-            MachineName = Environment.MachineName,
-            RequestTime = data.ContainsKey("RequestTime") ? data["RequestTime"] : DateTime.UtcNow,
-            DurationMs = data.ContainsKey("DurationMs") ? data["DurationMs"] : 0
-        };
+        data.TryGetValue("RequestPath", out var reqPath);
+        data.TryGetValue("RequestBody", out var reqBody);
+        data.TryGetValue("ResponseBody", out var resBody);
+        data.TryGetValue("StatusCode", out var statusCode);
+        data.TryGetValue("IpAddress", out var ip);
+        data.TryGetValue("RequestTime", out var reqTime);
+        data.TryGetValue("DurationMs", out var durationMs);
+
+        // CurrentUserService’den userId al
+        int effectiveUserId = _currentUserService.CurrentUser();
+
+        var logger = _logger
+            .ForContext("Source", source ?? string.Empty)
+            .ForContext("UserId", effectiveUserId)
+            .ForContext("RequestPath", requestPath ?? reqPath)
+            .ForContext("RequestBody", reqBody)
+            .ForContext("ResponseBody", resBody)
+            .ForContext("StatusCode", statusCode)
+            .ForContext("IpAddress", ip)
+            .ForContext("MachineName", Environment.MachineName)
+            .ForContext("RequestTime", reqTime ?? DateTime.UtcNow)
+            .ForContext("DurationMs", durationMs ?? 0);
+
+        var logMessage = message ?? (ex != null ? ex.Message : "HTTP Request completed");
 
         switch (level)
         {
-            case LogLevel.Trace: _logger?.Verbose("{@LogEvent}", logEvent); break;
-            case LogLevel.Debug: _logger?.Debug("{@LogEvent}", logEvent); break;
-            case LogLevel.Information: _logger?.Information("{@LogEvent}", logEvent); break;
-            case LogLevel.Warning: _logger?.Warning("{@LogEvent}", logEvent); break;
-            case LogLevel.Error: _logger?.Error(ex, "{@LogEvent}", logEvent); break;
-            case LogLevel.Critical: _logger?.Fatal(ex, "{@LogEvent}", logEvent); break;
+            case LogLevel.Trace:
+                logger.Verbose(logMessage);
+                break;
+            case LogLevel.Debug:
+                logger.Debug(logMessage);
+                break;
+            case LogLevel.Information:
+                logger.Information(logMessage);
+                break;
+            case LogLevel.Warning:
+                logger.Warning(logMessage);
+                break;
+            case LogLevel.Error:
+                logger.Error(ex, logMessage);
+                break;
+            case LogLevel.Critical:
+                logger.Fatal(ex, logMessage);
+                break;
         }
     }
-
-   
 }

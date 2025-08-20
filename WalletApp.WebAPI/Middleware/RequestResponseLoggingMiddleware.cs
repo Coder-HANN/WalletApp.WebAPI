@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using WalletApp.Application.Abstraction.Services;
+using Microsoft.AspNetCore.Http;
 
 public class RequestResponseLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly IServiceProvider _serviceProvider;
+
 
     public RequestResponseLoggingMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
     {
@@ -13,13 +15,11 @@ public class RequestResponseLoggingMiddleware
         _serviceProvider = serviceProvider;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context, ICurrentUserService currentUserService, ILogService logger)
     {
-        using var scope = _serviceProvider.CreateScope(); // request scope
-        var logger = scope.ServiceProvider.GetRequiredService<ILogService>();
-        var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+        // UserId al
+        var userId = currentUserService?.CurrentUser() ?? 0;
 
-        var userId = currentUserService.CurrentUser(); // buradan al
         var requestTime = DateTime.UtcNow;
         var stopwatch = Stopwatch.StartNew();
 
@@ -66,17 +66,18 @@ public class RequestResponseLoggingMiddleware
                 message: exception?.Message ?? "HTTP Request completed",
                 ex: exception,
                 requestPath: context.Request.Path,
-                userId: userId, // CurrentUserService’den gelen ID
+                userId: userId,
                 additionalData: new Dictionary<string, object>
                 {
-                    { "RequestBody", requestBody },
-                    { "ResponseBody", responseBodyText },
-                    { "StatusCode", context.Response.StatusCode },
-                    { "IpAddress", context.Connection.RemoteIpAddress?.ToString() },
-                    { "RequestTime", requestTime },
-                    { "DurationMs", stopwatch.ElapsedMilliseconds }
+                { "RequestBody", string.IsNullOrWhiteSpace(requestBody) ? null : requestBody },
+                { "ResponseBody", string.IsNullOrWhiteSpace(responseBodyText) ? null : responseBodyText },
+                { "StatusCode", context.Response.StatusCode },
+                { "IpAddress", context.Connection.RemoteIpAddress?.ToString() },
+                { "RequestTime", requestTime },
+                { "DurationMs", stopwatch.ElapsedMilliseconds }
                 }
             );
         }
     }
+
 }

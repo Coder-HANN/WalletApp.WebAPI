@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using WalletApp.Application.Abstraction.Services;
 
 public class CompositeLogger : ILogService
 {
