@@ -1,83 +1,94 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using WalletApp.Application.Abstraction.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using WalletApp.Application.Abstraction.Services;
 
-public class RequestResponseLoggingMiddleware
+namespace WalletApp.WebAPI.Middleware
 {
-    private readonly RequestDelegate _next;
-    private readonly IServiceProvider _serviceProvider;
-
-
-    public RequestResponseLoggingMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
+    public class RequestResponseLoggingMiddleware
     {
-        _next = next;
-        _serviceProvider = serviceProvider;
-    }
+        private readonly RequestDelegate _next;
 
-    public async Task Invoke(HttpContext context, ICurrentUserService currentUserService, ILogService logger)
-    {
-        // UserId al
-        var userId = currentUserService?.CurrentUser() ?? 0;
-
-        var requestTime = DateTime.UtcNow;
-        var stopwatch = Stopwatch.StartNew();
-
-        // --- Request Body ---
-        context.Request.EnableBuffering();
-        string requestBody = "";
-        if (context.Request.ContentLength > 0 && context.Request.Body.CanRead)
+        public RequestResponseLoggingMiddleware(RequestDelegate next)
         {
-            context.Request.Body.Position = 0;
-            using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, true, 1024, true);
-            requestBody = await reader.ReadToEndAsync();
-            context.Request.Body.Position = 0;
+            _next = next;
         }
 
-        // --- Response Body ---
-        var originalBodyStream = context.Response.Body;
-        using var responseBody = new MemoryStream();
-        context.Response.Body = responseBody;
-
-        Exception? exception = null;
-
-        try
+        public async Task InvokeAsync(
+            HttpContext context,
+            ICurrentUserService currentUserService,
+            ILogService logger)
         {
-            await _next(context);
-        }
-        catch (Exception ex)
-        {
-            exception = ex;
-            context.Response.StatusCode = 500;
-        }
-        finally
-        {
-            stopwatch.Stop();
+            int? userId = null;
+            try
+            {
+                userId = currentUserService.CurrentUser();
+            }
+            catch { /* anonim istek olabilir */ }
 
-            // ResponseBody oku
-            context.Response.Body.Seek(0, SeekOrigin.Begin);
-            string responseBodyText = await new StreamReader(context.Response.Body).ReadToEndAsync();
-            context.Response.Body.Seek(0, SeekOrigin.Begin);
-            await responseBody.CopyToAsync(originalBodyStream);
+            var requestTime = DateTime.UtcNow;
+            var sw = Stopwatch.StartNew();
 
-            // --- Log gönder ---
-            logger.Log(
-                level: exception != null ? LogLevel.Error : LogLevel.Information,
-                message: exception?.Message ?? "HTTP Request completed",
-                ex: exception,
-                requestPath: context.Request.Path,
-                userId: userId,
-                additionalData: new Dictionary<string, object>
+            // Request body
+            context.Request.EnableBuffering();
+            string requestBody = string.Empty;
+            if (context.Request.ContentLength > 0 && context.Request.Body.CanRead)
+            {
+                context.Request.Body.Position = 0;
+                using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true);
+                requestBody = await reader.ReadToEndAsync();
+                context.Request.Body.Position = 0;
+            }
+
+            // Response yakalama
+            var originalBodyStream = context.Response.Body;
+            await using var responseBuffer = new MemoryStream();
+            context.Response.Body = responseBuffer;
+
+            Exception? exception = null;
+
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+            finally
+            {
+                sw.Stop();
+
+                context.Response.Body.Seek(0, SeekOrigin.Begin);
+                string responseBodyText = await new StreamReader(context.Response.Body).ReadToEndAsync();
+                context.Response.Body.Seek(0, SeekOrigin.Begin);
+
+                // Response'u geri kopyala
+                await responseBuffer.CopyToAsync(originalBodyStream);
+                context.Response.Body = originalBodyStream;
+
+                var logData = new Dictionary<string, object>
                 {
-                { "RequestBody", string.IsNullOrWhiteSpace(requestBody) ? null : requestBody },
-                { "ResponseBody", string.IsNullOrWhiteSpace(responseBodyText) ? null : responseBodyText },
-                { "StatusCode", context.Response.StatusCode },
-                { "IpAddress", context.Connection.RemoteIpAddress?.ToString() },
-                { "RequestTime", requestTime },
-                { "DurationMs", stopwatch.ElapsedMilliseconds }
-                }
-            );
+                    { "RequestPath", context.Request.Path.ToString() },
+                    { "RequestBody", string.IsNullOrWhiteSpace(requestBody) ? null : requestBody },
+                    { "ResponseBody", string.IsNullOrWhiteSpace(responseBodyText) ? null : responseBodyText },
+                    { "StatusCode", context.Response.StatusCode },
+                    { "IpAddress", context.Connection.RemoteIpAddress?.ToString() },
+                    { "RequestTime", requestTime },
+                    { "DurationMs", sw.ElapsedMilliseconds },
+                    { "UserId", userId }
+                };
+
+                logger.Log(
+                    exception != null ? LogLevel.Error : LogLevel.Information,
+                    "HTTP request",
+                    exception,
+                    "RequestResponse",
+                    logData
+                );
+            }
         }
     }
-
 }

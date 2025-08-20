@@ -20,3 +20,4 @@ public class CurrentUserService : ICurrentUserService
         return int.TryParse(userIdInt, out var userId) ? userId : -1;
     }
 }
+
