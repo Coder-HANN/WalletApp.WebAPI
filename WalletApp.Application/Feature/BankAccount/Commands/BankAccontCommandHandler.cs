@@ -64,7 +64,6 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             var dto = new BankAccountCommand
             {
-               
                 AccountName = entity.AccountName,
                 Iban = entity.Iban,
                 BankName = entity.BankName,
@@ -77,6 +76,5 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             return ServiceResponse<BankAccountCommand>.Ok(dto, "Banka hesabı başarıyla eklendi.");
         }
-
     }
 }

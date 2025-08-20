@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using WalletApp.Application.Abstraction.Services;
 
 namespace WalletApp.WebAPI.Middleware
@@ -78,7 +76,7 @@ namespace WalletApp.WebAPI.Middleware
                     { "IpAddress", context.Connection.RemoteIpAddress?.ToString() },
                     { "RequestTime", requestTime },
                     { "DurationMs", sw.ElapsedMilliseconds },
-                    { "UserId", userId }
+                    { "UserId", userId.HasValue ? userId.Value : (int?)null }
                 };
 
                 logger.Log(

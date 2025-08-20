@@ -32,7 +32,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         if (currentUserId == null)
             return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
         
-        var cleanedIban = request.Iban.Replace(" ", "");
+        var cleanedIban = request.Iban.Replace("", "");
        
         var targetBankCode = cleanedIban.Substring(5, 4);
         

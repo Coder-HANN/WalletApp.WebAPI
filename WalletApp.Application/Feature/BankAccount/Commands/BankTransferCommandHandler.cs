@@ -49,7 +49,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
         if (wallet.TotalBalance < dto.Amount)
             return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bakiyesi yetersiz.");
-
+                            
         AppBankAccount? targetBankAccount = null;
         string? cleanedIban = null;
         string? targetBankCode = null;
@@ -119,7 +119,6 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             TargetAppBankAccountId = targetBankAccount.Id,
             Commission = "0",
             SourceBankAccount = null, // Source bank account is not used in this context
-
         };
 
         await _bankTransactionRepository.AddAsync(bankTransaction); 
@@ -134,11 +133,9 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             Type = transaction.Type,
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
-
         };
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
     }
-
 }
 
 // TODO: FACTORY DİZAYN PATTERN İLE SWİTCH TABLOSU OLUŞTUR KONTROLLERİ BANKCODE İLE DEĞİL PROVİDER ID İLE YAP ÖRNEK KULLANIMI İNCELE
