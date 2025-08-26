@@ -5,8 +5,8 @@ using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using Microsoft.AspNetCore.Http;
 using WalletApp.Application.DTOs.Wallet;
-using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Feature.Wallet.Commands;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 
 public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, ServiceResponse<AppWalletResponseDTO>>
 {

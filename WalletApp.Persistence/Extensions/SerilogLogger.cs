@@ -3,6 +3,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 
 namespace WalletApp.Infrastructure.Logging
 {

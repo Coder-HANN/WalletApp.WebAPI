@@ -1,4 +1,4 @@
-﻿namespace WalletApp.Application.Abstraction.Services
+﻿namespace WalletApp.Application.Abstraction.Services.CurrentUserServices
 {
     public interface ICurrentUserService
     {

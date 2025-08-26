@@ -3,8 +3,8 @@ using WalletApp.Application.Feature.Wallet.Dtos;
 using Microsoft.AspNetCore.Http;
 using WalletApp.Domain.Entities;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 
 namespace WalletApp.Application.Feature.BankAccount.Handlers
 {

@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
+using WalletApp.Infrastructure.Services.BankServices;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers;
 
@@ -18,6 +20,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly ICurrentUserService _currentUser;
     private readonly IBankRouteRepository _bankRouteRepository;
+    private readonly IBankServicesFactory _bankServicesFactory;
 
     public BankTransferCommandHandler(
         IWalletRepository walletRepository,
@@ -26,7 +29,8 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         ITransactionRepository transactionRepository,
         IBankTransactionRepository bankTransactionRepository,
         ICurrentUserService currentUser,
-        IBankRouteRepository bankRouteRepository)
+        IBankRouteRepository bankRouteRepository,
+        IBankServicesFactory bankServicesFactory)
     {
         _walletRepository = walletRepository;
         _providerBankRepository = providerBankRepository;
@@ -35,6 +39,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         _bankTransactionRepository = bankTransactionRepository;
         _currentUser = currentUser;
         _bankRouteRepository = bankRouteRepository;
+        _bankServicesFactory = bankServicesFactory;
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(BankTransferCommand dto, CancellationToken cancellationToken)
@@ -53,6 +58,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         AppBankAccount? targetBankAccount = null;
         string? cleanedIban = null;
         string? targetBankCode = null;
+        
 
         if (dto.RegisterBank == RegisterBank.External)
         {
@@ -81,20 +87,21 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         if (providerBanks == null || !providerBanks.Any())
             return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bulunamadı.");
 
-        var sourceBankCode = await _bankRouteRepository.GetProviderBankCodeAsync(targetBankCode);
-        var sourceProviderBank = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode);
+        var sourceBankCode = await _bankRouteRepository.GetProviderBankIdAsync(targetBankAccount.Id); // patladı 
+        var sourceProviderBank = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode.ToString());
 
         if (sourceProviderBank == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Uygun provider banka bulunamadı.");
 
-        if (sourceProviderBank.TotalBalance < dto.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bakiyesi yetersiz.");
+        var factoryTransfer = _bankServicesFactory.SelectBankServices(sourceProviderBank.BankCode);
+
+        var bankaBakiye = await factoryTransfer.BakiyeBilgisi(dto);
+
+        var transfer = await factoryTransfer.ParaTransferi(dto);
+
 
         wallet.TotalBalance -= dto.Amount;
         await _walletRepository.UpdateAsync(wallet);
-
-        sourceProviderBank.TotalBalance -= dto.Amount;
-        await _providerBankRepository.UpdateAsync(sourceProviderBank);
 
         targetBankAccount.Balance += dto.Amount;
         await _bankAccountRepository.UpdateAsync(targetBankAccount);
@@ -124,6 +131,7 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         await _bankTransactionRepository.AddAsync(bankTransaction); 
         await _bankTransactionRepository.SaveChangesAsync();
 
+
         var responseDto = new TransactionResponseDTO
         {
             AppUserId = currentUserId,
@@ -137,5 +145,3 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
     }
 }
-
-// TODO: FACTORY DİZAYN PATTERN İLE SWİTCH TABLOSU OLUŞTUR KONTROLLERİ BANKCODE İLE DEĞİL PROVİDER ID İLE YAP ÖRNEK KULLANIMI İNCELE

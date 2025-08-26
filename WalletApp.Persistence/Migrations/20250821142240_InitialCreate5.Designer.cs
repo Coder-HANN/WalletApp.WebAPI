@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WalletApp.Persistence.Context;
 
@@ -11,9 +12,11 @@ using WalletApp.Persistence.Context;
 namespace WalletApp.Persistence.Migrations
 {
     [DbContext(typeof(WalletDbContext))]
-    partial class WalletDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250821142240_InitialCreate5")]
+    partial class InitialCreate5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -225,6 +228,9 @@ namespace WalletApp.Persistence.Migrations
 
             modelBuilder.Entity("WalletApp.Domain.Entities.BankRoute", b =>
                 {
+                    b.Property<string>("TargetBankCode")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -242,15 +248,12 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Remark")
+                    b.Property<string>("ProviderBankCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
 
-                    b.Property<Guid>("SourceBankId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TargetBankId")
-                        .HasColumnType("uniqueidentifier");
+                    b.HasKey("TargetBankCode");
 
                     b.ToTable("BankRoutes");
                 });

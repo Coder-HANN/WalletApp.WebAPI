@@ -1,7 +1,10 @@
-﻿using WalletApp.Application.Abstraction.Repositories;
+﻿using MediatR;
+using System.Data.Entity;
+using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Context;
+
 
 public class BankRouteRepository : EfEntityRepositoryBase<BankRoute>, IBankRouteRepository
 {
@@ -11,22 +14,22 @@ public class BankRouteRepository : EfEntityRepositoryBase<BankRoute>, IBankRoute
         _context = context;
     }
 
-    public Task<string> GetProviderBankCodeAsync(string targetBankCode)
+    public Task<Guid> GetProviderBankIdAsync(Guid targetBankId)
     {
-        throw new NotImplementedException();
-    }
+        if (targetBankId == Guid.Empty)
+        {
+            _context.BankRoutes
+            .Where(x => x.TargetBankId == null)
+            .Select(x => x.SourceBankId)
+            .FirstOrDefaultAsync();
+        } else
+        {
+           _context.BankRoutes
+           .Where(x => x.TargetBankId == targetBankId)
+           .Select(x => x.SourceBankId)
+           .FirstOrDefaultAsync();
+        }
+        return Task.FromResult(Guid.Empty);
 
-    public class VakifBankCode 
-    {
-        public const string Code = "0015";
     }
-    public class ZiraatBankCode
-    {
-        public const string Code = "0010";
-    }
-    public class GarantiBankCode
-    {
-        public const string Code = "0020";
-    }
-
 }

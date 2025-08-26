@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;

@@ -4,8 +4,8 @@ using WalletApp.Domain.Enums;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Feature.Wallet.Commands;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers;
 

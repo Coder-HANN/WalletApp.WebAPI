@@ -5,16 +5,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Serilog.Sinks.MSSqlServer;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Abstraction.Services.MailServices;
 using WalletApp.Application.Common;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Logging;
+using WalletApp.Infrastructure.Services.BankServices;
 using WalletApp.Infrastructure.Services.EmailServices;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
@@ -131,6 +134,17 @@ builder.Services.AddApplicationServices();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
 builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 builder.Services.AddMemoryCache();
+
+
+builder.Services.AddScoped<IBankServicesFactory, BankServicesFactory>();
+builder.Services.AddScoped<VakifBankServices>(provider =>
+    new VakifBankServices(provider.GetRequiredService<IProviderBankRepository>()));
+
+builder.Services.AddScoped<ZiraatBankServices>(provider =>
+    new ZiraatBankServices(provider.GetRequiredService<IProviderBankRepository>()));
+
+builder.Services.AddScoped<GarantiBankServices>(provider =>
+    new GarantiBankServices(provider.GetRequiredService<IProviderBankRepository>()));
 
 var app = builder.Build();
 

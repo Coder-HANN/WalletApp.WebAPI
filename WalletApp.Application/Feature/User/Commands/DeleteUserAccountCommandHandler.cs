@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Feature.User.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;

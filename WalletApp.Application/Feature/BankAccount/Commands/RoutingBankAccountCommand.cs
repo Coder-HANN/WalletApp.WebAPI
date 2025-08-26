@@ -7,6 +7,7 @@ namespace WalletApp.Application.Feature.BankAccount.Commands
 {
     public class RoutingBankAccountCommand:IRequest<ServiceResponse<RoutingBankAccountResponseDTO>>
     {
-        public string Iban { get; set; }
+        public Guid SourceProviderBankId { get; set; }
+        public Guid? TargetProviderBankId { get; set; }
     }
 }

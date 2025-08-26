@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using WalletApp.Domain.Entities;
 
 
@@ -17,7 +18,8 @@ namespace WalletApp.Persistence.Context
         public DbSet<AppPayment> Payments { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<ProviderBank> ProviderBanks { get; set; }
-        
+        public DbSet<BankRoute> BankRoutes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -92,7 +94,7 @@ namespace WalletApp.Persistence.Context
                        .WithMany(u => u.BankHesap)
                        .HasForeignKey(ba => ba.AppUserId)
                        .OnDelete(DeleteBehavior.Restrict);
-                
+
             });
 
             // Transaction configuration
@@ -188,6 +190,7 @@ namespace WalletApp.Persistence.Context
                        .WithMany(w => w.WalletTransfers)
                        .HasForeignKey(wt => wt.WalletId)
                        .OnDelete(DeleteBehavior.Restrict);
+
             });
 
             // ProviderBank configuration
@@ -197,7 +200,13 @@ namespace WalletApp.Persistence.Context
                 builder.Property(pb => pb.BankName).IsRequired().HasMaxLength(100);
             });
 
-            
+            modelBuilder.Entity<BankRoute>(builder =>
+            {
+                builder.HasNoKey();
+                builder.Property(br => br.TargetBankId);
+                builder.Property(br => br.SourceBankId).IsRequired();
+                builder.Property(br => br.Remark).IsRequired();
+            });
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

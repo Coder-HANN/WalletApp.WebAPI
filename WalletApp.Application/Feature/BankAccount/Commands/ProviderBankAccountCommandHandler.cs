@@ -1,9 +1,10 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.BankAccount;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Domain.Entities;
 
 
 namespace WalletApp.Application.Feature.BankAccount.Handlers
@@ -27,16 +28,16 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
             if (currentUserId == null)
                 return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
 
-            var existing = await _providerBankRepository.GetAsync(p => p.BankName == request.BankName);
-            if (existing != null)
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Bu banka zaten eklenmiş.");
-
             // IBAN'dan BankCode çıkarılıyor
             var bankCode = ExtractBankCodeFromIban(request.Iban);
             if (string.IsNullOrEmpty(bankCode))
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Geçersiz IBAN, BankCode alınamadı.");
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Geçersiz IBAN.");
 
-            var providerBank = new Domain.Entities.ProviderBank
+            var existing = await _providerBankRepository.GetAsync(p => p.BankCode == bankCode);
+            if (existing != null)
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Bu banka zaten eklenmiş.");
+
+            var providerBank = new ProviderBank
             {
                 BankName = request.BankName,
                 Iban = request.Iban,
@@ -59,10 +60,10 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
         private string ExtractBankCodeFromIban(string iban)
         {
-            if (string.IsNullOrWhiteSpace(iban) || iban.Length < 6)
+            if (string.IsNullOrWhiteSpace(iban) || iban.Length < 26)
                 return null;
 
-            return iban.Substring(5,4); // 5. ve 6. karakterler (index 4 ve 5)
+            return iban.Replace(" "," ").Substring(5,4); 
         }
 
     }

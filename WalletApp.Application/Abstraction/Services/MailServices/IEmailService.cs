@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WalletApp.Application.Abstraction.Services
+namespace WalletApp.Application.Abstraction.Services.MailServices
 {
     public interface IEmailService
     {

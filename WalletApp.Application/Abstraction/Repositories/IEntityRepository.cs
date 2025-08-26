@@ -22,6 +22,6 @@ namespace WalletApp.Application.Abstraction.Repositories
         Task<int> SaveChangesAsync();
        
         Task<T?> GetByIdAsync(Guid id);
-        
+     
     }
 }

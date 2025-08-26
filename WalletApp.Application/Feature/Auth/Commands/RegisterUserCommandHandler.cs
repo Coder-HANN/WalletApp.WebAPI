@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.MailServices;
 using WalletApp.Application.DTOs.Auth;
 using WalletApp.Application.Feature.Auth.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
@@ -64,15 +64,10 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
             Occupation = request.Occupation,
             Address = string.IsNullOrEmpty(request.Address) ? string.Empty : request.Address,
             PhoneNumber = request.PhoneNumber
-          
-
-
-
         };
 
         // 2. UserDetail ekle
         await _userDetailRepository.AddAsync(userDetail);
-
 
         try
         {

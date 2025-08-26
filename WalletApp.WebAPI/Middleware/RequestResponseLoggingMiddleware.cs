@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 
 namespace WalletApp.WebAPI.Middleware
 {

@@ -3,7 +3,17 @@ namespace WalletApp.Domain.Entities
 {
     public class BankRoute : BaseEntity
     {
-        public string TargetBankCode { get; set; }
-        public string ProviderBankCode { get; set; }
+        /// <summary>
+        /// TargetBankProviderId
+        /// </summary>
+        /// 
+        
+        public Guid? TargetBankId { get; set; }
+        /// <summary>
+        /// SourceBankProviderId
+        /// </summary>
+        public Guid? SourceBankId { get; set; }
+
+        public string? Remark { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Domain.Entities;
 using WalletApp.Infrastructure.Repositories;
+using WalletApp.Infrastructure.Services.BankServices;
 using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Repositories;
 
@@ -29,7 +30,8 @@ namespace WalletApp.Persistence.Extensions
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IBankRouteRepository, BankRouteRepository>();
             services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
-
+            
+           
             return services;
         }
     }
