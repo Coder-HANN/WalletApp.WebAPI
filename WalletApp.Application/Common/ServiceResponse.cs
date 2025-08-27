@@ -1,5 +1,4 @@
 ﻿
-
 namespace WalletApp.Application.Feature.Wallet.Dtos
 {
     public class ServiceResponse<T>

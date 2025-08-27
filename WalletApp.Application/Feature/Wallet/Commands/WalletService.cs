@@ -62,7 +62,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             return await _walletRepository.GetAllAsync(w => w.AppUserId == currentUserId);
         }
 
-        
+
 
         public async Task<AppWallet> UpdateWalletAsync(AppWallet wallet)
         {

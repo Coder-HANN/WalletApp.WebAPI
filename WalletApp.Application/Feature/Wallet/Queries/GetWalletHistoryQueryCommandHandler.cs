@@ -5,6 +5,7 @@ using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
 
+
 namespace WalletApp.Application.Feature.Wallet.Queries
 {
     public class GetWalletHistoryQueryCommandHandler : IRequestHandler<GetUserWalletsHistoryQuery, ServiceResponse<IEnumerable<TransactionResponseDTO>>>
@@ -42,8 +43,5 @@ namespace WalletApp.Application.Feature.Wallet.Queries
 
             return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Ok(dtoList, "İşlem geçmişi getirildi.");
         }
-
-
-
     }
 }

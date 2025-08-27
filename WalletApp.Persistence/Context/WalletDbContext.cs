@@ -192,7 +192,6 @@ namespace WalletApp.Persistence.Context
                        .OnDelete(DeleteBehavior.Restrict);
 
             });
-
             // ProviderBank configuration
             modelBuilder.Entity<ProviderBank>(builder =>
             {
