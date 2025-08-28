@@ -1,30 +1,36 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
+using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Common.Pagination;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
+using WalletApp.Domain.Entities;
 
 
 namespace WalletApp.Application.Feature.Wallet.Queries
 {
-    public class GetWalletHistoryQueryCommandHandler : IRequestHandler<GetUserWalletsHistoryQuery, ServiceResponse<IEnumerable<TransactionResponseDTO>>>
+    public class GetWalletHistoryQueryCommandHandler : PagedSearchQueryHandler<GetUserWalletsHistoryQuery, ServiceResponse<IEnumerable<TransactionResponseDTO>>> 
     {
         private readonly WalletService _walletService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IEntityRepository<AppWallet> _entityRepository;
 
         public GetWalletHistoryQueryCommandHandler(
             WalletService walletService,
             IHttpContextAccessor httpContextAccessor,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IEntityRepository<AppWallet> entityRepository)
         {
             _walletService = walletService;
             _httpContextAccessor = httpContextAccessor;
             _currentUserService = currentUserService;
+            _entityRepository = entityRepository;
         }
 
-        public async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> Handle(GetUserWalletsHistoryQuery request, CancellationToken cancellationToken)
+        public override async Task<ServiceResponse<IEnumerable<TransactionResponseDTO>>> Handle(GetUserWalletsHistoryQuery request, CancellationToken cancellationToken)
         {
             var transactions = await _walletService.GetWalletTransactionHistoryAsync(request.WalletId);
 
@@ -41,7 +47,13 @@ namespace WalletApp.Application.Feature.Wallet.Queries
                 CreatedDate = t.CreatedDate
             });
 
-            return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Ok(dtoList, "İşlem geçmişi getirildi.");
+            var result = await _entityRepository.GetPagedResult<TransactionResponseDTO>(dtoList,
+               pageSize: request.PageSize,
+               pageIndex: request.Page,
+               ordering: shr => shr.OrderByDescending(_ => _.Id),
+               cancellationToken: cancellationToken);
+
+            return HandleResult<TransactionResponseDTO>(result);
         }
     }
 }

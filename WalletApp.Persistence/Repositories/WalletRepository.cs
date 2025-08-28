@@ -2,17 +2,15 @@
 using System.Linq.Expressions;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Domain.Entities;
+using WalletApp.Persistence.Base;
 using WalletApp.Persistence.Context;
 
 namespace WalletApp.Infrastructure.Repositories
 {
-    public class WalletRepository : IWalletRepository
+    public class WalletRepository : EfEntityRepositoryBase<AppWallet>, IWalletRepository
     {
-        private readonly WalletDbContext _context;
-        public WalletRepository(WalletDbContext context)
-        {
-            _context = context;
-        }
+        
+        public WalletRepository(WalletDbContext context) : base(context) {}
 
         public async Task<AppWallet?> GetByIdAsync(Guid id)
         {
@@ -141,11 +139,14 @@ namespace WalletApp.Infrastructure.Repositories
                                  .ToListAsync();
         }
 
-       
-        // Buraya bakılacak 
         public async Task<AppWallet> GetByUserIdAsync(int currentUserService)
         {
             return await GetAsync(w => w.AppUserId == currentUserService);
+        }
+
+        public Task<IPagingExecutionResult<T>> GetPagedResult<T>(IEnumerable<T> query, int? pageSize = 10, int? pageIndex = 1, Func<IQueryable<T>, IOrderedQueryable<T>> ordering = null, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
     }
 }

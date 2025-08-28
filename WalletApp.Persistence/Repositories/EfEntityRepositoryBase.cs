@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Context;
+using WalletApp.Persistence.Repositories;
 
 
 namespace WalletApp.Persistence.Base
@@ -100,6 +101,29 @@ namespace WalletApp.Persistence.Base
         public Task<int> SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
+        }
+
+        public Task<IPagingExecutionResult<T>> GetPagedResult<T>(IEnumerable<T> query,int? pageSize = 10,int? pageIndex = 1,Func<IQueryable<T>, IOrderedQueryable<T>> ordering = default,
+            CancellationToken cancellationToken = default)
+        {
+            if ((pageIndex ??= 1) < 1) pageIndex = 1;
+            if ((pageSize ??= 10) < 1) pageSize = 1;
+
+            var hasPaging = false;
+            var totalCount = 0;
+
+            if (pageSize.HasValue && pageIndex.HasValue)
+            {
+                hasPaging = true;
+                totalCount = query.Count();
+                query = ordering == null? query: ordering(query.AsQueryable());
+                query = query.Skip(pageSize.Value * (pageIndex.Value - 1)).Take(pageSize.Value);
+            }
+
+            var data = query.ToList();
+
+            return Task.FromResult<IPagingExecutionResult<T>>(new PagingExecutionResult<T>(data, hasPaging, pageIndex.Value, pageSize.Value, totalCount)
+            );
         }
 
     }

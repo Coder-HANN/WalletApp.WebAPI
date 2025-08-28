@@ -6,14 +6,10 @@ using WalletApp.Persistence.Context;
 
 namespace WalletApp.Persistence.Base
 {
-    public class WalletTransferRepository : IWalletTransferRepository
+    public class WalletTransferRepository : EfEntityRepositoryBase<WalletTransfer>, IWalletTransferRepository
     {
-        private readonly WalletDbContext _context;
 
-        public WalletTransferRepository(WalletDbContext context)
-        {
-            _context = context;
-        }
+        public WalletTransferRepository(WalletDbContext context) : base(context) {}
 
         public async Task<WalletTransfer> AddAsync(WalletTransfer entity)
         {
@@ -102,5 +98,7 @@ namespace WalletApp.Persistence.Base
         {
             return await _context.WalletTransfers.FindAsync(id);
         }
+
+      
     }
 }

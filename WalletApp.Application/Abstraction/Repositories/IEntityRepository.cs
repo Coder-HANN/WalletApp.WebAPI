@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using WalletApp.Application.Feature.Wallet.Queries;
 
 
 namespace WalletApp.Application.Abstraction.Repositories
@@ -22,6 +23,9 @@ namespace WalletApp.Application.Abstraction.Repositories
         Task<int> SaveChangesAsync();
        
         Task<T?> GetByIdAsync(Guid id);
-     
+
+        Task<IPagingExecutionResult<T>> GetPagedResult<T>(IEnumerable<T> query, int? pageSize = 10, int? pageIndex = 1,
+        Func<IQueryable<T>, IOrderedQueryable<T>> ordering = null,
+        CancellationToken cancellationToken = default);
     }
 }

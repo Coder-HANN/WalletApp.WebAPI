@@ -30,8 +30,10 @@ namespace WalletApp.Persistence.Extensions
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IBankRouteRepository, BankRouteRepository>();
             services.AddScoped(typeof(IEntityRepository<>), typeof(EfEntityRepositoryBase<>));
-            
-           
+
+
+
+
             return services;
         }
     }
