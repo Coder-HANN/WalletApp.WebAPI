@@ -54,8 +54,7 @@ namespace WalletApp.Infrastructure.Repositories
                 .FirstOrDefault(predicate);
         }
 
-        public async Task<AppWallet> GetAsync(
-            Expression<Func<AppWallet, bool>> predicate,
+        public async Task<AppWallet> GetAsync(Expression<Func<AppWallet, bool>> predicate,
             Func<IQueryable<AppWallet>, IQueryable<AppWallet>> include = null)
         {
             IQueryable<AppWallet> query = _context.Wallets;

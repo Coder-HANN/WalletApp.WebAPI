@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Linq;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
+using WalletApp.Infrastructure.Services.MemoryCach;
+
 
 namespace WalletApp.Application.Feature.Wallet.Handlers
 {
@@ -226,6 +227,8 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
                 }
             };
         }
+
+        
         public async Task<IEnumerable<Transaction>> GetWalletTransactionHistoryAsync(Guid walletId)
         {
             var currentUserId = _currentUserService.CurrentUser();

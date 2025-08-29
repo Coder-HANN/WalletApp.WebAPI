@@ -19,6 +19,7 @@ using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Logging;
 using WalletApp.Infrastructure.Services.BankServices;
 using WalletApp.Infrastructure.Services.EmailServices;
+using WalletApp.Infrastructure.Services.MemoryCach;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
 using WalletApp.WebAPI.Middleware;
@@ -134,6 +135,7 @@ builder.Services.AddApplicationServices();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
 builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheManager, MemoryCacheManager>();
 
 
 builder.Services.AddScoped<IBankServicesFactory, BankServicesFactory>();
