@@ -3,6 +3,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Services.MemoryCach;
@@ -42,7 +43,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null || currentUserId == -1)
-                throw new Exception("Kullanıcı doğrulanamadı");
+                throw new Exception(WalletResource.UserIsNotFound);
 
             var wallet = new AppWallet
             {
@@ -58,7 +59,7 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         {
 
             if (currentUserId == null || currentUserId == -1)
-                throw new Exception("Kullanıcı doğrulanamadı");
+                throw new Exception(WalletResource.UserIsNotFound);
 
             return await _walletRepository.GetAllAsync(w => w.AppUserId == currentUserId);
         }
@@ -78,10 +79,10 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         public async Task<List<TransactionResponseDTO>> ProcessWalletTransactionAsync(Guid walletId, TransferCommand request)
         {
             var wallet = await _walletRepository.GetAsync(w => w.Id == request.SourceWalletId)
-                         ?? throw new Exception("Cüzdan bulunamadı");
+                         ?? throw new Exception(WalletResource.WalletIsNotFound);
 
             if (request.Type == TransactionType.Withdraw && wallet.TotalBalance < request.Amount)
-                throw new Exception("Yetersiz bakiye");
+                throw new Exception(WalletResource.InsufficientAmount);
 
             if (request.Type == TransactionType.Deposit)
                 wallet.TotalBalance += request.Amount;
@@ -150,13 +151,13 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         public async Task<List<TransactionResponseDTO>> TransferAsync(Guid sourceWalletId, Guid targetWalletId, decimal amount, string? description)
         {
             var sourceWallet = await _walletRepository.GetAsync(w => w.Id == sourceWalletId)
-                ?? throw new Exception("Kaynak cüzdan bulunamadı.");
+                ?? throw new Exception(WalletResource.SourceWalletIsNotFound);
 
             var targetWallet = await _walletRepository.GetAsync(w => w.Id == targetWalletId)
-                ?? throw new Exception("Hedef cüzdan bulunamadı.");
+                ?? throw new Exception(WalletResource.TargetWalletIsNotFound);
 
             if (sourceWallet.TotalBalance < amount)
-                throw new Exception("Yetersiz bakiye.");
+                throw new Exception(WalletResource.InsufficientAmount);
 
             sourceWallet.TotalBalance -= amount;
             targetWallet.TotalBalance += amount;
@@ -232,11 +233,11 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null || currentUserId == -1)
-                throw new Exception("Kullanıcı doğrulanamadı");
+                throw new Exception(WalletResource.UserIsNotFound);
 
             var wallet = await _walletRepository.GetAsync(w => w.Id == walletId && w.AppUserId == currentUserId);
             if (wallet == null)
-                throw new Exception("Bu cüzdan size ait değil.");
+                throw new Exception(WalletResource.WalletIsNotFound);
 
             return await _transactionRepository.GetAllAsync(t => t.WalletId == walletId);
         }

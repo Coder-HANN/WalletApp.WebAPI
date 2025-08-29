@@ -4,6 +4,7 @@ using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 
 namespace WalletApp.Application.Feature.Wallet.Queries
 {
@@ -27,7 +28,7 @@ namespace WalletApp.Application.Feature.Wallet.Queries
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Fail("Kullanıcı doğrulanamadı");
+                return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Fail(GetUserWalletsQueryResource.UserIsNotFound);
 
             var wallets = await _walletService.GetMyWalletsAsync(currentUserId);
 
@@ -41,7 +42,7 @@ namespace WalletApp.Application.Feature.Wallet.Queries
                 
             });
 
-            return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Ok(dtoList, "Cüzdanlar getirildi.");
+            return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Ok(dtoList, GetUserWalletsQueryResource.SuccessMessage);
         }
     }
 }

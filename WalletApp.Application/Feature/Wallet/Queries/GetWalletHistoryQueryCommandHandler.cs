@@ -6,6 +6,7 @@ using WalletApp.Application.Common.Pagination;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 using WalletApp.Domain.Entities;
 
 
@@ -35,7 +36,7 @@ namespace WalletApp.Application.Feature.Wallet.Queries
             var transactions = await _walletService.GetWalletTransactionHistoryAsync(request.WalletId);
 
             if (!transactions.Any())
-                return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Fail("İşlem geçmişi bulunamadı.");
+                return ServiceResponse<IEnumerable<TransactionResponseDTO>>.Fail(GetWalletHistoryQueryResource.HistoryNotFound);
 
             var dtoList = transactions.Select(t => new TransactionResponseDTO
             {

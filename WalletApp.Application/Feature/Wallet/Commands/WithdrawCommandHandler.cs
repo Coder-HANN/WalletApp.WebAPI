@@ -5,6 +5,7 @@ using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 
@@ -42,26 +43,26 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         // Kullanıcı doğrulama
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null || currentUserId == -1)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.UserIsNotFound);
 
         //  Cüzdan kontrolü
         var wallet = await _walletRepository.GetAsync(x => x.Id == request.WalletId && x.AppUserId == currentUserId);
         if (wallet == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bulunamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.WalletIsNotFound);
 
         if (wallet.TotalBalance < request.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bakiyesi yetersiz.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.WalletAmountIsNotEnough);
 
         // Kullanıcı banka hesabı kontrolü
         var userBankAccount = await _bankAccountRepository.GetAsync(
             x => x.Id == request.AppBankAccountId && x.AppUserId == currentUserId);
         if (userBankAccount == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Banka hesabı bulunamadı veya size ait değil.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.BankAccountIsNotFound);
 
         //  IBAN’dan banka kodu çıkar
         var cleanIban = userBankAccount.Iban.Replace(" ", "");
         if (cleanIban.Length < 9)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz IBAN.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.InvaliedIban);
         var bankCode = cleanIban.Substring(5, 4);
 
         //  Provider bank seçimi (önce aynısı, yoksa 0015 VakıfBank)
@@ -72,10 +73,10 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         var providerBankAccount = await _bankAccountRepository.GetAsync(x => x.ProviderBankId == providerBank.Id);
 
         if (providerBank == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bulunamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.ProviderBankAccountIsNotFound);
 
         if (providerBank.TotalBalance < request.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bakiyesi yetersiz.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.ProviderBankAmountIsNotEnough);
         
         wallet.TotalBalance -= request.Amount;
         await _walletRepository.UpdateAsync(wallet);
@@ -108,7 +109,7 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
             CreatedDate = transaction.CreatedDate
         };
 
-        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para çekme işlemi başarılı.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, WithdrawResource.SuccessMessage);
     }
 
 }
