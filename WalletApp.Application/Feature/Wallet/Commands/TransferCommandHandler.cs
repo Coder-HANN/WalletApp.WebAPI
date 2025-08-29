@@ -4,6 +4,7 @@ using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 using WalletApp.Domain.Enums;
 
 
@@ -30,11 +31,11 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null || currentUserId == -1)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrualanamadı");
+            return ServiceResponse<TransactionResponseDTO>.Fail(TransferResource.UserIsNotFound);
             var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount, request.Description.ToString());
 
         if (transaction == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Transfer failed.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(TransferResource.FailedMessage);
 
         return ServiceResponse<TransactionResponseDTO>.Ok(new TransactionResponseDTO
         {
@@ -42,6 +43,6 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
             WalletId = request.SourceWalletId,
             Amount = request.Amount,
             Type = TransactionType.Transfer,
-        }, "Transfer successful.");
+        },  TransferResource.SuccessMessage);
     }
 }

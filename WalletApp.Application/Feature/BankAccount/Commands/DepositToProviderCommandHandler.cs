@@ -3,6 +3,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.BankAccount;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 
 public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProviderBankAccountCommand, ServiceResponse<DepositToProviderBankAccountResponseDTO>>
@@ -22,17 +23,17 @@ public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProv
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail(DepositToProviderBankResource.UserIsNotFound);
 
         if (string.IsNullOrWhiteSpace(request.Iban))
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("IBAN boş olamaz.");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail(DepositToProviderBankResource.InvaliedIban);
 
         var providerBank = await _providerBankRepository.GetAsync(p => p.Iban == request.Iban);
         if (providerBank == null)
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("IBAN’a ait banka hesabı bulunamadı.");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail(DepositToProviderBankResource.BankAccountIsNotFound);
 
         if (request.Amount <= 0)
-            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail("Yatırılacak tutar pozitif olmalı.");
+            return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Fail(DepositToProviderBankResource.AmountMustBeGreaterThanZero);
 
         providerBank.TotalBalance += request.Amount;
 
@@ -46,7 +47,7 @@ public class DepositToProviderBankCommandHandler : IRequestHandler<DepositToProv
             Description = request.Description
         };
 
-        return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Ok(response, "Provider banka bakiyesi başarıyla güncellendi.");
+        return ServiceResponse<DepositToProviderBankAccountResponseDTO>.Ok(response, DepositToProviderBankResource.SuccessMessage);
     }
 
 }

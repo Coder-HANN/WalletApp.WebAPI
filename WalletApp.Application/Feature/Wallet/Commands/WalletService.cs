@@ -228,7 +228,6 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             };
         }
 
-        
         public async Task<IEnumerable<Transaction>> GetWalletTransactionHistoryAsync(Guid walletId)
         {
             var currentUserId = _currentUserService.CurrentUser();
@@ -241,6 +240,5 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
 
             return await _transactionRepository.GetAllAsync(t => t.WalletId == walletId);
         }
-
     }
 }

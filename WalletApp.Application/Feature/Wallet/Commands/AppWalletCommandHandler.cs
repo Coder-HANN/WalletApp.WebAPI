@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 
 public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, ServiceResponse<AppWalletResponseDTO>>
 {
@@ -28,15 +29,15 @@ public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, Service
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<AppWalletResponseDTO>.Fail("Kullanıcı bulunamadı");
+            return ServiceResponse<AppWalletResponseDTO>.Fail(AppWalletResource.UserIsNotFound);
 
 		if (string.IsNullOrEmpty(request.Name))
-            return ServiceResponse<AppWalletResponseDTO>.Fail("Cüzdan adı boş olamaz.");
+            return ServiceResponse<AppWalletResponseDTO>.Fail(AppWalletResource.WalletNameIsNotNull);
 
         var result = await _walletService.CreateWalletAsync( request.Currency, cancellationToken);
 
         if (result == null)
-            return ServiceResponse<AppWalletResponseDTO>.Fail("Cüzdan oluşturulamadı.");
+            return ServiceResponse<AppWalletResponseDTO>.Fail(AppWalletResource.FailedMessage);
 
         var dto = new AppWalletResponseDTO
         {
@@ -46,6 +47,6 @@ public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, Service
             Assest = result.Assest 
         };
 
-        return ServiceResponse<AppWalletResponseDTO>.Ok(dto, "Cüzdan başarıyla oluşturuldu.");
+        return ServiceResponse<AppWalletResponseDTO>.Ok(dto, AppWalletResource.SuccessMessage);
     }
 }

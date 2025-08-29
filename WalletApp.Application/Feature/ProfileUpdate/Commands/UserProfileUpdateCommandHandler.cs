@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.ProfileUpdate;
+using WalletApp.Application.Feature.ProfileUpdate.Validators.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -30,15 +31,15 @@ namespace WalletApp.Application.Feature.ProfileUpdate.Commands
         {
             var userId = _currentUserService.CurrentUser();
             if (userId == null)
-                return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı bulunamadı");
+                return ServiceResponse<UserProfileResponseDTO>.Fail(UserProfileUpdateResource.UserNotFound);
 
             var userDetail = await _userDetailRepository.GetAsync(x => x.AppUserId == userId);
             if (userDetail == null)
-                return ServiceResponse<UserProfileResponseDTO>.Fail("Profil bulunamadı");
+                return ServiceResponse<UserProfileResponseDTO>.Fail(UserProfileUpdateResource.ProfileIsNotFound);
 
             var user = await _userRepository.GetByUserIdAsync(userId);
             if (user == null)
-                return ServiceResponse<UserProfileResponseDTO>.Fail("Kullanıcı bilgisi bulunamadı");
+                return ServiceResponse<UserProfileResponseDTO>.Fail(UserProfileUpdateResource.UserDetailsNotFound);
 
             bool isModified = false;
 

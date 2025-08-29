@@ -3,6 +3,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.BankAccount;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -26,16 +27,16 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail(ProviderBankAccountResource.UserIsNotFound);
 
             // IBAN'dan BankCode çıkarılıyor
             var bankCode = ExtractBankCodeFromIban(request.Iban);
             if (string.IsNullOrEmpty(bankCode))
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Geçersiz IBAN.");
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail(ProviderBankAccountResource.InvaliedIban);
 
             var existing = await _providerBankRepository.GetAsync(p => p.BankCode == bankCode);
             if (existing != null)
-                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail("Bu banka zaten eklenmiş.");
+                return ServiceResponse<ProviderBankAccountResponseDTO>.Fail(ProviderBankAccountResource.BankAccountIsAvailable);
 
             var providerBank = new ProviderBank
             {
@@ -55,7 +56,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 AccountType = providerBank.AccountType
             };
 
-            return ServiceResponse<ProviderBankAccountResponseDTO>.Ok(response, "Banka hesabı başarıyla eklendi.");
+            return ServiceResponse<ProviderBankAccountResponseDTO>.Ok(response, ProviderBankAccountResource.SuccessMessage);
         }
 
         private string ExtractBankCodeFromIban(string iban)

@@ -5,6 +5,7 @@ using WalletApp.Domain.Entities;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 
 namespace WalletApp.Application.Feature.BankAccount.Handlers
 {
@@ -32,16 +33,16 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<BankAccountCommand>.Fail("Kullanıcı bulunamadı");
+                return ServiceResponse<BankAccountCommand>.Fail(BankAccontResource.UserIsNotSearchable);
 
             var bankCode = string.Empty;
             if (!string.IsNullOrEmpty(request.Iban) && request.Iban.Length >= 9)
             {
-                bankCode = request.Iban.Substring(5, 4); // IBAN’dan banka kodunu al
+                bankCode = request.Iban.Substring(5, 4);
             }
             else
             {
-                return ServiceResponse<BankAccountCommand>.Fail("Geçersiz IBAN numarası.");
+                return ServiceResponse<BankAccountCommand>.Fail(BankAccontResource.InvaliedIban);
             }
 
             var entity = new AppBankAccount
@@ -74,7 +75,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 WalletId = entity.WalletId
             };
 
-            return ServiceResponse<BankAccountCommand>.Ok(dto, "Banka hesabı başarıyla eklendi.");
+            return ServiceResponse<BankAccountCommand>.Ok(dto, BankAccontResource.BankAccoundAdded);
         }
     }
 }

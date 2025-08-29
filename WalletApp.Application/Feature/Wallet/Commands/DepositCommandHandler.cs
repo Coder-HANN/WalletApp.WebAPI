@@ -6,6 +6,7 @@ using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Feature.Wallet.Validations.Resource;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers;
 
@@ -38,26 +39,26 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.UserIsNotFound);
 
         var userBankAccount = await _bankAccountRepository.GetAsync(x => x.Id == request.SourceBankId && x.AppUserId == currentUserId);
         if (userBankAccount == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Banka hesabı bulunamadı veya size ait değil.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.BankAccountNotFound);
 
         if (request.Amount <= 0)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Tutar sıfırdan büyük olmalıdır.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.AmountMustBeGreaterThanZero);
 
         if (userBankAccount.Balance < request.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Banka hesabınızda yeterli bakiye yok.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.InsufficientBalance);
 
         var wallet = await _walletRepository.GetAsync(x => x.Id == request.WalletId && x.AppUserId == currentUserId);
         if (wallet == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bulunamadı veya size ait değil.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.WalletNotFound);
 
         // IBAN'dan banka kodunu al (boşlukları kaldır, 5. ve 6. karakterler)
         
         if (userBankAccount.Iban.Length < 24)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz IBAN.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.InavliedIban);
 
         var bankCode = userBankAccount.Iban.Substring(5, 4);
 
@@ -69,7 +70,7 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
             // VakıfBank (0015) default olarak atanabilir
             providerBank = providerBanks.FirstOrDefault(pb => pb.BankCode == "0015");
             if (providerBank == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Varsayılan provider banka bulunamadı.");
+                return ServiceResponse<TransactionResponseDTO>.Fail(DepositResource.ProviderBankAccountNotFound);
         }
 
         // Güncellemeler
@@ -113,10 +114,10 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
             Type = transaction.Type,
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate,
-            Suggestion = "Bakiye başarıyla yüklendi."
+            Suggestion = DepositResource.SuccessMessage
         };
 
-        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Cüzdana bakiye yatırma işlemi başarılı.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, DepositResource.SuccessMessage);
     }
 
 }

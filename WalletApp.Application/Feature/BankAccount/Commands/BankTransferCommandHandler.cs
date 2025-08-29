@@ -4,6 +4,7 @@ using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
@@ -46,14 +47,14 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
     {
         var currentUserId = _currentUser.CurrentUser();
         if (currentUserId == null || currentUserId == -1)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.UserIsNotFound);
 
         var wallet = await _walletRepository.GetAsync(x => x.Id == dto.WalletId && x.AppUserId == currentUserId);
         if (wallet == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("İşlem yapılacak cüzdan bulunamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.WalletIsNotFound);
 
         if (wallet.TotalBalance < dto.Amount)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bakiyesi yetersiz.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.WalletAmountIsNotEnough);
                             
         AppBankAccount? targetBankAccount = null;
         string? cleanedIban = null;
@@ -67,31 +68,31 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
             targetBankAccount = await _bankAccountRepository.GetAsync(x => x.Iban.Replace(" ", "") == cleanedIban);
             if (targetBankAccount == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Hedef banka hesabı sistemde kayıtlı değil.");
+                return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.BankAccountIsNotFound);
         }
         else if (dto.RegisterBank == RegisterBank.Registered)
         {
             targetBankAccount = await _bankAccountRepository.GetAsync(x => x.Id == dto.TargetBankAccountId);
             if (targetBankAccount == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Hedef banka hesabı bulunamadı.");
+                return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.BankAccountIsNotFound);
 
             cleanedIban = targetBankAccount.Iban.Replace(" ", "");
             targetBankCode = cleanedIban.Substring(5, 4);
         }
         else
         {
-            return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz banka türü.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.BankTypeIsNotFound);
         }
 
         var providerBanks = await _providerBankRepository.GetAllAsync();
         if (providerBanks == null || !providerBanks.Any())
-            return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bulunamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.SourceBankAccountIsNotFound);
 
-        var sourceBankCode = await _bankRouteRepository.GetProviderBankIdAsync(targetBankAccount.Id); // patladı 
+        var sourceBankCode = await _bankRouteRepository.GetProviderBankIdAsync(targetBankAccount.Id); 
         var sourceProviderBank = providerBanks.FirstOrDefault(x => x.BankCode == sourceBankCode.ToString());
 
         if (sourceProviderBank == null)
-            return ServiceResponse<TransactionResponseDTO>.Fail("Uygun provider banka bulunamadı.");
+            return ServiceResponse<TransactionResponseDTO>.Fail(BankTransferResource.ProviderBankAccountIsNotFound);
 
         var factoryTransfer = _bankServicesFactory.SelectBankServices(sourceProviderBank.BankCode);
 
@@ -142,6 +143,6 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
         };
-        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Para transferi başarıyla gerçekleştirildi.");
+        return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, BankTransferResource.SuccessMessage);
     }
 }

@@ -39,12 +39,12 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(WithdrawCommand request, CancellationToken cancellationToken)
     {
-        // 1️⃣ Kullanıcı doğrulama
+        // Kullanıcı doğrulama
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null || currentUserId == -1)
             return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı.");
 
-        // 2️⃣ Cüzdan kontrolü
+        //  Cüzdan kontrolü
         var wallet = await _walletRepository.GetAsync(x => x.Id == request.WalletId && x.AppUserId == currentUserId);
         if (wallet == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bulunamadı.");
@@ -52,19 +52,19 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         if (wallet.TotalBalance < request.Amount)
             return ServiceResponse<TransactionResponseDTO>.Fail("Cüzdan bakiyesi yetersiz.");
 
-        // 3️⃣ Kullanıcı banka hesabı kontrolü
+        // Kullanıcı banka hesabı kontrolü
         var userBankAccount = await _bankAccountRepository.GetAsync(
             x => x.Id == request.AppBankAccountId && x.AppUserId == currentUserId);
         if (userBankAccount == null)
             return ServiceResponse<TransactionResponseDTO>.Fail("Banka hesabı bulunamadı veya size ait değil.");
 
-        // 4️⃣ IBAN’dan banka kodu çıkar
+        //  IBAN’dan banka kodu çıkar
         var cleanIban = userBankAccount.Iban.Replace(" ", "");
         if (cleanIban.Length < 9)
             return ServiceResponse<TransactionResponseDTO>.Fail("Geçersiz IBAN.");
         var bankCode = cleanIban.Substring(5, 4);
 
-        // 5️⃣ Provider bank seçimi (önce aynısı, yoksa 0015 VakıfBank)
+        //  Provider bank seçimi (önce aynısı, yoksa 0015 VakıfBank)
         var providerBanks = await _providerBankRepository.GetAllAsync();
 
         var providerBank = providerBanks.FirstOrDefault(pb => pb.BankCode == bankCode) ?? providerBanks.FirstOrDefault(pb => pb.BankCode == "0015");
@@ -76,16 +76,15 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
 
         if (providerBank.TotalBalance < request.Amount)
             return ServiceResponse<TransactionResponseDTO>.Fail("Provider banka bakiyesi yetersiz.");
-
         
         wallet.TotalBalance -= request.Amount;
         await _walletRepository.UpdateAsync(wallet);
 
-        // 7️⃣ Provider banktan gerçek düşüş
+        // Provider banktan gerçek düşüş
         providerBank.TotalBalance -= request.Amount;
         await _providerBankRepository.UpdateAsync(providerBank);
 
-        // 8️⃣ Transaction kaydı
+        // Transaction kaydı
         var transaction = new Transaction
         {
             WalletId = wallet.Id,

@@ -1,7 +1,9 @@
 ﻿using MediatR;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.User.Commands;
+using WalletApp.Application.Feature.User.Validators.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -24,26 +26,25 @@ namespace WalletApp.Application.Feature.Auth.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<string>.Fail("Kullanıcı doğrulanamdı");
+                return ServiceResponse<string>.Fail(DeleteUserAccountResource.UserNotFound);
 
 
             var user = await _userRepository.GetAsync(u => u.Id == currentUserId);
 
             if (user.Email != request.Email)
-                return ServiceResponse<string>.Fail("Girilen email, giriş yapan kullanıcıya ait değil.");
+                return ServiceResponse<string>.Fail(DeleteUserAccountResource.UserAndMailNotMatch);
 
             if (user.PasswordHash != request.PasswordHash)
-                return ServiceResponse<string>.Fail("Girilen şifre hatalı.");
+                return ServiceResponse<string>.Fail(DeleteUserAccountResource.InvalidPassword);
 
             var command = request.Command;
                 
             if (!string.IsNullOrEmpty(command))
-                    return ServiceResponse<string>.Fail("Lütfen hesabınızı neden kapatmak istediğinizi yazınız.");
+                    return ServiceResponse<string>.Fail(DeleteUserAccountResource.WhyAreYouLeaving);
             
-
             await _userRepository.DeleteAsync(user);
 
-            return ServiceResponse<string>.Ok("Kullanıcı başarıyla silindi.");
+            return ServiceResponse<string>.Ok(DeleteUserAccountResource.SuccessMessage);
         }
     }
 }

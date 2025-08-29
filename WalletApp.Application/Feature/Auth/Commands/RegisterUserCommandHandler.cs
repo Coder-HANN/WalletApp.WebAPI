@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
+using System.Reflection;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.MailServices;
 using WalletApp.Application.DTOs.Auth;
 using WalletApp.Application.Feature.Auth.Commands;
+using WalletApp.Application.Feature.Auth.Validators.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Domain.Entities;
@@ -37,10 +39,10 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
         // Email zaten kayıtlı mı?
         if(await _userDetailRepository.ExistsAsync(request.Email))
         {
-            return ServiceResponse<RegisterResponseDTO>.Fail("Bu e-posta adresi zaten kayıtlı.");
+            return ServiceResponse<RegisterResponseDTO>.Fail(RegisterResource.RegisteredEmail);
         }
         if (!request.Email.Contains("@"))
-            return ServiceResponse<RegisterResponseDTO>.Fail("Geçersiz email formatı.");
+            return ServiceResponse<RegisterResponseDTO>.Fail(RegisterResource.InvalidEmailFormat);
 
         var user = new AppUser
         {
@@ -51,8 +53,8 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
         };
         user.PasswordHash = _passwordHasher.HashPassword(user, request.PasswordHash);
 
-        // 1. AppUser'u kaydet
-        await _userRepository.AddUserAsync(user);  // Burada kullanıcıyı kaydeden metodu kullanmalısın
+       
+        await _userRepository.AddUserAsync(user);  
 
         var userDetail = new UserDetail
         {
@@ -66,17 +68,11 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
             PhoneNumber = request.PhoneNumber
         };
 
-        // 2. UserDetail ekle
+        
         await _userDetailRepository.AddAsync(userDetail);
 
         try
-        {
-          //  await _emailService.SendAsync(
-           //     request.Email,
-           //     "Kayıt Başarılı",
-            //    $"Merhaba {request.Name}, kayıt işleminiz başarıyla tamamlandı. Hoş geldiniz! Kodunuz: 123456");
-            // Kullanıcı detaylarını ekle
-
+        {    
           
             // Wallet oluştur
             await _walletService.CreateWalletAsync( "TL", cancellationToken);
@@ -86,12 +82,12 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
                 Email = user.Email,
                 Name = user.UserDetail.Name,
                 Surname = user.UserDetail.Surname,
-                Message = "Kayıt başarılı."
-            }, "Kayıt başarılı.");
+                Message = RegisterResource.SuccessMessage
+            },  RegisterResource.SuccessMessage);
         }
         catch (Exception ex)
         {
-            return ServiceResponse<RegisterResponseDTO>.Fail("Kayıt sırasında hata oluştu: " + ex.Message);
+            return ServiceResponse<RegisterResponseDTO>.Fail(RegisterResource.ErrorMessage + ex.Message);
         }
     }
 }

@@ -2,6 +2,7 @@
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -23,18 +24,15 @@ public class DeleteBankAccountCommandHandler : IRequestHandler<DeleteBankAccount
     {
         var currentUserId = _currentUser.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<string>.Fail("Kullanıcı doğrulanamadı");
+            return ServiceResponse<string>.Fail(DeleteBankResource.UserIsNotFound);
+
         var account = await _bankAccountRepository.GetAsync(x => x.Iban == request.Iban);
 
         if (account == null)
-            return ServiceResponse<string>.Fail("Banka hesabı bulunamadı.");
-
-        if (account.AppUserId != _currentUser.CurrentUser())
-            return ServiceResponse<string>.Fail("Bu hesabı silme yetkiniz yok.");
-
+            return ServiceResponse<string>.Fail(DeleteBankResource.BankAccountIsNotFound);
 
         await _bankAccountRepository.DeleteAsync(account);
 
-        return ServiceResponse<string>.Ok("Banka hesabı başarıyla silindi.");
+        return ServiceResponse<string>.Ok(DeleteBankResource.BankAccountDeleted);
     }
 }

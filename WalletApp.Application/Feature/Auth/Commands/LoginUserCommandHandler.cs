@@ -8,6 +8,7 @@ using System.Text;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.DTOs.Auth;
 using WalletApp.Application.Feature.Auth.Commands;
+using WalletApp.Application.Feature.Auth.Validators.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -17,7 +18,6 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Service
     private readonly IConfiguration _configuration;
     private readonly IUserRepository _userRepository;
     
-
     public LoginUserCommandHandler(
         IPasswordHasher<AppUser> passwordHasher,
         IConfiguration configuration,
@@ -26,20 +26,21 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Service
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _userRepository = userRepository;
+        
     }
 
     public async Task<ServiceResponse<LoginUserResponseDTO>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            return ServiceResponse<LoginUserResponseDTO>.Fail("Email ve şifre boş olamaz.");
+            return ServiceResponse<LoginUserResponseDTO>.Fail(LoginResource.EmailorPasswordRequired);
 
         var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user == null)
-            return ServiceResponse<LoginUserResponseDTO>.Fail("Geçersiz email veya şifre.");
+            return ServiceResponse<LoginUserResponseDTO>.Fail(LoginResource.InvalidEmailOrPassword);
 
         var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
         if (verifyResult == PasswordVerificationResult.Failed)
-            return ServiceResponse<LoginUserResponseDTO>.Fail("Geçersiz email veya şifre.");
+            return ServiceResponse<LoginUserResponseDTO>.Fail(LoginResource.EmailorPasswordRequired);
 
         var token = await GenerateJwtToken(user);
         var expiration = DateTime.UtcNow.AddHours(1);
@@ -49,7 +50,7 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, Service
             Token = token,
             Email = user.Email,
             TokenExpiration = expiration
-        }, "Giriş başarılı.");
+        }, LoginResource.SuccessMessage);
     }
 
     private async Task<string> GenerateJwtToken(AppUser user)

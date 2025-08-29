@@ -2,6 +2,7 @@
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Payment;
+using WalletApp.Application.Feature.Payment.Validators.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -31,26 +32,26 @@ namespace WalletApp.Application.Feature.Payment.Handler
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<PaymentResponseDTO>.Fail("Kullanıcı doğrulanamdı");
-            // ➤ Kontrol: Institution boş mu?
+                return ServiceResponse<PaymentResponseDTO>.Fail(PaymentResource.UserIsNotFound);
+            
             if (string.IsNullOrWhiteSpace(request.Institution))
-                return ServiceResponse<PaymentResponseDTO>.Fail("Kuruluş adı boş olamaz.");
+                return ServiceResponse<PaymentResponseDTO>.Fail(PaymentResource.InstutionNameNotNull);
 
-            // ➤ Kontrol: Amount negatif mi?
+            
             if (request.Amount <= 0)
-                return ServiceResponse<PaymentResponseDTO>.Fail("Ödeme miktarı pozitif olmalıdır.");
+                return ServiceResponse<PaymentResponseDTO>.Fail(PaymentResource.AmountMustBeGreaterThanZero);
 
-            // ➤ Cüzdan kontrolü
+          
             var wallet = await _walletRepository.GetAsync(w => w.Id == request.AppWalletId);
             if (wallet == null)
-                return ServiceResponse<PaymentResponseDTO>.Fail("Cüzdan bulunamadı.");
+                return ServiceResponse<PaymentResponseDTO>.Fail(PaymentResource.WalletIsNotFound);
 
-            // ➤ Bakiye kontrolü
+            
             if (wallet.TotalBalance < request.Amount)
             {
-                return ServiceResponse<PaymentResponseDTO>.Fail("Yetersiz bakiye.");
+                return ServiceResponse<PaymentResponseDTO>.Fail(PaymentResource.InsufficientBalance);
             }
-            // ➤ Transaction oluştur
+            
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
@@ -62,7 +63,7 @@ namespace WalletApp.Application.Feature.Payment.Handler
             await _transactionRepository.AddAsync(transaction);
             
 
-            // ➤ Payment oluştur
+           
             var payment = new AppPayment
             {
                 Id = Guid.NewGuid(),
@@ -74,12 +75,12 @@ namespace WalletApp.Application.Feature.Payment.Handler
             await _paymentRepository.AddAsync(payment);
            
 
-            // ➤ Bakiye güncelle
+           
             wallet.TotalBalance -= request.Amount;
             await _walletRepository.UpdateAsync(wallet);
             await _walletRepository.SaveChangesAsync();
 
-            // ➤ Response
+            
             var response = new PaymentResponseDTO
             {
                 AppPaymentId = payment.Id,
@@ -88,7 +89,7 @@ namespace WalletApp.Application.Feature.Payment.Handler
                 PaymentDate = DateTime.UtcNow
             };
 
-            return ServiceResponse<PaymentResponseDTO>.Ok(response, "Ödeme başarıyla gerçekleşti");
-        }
+            return ServiceResponse<PaymentResponseDTO>.Ok(response, PaymentResource.PaymentSuccess);
+         }
     }
 }

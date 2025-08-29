@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json.Bson;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
@@ -38,17 +40,17 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
         {
             var currentUserId = _currentUserService.CurrentUser();
             if (currentUserId == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Kullanıcı doğrulanamadı");
+                return ServiceResponse<TransactionResponseDTO>.Fail(BankDepositResource.UserIsNotFound);
             // Dış kaynak bankasının Id'si 
             Guid SourceBankId = new Guid("00000000-0000-0000-0000-000000000001"); // dışarıdan para gelince bu değeri veriyoruz
 
             // Hedef banka kontrolü
             var targetBank = await _bankAccountRepository.GetByIdAsync(request.TargetBankId);
             if (targetBank == null)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Target bank not found.");
+                return ServiceResponse<TransactionResponseDTO>.Fail(BankDepositResource.TargetBankNotFound);
 
             if (request.Amount <= 0)
-                return ServiceResponse<TransactionResponseDTO>.Fail("Amount must be greater than zero.");
+                return ServiceResponse<TransactionResponseDTO>.Fail(BankDepositResource.AmountMustBeGreaterThanZero);
 
             // Hedef banka bakiyesini güncelle
             targetBank.Balance += request.Amount;
@@ -86,10 +88,10 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 Type = TransactionType.Deposit,
                 Description = transaction.Description,
                 CreatedDate = transaction.CreatedDate,
-                Suggestion = "Deposit from external source"
+                Suggestion = BankDepositResource.SuccessMessage
             };
 
-            return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, "Deposit successful.");
+            return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, BankDepositResource.SuccessMessage);
         }
 
     }

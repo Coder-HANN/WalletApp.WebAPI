@@ -138,6 +138,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheManager, MemoryCacheManager>();
 
 
+
 builder.Services.AddScoped<IBankServicesFactory, BankServicesFactory>();
 builder.Services.AddScoped<VakifBankServices>(provider =>
     new VakifBankServices(provider.GetRequiredService<IProviderBankRepository>()));

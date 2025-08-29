@@ -4,6 +4,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.DTOs.BankAccount;
 using WalletApp.Application.Feature.BankAccount.Commands;
+using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
 using WalletApp.Application.Feature.Wallet.Dtos;
 using WalletApp.Domain.Entities;
 
@@ -32,7 +33,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
     {
         var currentUserId = _currentUserService.CurrentUser();
         if (currentUserId == null)
-            return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kullanıcı doğrulanamadı");
+            return ServiceResponse<RoutingBankAccountResponseDTO>.Fail(RoutingBankAccountResource.UserIsNotFound);
 
         //TODO : Source ve target, provider tablosunda var mı? Target tüm seçeneği için olmasa da olur.
 
@@ -41,7 +42,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         var isSourceBankAccount = await _providerBankRepository.Query().AnyAsync(x => x.Id == request.SourceProviderBankId);
 
         if (!isSourceBankAccount)
-            return ServiceResponse<RoutingBankAccountResponseDTO>.Fail("Kaynak provider banka bulunamadı.");
+            return ServiceResponse<RoutingBankAccountResponseDTO>.Fail(RoutingBankAccountResource.SourceBankAccountIsNotFound);
 
         var isTargetBankAccount = await _providerBankRepository.Query().AnyAsync(x => x.Id == request.TargetProviderBankId);
 
@@ -51,7 +52,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
 
             if (isAllTarget)
             {
-                throw new Exception("Hedef tüm bankalar için yönlendirme zaten mevcut.");
+                throw new Exception(RoutingBankAccountResource.RoutingAvailable);
             }
         }
 
@@ -61,7 +62,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
         {
             var result = new ServiceResponse<RoutingBankAccountResponseDTO>()
             {
-                Message = "Bu hedef banka için yönlendirme zaten mevcut.",
+                Message = RoutingBankAccountResource.RoutingAvailableForThisBank,
                 Success = false
             };
 
@@ -84,7 +85,7 @@ public class RoutingBankAccountCommandHandler : IRequestHandler<RoutingBankAccou
             TargetBankAccountId = request.TargetProviderBankId,
         };
 
-        return ServiceResponse<RoutingBankAccountResponseDTO>.Ok(response, "Yönlendirme başarıyla tamamlandı.");
+        return ServiceResponse<RoutingBankAccountResponseDTO>.Ok(response, RoutingBankAccountResource.SuccessMessage);
 
     }
 }
