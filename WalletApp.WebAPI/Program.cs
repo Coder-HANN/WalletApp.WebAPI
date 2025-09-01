@@ -64,11 +64,11 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Listen(System.Net.IPAddress.Any, 5000);
 });
 
-// Redis
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = configuration["RedisSettings:ConnectionString"];
-});
+//// Redis
+//builder.Services.AddStackExchangeRedisCache(options =>
+//{
+//    options.Configuration = configuration["RedisSettings:ConnectionString"];
+//});
 
 // Container - Autofac yapısı araştır
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
@@ -80,10 +80,10 @@ builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
                     .As<ICacheManager>()
                     .SingleInstance();
 
-    // Redis
-    containerBuilder.RegisterType<RedisCacheManager>()
-        .As<ICacheManager>()
-        .SingleInstance();
+    //// Redis
+    //containerBuilder.RegisterType<RedisCacheManager>()
+    //    .As<ICacheManager>()
+    //    .SingleInstance();
 });
 
 // CORS
