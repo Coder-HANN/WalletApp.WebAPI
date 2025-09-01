@@ -1,5 +1,6 @@
 ﻿using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
+using WalletApp.Application.Abstraction.Services.IoC;
 
 namespace WalletApp.Infrastructure.Services.MemoryCach
 {
@@ -8,10 +9,10 @@ namespace WalletApp.Infrastructure.Services.MemoryCach
         private string _pattern;
         private ICacheManager _cacheManager;
 
-        public CacheRemoveAspect(string pattern, ICacheManager cacheManager)
+        public CacheRemoveAspect(string pattern)
         {
             _pattern = pattern;
-            _cacheManager = cacheManager;
+            _cacheManager = ServiceTool.ServiceProvider.GetService<ICacheManager>();
         }
 
         protected override void OnSuccess(IInvocation invocation)

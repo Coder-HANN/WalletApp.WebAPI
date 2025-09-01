@@ -1,4 +1,8 @@
-﻿using FluentValidation.AspNetCore;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Castle.DynamicProxy;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +17,10 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Abstraction.Services.MailServices;
+using WalletApp.Application.Abstraction.Services.Redis;
 using WalletApp.Application.Common;
+using WalletApp.Application.Feature.Wallet.Handlers;
+using WalletApp.Application.Feature.Wallet.Queries;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Logging;
@@ -23,6 +30,8 @@ using WalletApp.Infrastructure.Services.MemoryCach;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Extensions;
 using WalletApp.WebAPI.Middleware;
+using WalletApp.Application.Abstraction.Services.IoC;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -53,6 +62,28 @@ builder.Services.AddScoped<ILogService, CompositeLogger>(); // ILogService sadec
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(System.Net.IPAddress.Any, 5000);
+});
+
+// Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = configuration["RedisSettings:ConnectionString"];
+});
+
+// Container - Autofac yapısı araştır
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    // Memory Cache
+    containerBuilder.RegisterType<MemoryCacheManager>()
+                    .As<ICacheManager>()
+                    .SingleInstance();
+
+    // Redis
+    containerBuilder.RegisterType<RedisCacheManager>()
+        .As<ICacheManager>()
+        .SingleInstance();
 });
 
 // CORS
@@ -148,6 +179,8 @@ builder.Services.AddScoped<ZiraatBankServices>(provider =>
 
 builder.Services.AddScoped<GarantiBankServices>(provider =>
     new GarantiBankServices(provider.GetRequiredService<IProviderBankRepository>()));
+
+ServiceTool.Create(builder.Services);
 
 var app = builder.Build();
 
