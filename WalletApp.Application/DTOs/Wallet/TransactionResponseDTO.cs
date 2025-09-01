@@ -4,7 +4,6 @@ using MediatR;
 namespace WalletApp.Application.DTOs.Wallet
 {
     public class TransactionResponseDTO 
-    
     {
         public Guid Id { get; set; }
         public int AppUserId { get; set; }
