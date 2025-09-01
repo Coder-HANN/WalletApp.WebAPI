@@ -17,7 +17,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Abstraction.Services.MailServices;
-using WalletApp.Application.Abstraction.Services.Redis;
+//using WalletApp.Application.Abstraction.Services.Redis;
 using WalletApp.Application.Common;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Application.Feature.Wallet.Queries;
