@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Castle.DynamicProxy;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -8,15 +9,19 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using System.Transactions;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Abstraction.Services.IoC;
 using WalletApp.Application.Abstraction.Services.MailServices;
+using WalletApp.Application.Abstraction.Services.Transaction;
 using WalletApp.Application.Common;
+using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Domain.Entities;
 using WalletApp.Domain.Enums;
 using WalletApp.Infrastructure.Logging;
@@ -153,6 +158,44 @@ builder.Services.AddApplicationServices();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommandHandler).Assembly));
 builder.Services.AddControllersWithViews().AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<Program>());
 
+
+builder.Services.AddDbContext<WalletDbContext>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddSingleton<ProxyGenerator>();
+
+
+// AOP - Transaction
+builder.Services.AddTransient<WalletService>(provider =>
+{
+    var transactionService = provider.GetRequiredService<ITransactionService>();
+    var proxyGenerator = provider.GetRequiredService<ProxyGenerator>();
+
+    var walletRepository = provider.GetRequiredService<IWalletRepository>();
+    var transactionRepository = provider.GetRequiredService<ITransactionRepository>();
+    var walletTransferRepository = provider.GetRequiredService<IWalletTransferRepository>();
+    var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
+    var providerBankRepository = provider.GetRequiredService<IProviderBankRepository>();
+    var bankTransactionRepository = provider.GetRequiredService<IBankTransactionRepository>();
+    var currentUserService = provider.GetRequiredService<ICurrentUserService>();
+
+    var walletService = new WalletService(
+        walletRepository,
+        transactionRepository,
+        walletTransferRepository,
+        httpContextAccessor,
+        providerBankRepository,
+        bankTransactionRepository,
+        currentUserService
+    );
+
+    return proxyGenerator.CreateClassProxyWithTarget(
+        walletService,
+        new TransactionAspect(transactionService)
+    );
+});
+
+// TransferCommandHandler register (MediatR otomatik çalışacak)
+builder.Services.AddTransient<TransferCommandHandler>();
 
 builder.Services.AddScoped<IBankServicesFactory, BankServicesFactory>();
 builder.Services.AddScoped<VakifBankServices>(provider =>

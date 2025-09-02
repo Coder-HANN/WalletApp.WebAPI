@@ -34,6 +34,9 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
             return ServiceResponse<TransactionResponseDTO>.Fail(TransferResource.UserIsNotFound);
             var transaction = await _walletService.TransferAsync(request.SourceWalletId, request.TargetWalletId, request.Amount, request.Description.ToString());
 
+
+
+
         if (transaction == null)
             return ServiceResponse<TransactionResponseDTO>.Fail(TransferResource.FailedMessage);
 

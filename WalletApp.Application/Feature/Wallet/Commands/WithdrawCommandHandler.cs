@@ -65,7 +65,6 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
             return ServiceResponse<TransactionResponseDTO>.Fail(WithdrawResource.InvaliedIban);
         var bankCode = cleanIban.Substring(5, 4);
 
-        //  Provider bank seçimi (önce aynısı, yoksa 0015 VakıfBank)
         var providerBanks = await _providerBankRepository.GetAllAsync();
 
         var providerBank = providerBanks.FirstOrDefault(pb => pb.BankCode == bankCode) ?? providerBanks.FirstOrDefault(pb => pb.BankCode == "0015");

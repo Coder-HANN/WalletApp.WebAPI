@@ -100,7 +100,6 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
         var transfer = await factoryTransfer.ParaTransferi(dto);
 
-
         wallet.TotalBalance -= dto.Amount;
         await _walletRepository.UpdateAsync(wallet);
 

@@ -11,7 +11,7 @@ using WalletApp.Infrastructure.Services.MemoryCach;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers
 {
-    public class WalletService
+    public class WalletService 
     {
         private readonly IWalletRepository _walletRepository;
         private readonly ITransactionRepository _transactionRepository;
