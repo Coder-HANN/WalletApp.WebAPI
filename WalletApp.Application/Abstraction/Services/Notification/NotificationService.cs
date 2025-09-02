@@ -11,12 +11,12 @@ namespace WalletApp.Application.Abstraction.Services.Notification
             _hubServices = hubServices;
         }
 
-        public async Task SendToUser(string userId,string message)
+        public async Task SendToUserAsync(string userId,string message)
         {
-            await _hubServices.Clients.User(userId).SendAsync("Hesabınıza para girişi oldu.", message);
+            await _hubServices.Clients.User(userId).SendAsync(message);
         }
 
-        public async Task SendToAll(string message)
+        public async Task SendToAllAsync(string message)
         {
             await _hubServices.Clients.All.SendAsync("", message);
         }

@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using Castle.DynamicProxy;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +20,7 @@ using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Abstraction.Services.IoC;
 using WalletApp.Application.Abstraction.Services.MailServices;
+using WalletApp.Application.Abstraction.Services.Notification;
 using WalletApp.Application.Abstraction.Services.Transaction;
 using WalletApp.Application.Common;
 using WalletApp.Application.Feature.Wallet.Handlers;
@@ -206,7 +208,7 @@ builder.Services.AddScoped<ZiraatBankServices>(provider =>
 
 builder.Services.AddScoped<GarantiBankServices>(provider =>
     new GarantiBankServices(provider.GetRequiredService<IProviderBankRepository>()));
-
+builder.Services.AddSignalR();
 ServiceTool.Create(builder.Services);
 
 var app = builder.Build();
@@ -257,5 +259,7 @@ app.UseMiddleware<AppUserMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("");
 
 app.Run();

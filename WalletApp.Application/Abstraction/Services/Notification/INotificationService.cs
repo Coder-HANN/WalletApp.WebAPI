@@ -8,7 +8,7 @@ namespace WalletApp.Application.Abstraction.Services.Notification
 {
     public interface INotificationService
     {
-        Task SendToUser(string userId,string message);
-        Task SendToAll(string message);
+        Task  SendToUserAsync(string userId,string message);
+        Task SendToAllAsync(string message);
     }
 }
