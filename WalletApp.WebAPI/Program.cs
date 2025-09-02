@@ -165,12 +165,12 @@ builder.Services.AddSingleton<ProxyGenerator>();
 
 
 // AOP - Transaction
-builder.Services.AddTransient<WalletService>(provider =>
+builder.Services.AddTransient<WalletService>(provider =>   // Eğer buraya istek gelirse , aşağıdaki fonksiyon çalışacak
 {
-    var transactionService = provider.GetRequiredService<ITransactionService>();
-    var proxyGenerator = provider.GetRequiredService<ProxyGenerator>();
+    var transactionService = provider.GetRequiredService<ITransactionService>(); // TransactionAspect için gerekli class
+    var proxyGenerator = provider.GetRequiredService<ProxyGenerator>(); // Castle DynamicProxy için gerekli class
 
-    var walletRepository = provider.GetRequiredService<IWalletRepository>();
+    var walletRepository = provider.GetRequiredService<IWalletRepository>(); // WalletService için kullandığımız repolar
     var transactionRepository = provider.GetRequiredService<ITransactionRepository>();
     var walletTransferRepository = provider.GetRequiredService<IWalletTransferRepository>();
     var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
@@ -178,7 +178,7 @@ builder.Services.AddTransient<WalletService>(provider =>
     var bankTransactionRepository = provider.GetRequiredService<IBankTransactionRepository>();
     var currentUserService = provider.GetRequiredService<ICurrentUserService>();
 
-    var walletService = new WalletService(
+    var walletService = new WalletService( // Gerçek WalletService instance'ı
         walletRepository,
         transactionRepository,
         walletTransferRepository,
@@ -188,7 +188,7 @@ builder.Services.AddTransient<WalletService>(provider =>
         currentUserService
     );
 
-    return proxyGenerator.CreateClassProxyWithTarget(
+    return proxyGenerator.CreateClassProxyWithTarget( // MediatR çağırdığında bu proxy gelecek
         walletService,
         new TransactionAspect(transactionService)
     );

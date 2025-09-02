@@ -2,7 +2,7 @@
 using System.Reflection;
 
 
-namespace WalletApp.Infrastructure.Services.MemoryCach
+namespace WalletApp.Application.Abstraction.Services.Interceptors
 {
     public class AspectInterceptorSelector : IInterceptorSelector
     {

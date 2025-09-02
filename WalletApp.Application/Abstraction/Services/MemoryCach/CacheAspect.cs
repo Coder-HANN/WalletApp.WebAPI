@@ -1,6 +1,7 @@
 ﻿using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
 using WalletApp.Application.Abstraction.Services;
+using WalletApp.Application.Abstraction.Services.Interceptors;
 using WalletApp.Application.Abstraction.Services.IoC;
 
 namespace WalletApp.Infrastructure.Services.MemoryCach
