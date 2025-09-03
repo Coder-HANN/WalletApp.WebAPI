@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Abstraction.Services.Notification;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Feature.Wallet.Dtos;
@@ -18,6 +19,7 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
     public WithdrawCommandHandler(
         IWalletRepository walletRepository,
@@ -26,7 +28,8 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         IProviderBankRepository providerBankRepository,
         IBankTransactionRepository bankTransactionRepository,
         IHttpContextAccessor httpContextAccessor,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _walletRepository = walletRepository;
         _transactionRepository = transactionRepository;
@@ -35,6 +38,7 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
         _bankTransactionRepository = bankTransactionRepository;
         _httpContextAccessor = httpContextAccessor;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
 
@@ -107,6 +111,8 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
             Description = transaction.Description,
             CreatedDate = transaction.CreatedDate
         };
+
+        await _notificationService.SendToUserAsync(currentUserId.ToString(), WithdrawResource.PushNotificationMessage);
 
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, WithdrawResource.SuccessMessage);
     }

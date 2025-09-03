@@ -40,7 +40,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
         if (transaction == null)
             return ServiceResponse<TransactionResponseDTO>.Fail(TransferResource.FailedMessage);
 
-        //await _notificationService.SendToUserAsync();
+        await _notificationService.SendToUserAsync(currentUserId.ToString(), TransferResource.PushNotificationMessage);
 
         return ServiceResponse<TransactionResponseDTO>.Ok(new TransactionResponseDTO
         {
@@ -49,5 +49,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, ServiceRe
             Amount = request.Amount,
             Type = TransactionType.Transfer,
         },  TransferResource.SuccessMessage);
+
+        
     }
 }

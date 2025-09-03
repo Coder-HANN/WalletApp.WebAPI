@@ -16,5 +16,6 @@ namespace WalletApp.Application.Feature.Wallet.Validations.Resource
         public const string InavliedIban = "Geçersiz iban formatı";
         public const string ProviderBankAccountNotFound = "Sağlayıcı banka hesabı bulunamadı";
         public const string SuccessMessage = "Para yatırma işlemi başarılı";
+        public const string PushNotificationMessage = "Cüzdanınıza para yatırıldı";
     }
 }

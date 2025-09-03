@@ -7,6 +7,7 @@ using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Feature.Wallet.Commands;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
 using WalletApp.Application.Feature.Wallet.Validations.Resource;
+using WalletApp.Application.Abstraction.Services.Notification;
 
 namespace WalletApp.Application.Feature.Wallet.Handlers;
 
@@ -18,6 +19,7 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
     private readonly IBankTransactionRepository _bankTransactionRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IProviderBankRepository _providerBankRepository;
+    private readonly INotificationService _notificationService;
 
     public DepositToWalletCommandHandler(
         IWalletRepository walletRepository,
@@ -25,7 +27,8 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
         ITransactionRepository transactionRepository,
         IBankTransactionRepository bankTransactionRepository,
         ICurrentUserService currentUserService,
-        IProviderBankRepository providerBankRepository)
+        IProviderBankRepository providerBankRepository,
+        INotificationService notificationService)
     {
         _walletRepository = walletRepository;
         _bankAccountRepository = bankAccountRepository;
@@ -33,6 +36,7 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
         _bankTransactionRepository = bankTransactionRepository;
         _currentUserService = currentUserService;
         _providerBankRepository = providerBankRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<ServiceResponse<TransactionResponseDTO>> Handle(DepositCommand request, CancellationToken cancellationToken)
@@ -116,6 +120,7 @@ public class DepositToWalletCommandHandler : IRequestHandler<DepositCommand, Ser
             CreatedDate = transaction.CreatedDate,
             Suggestion = DepositResource.SuccessMessage
         };
+        await _notificationService.SendToUserAsync(currentUserId.ToString(), DepositResource.PushNotificationMessage);
 
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, DepositResource.SuccessMessage);
     }

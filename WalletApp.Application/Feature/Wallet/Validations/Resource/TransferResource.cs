@@ -11,5 +11,6 @@ namespace WalletApp.Application.Feature.Wallet.Validations.Resource
         public const string UserIsNotFound = "Kullanıcı bulunamadı";
         public const string SuccessMessage = "Transfer işlemi başarılı";
         public const string FailedMessage = "Transfer işlemi başarısız";
+        public const string PushNotificationMessage = "Cüzdanda transfer gerçekleşti";
     }
 }

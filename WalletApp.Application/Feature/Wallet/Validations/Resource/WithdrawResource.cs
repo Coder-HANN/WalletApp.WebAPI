@@ -16,5 +16,6 @@ namespace WalletApp.Application.Feature.Wallet.Validations.Resource
         public const string ProviderBankAccountIsNotFound = "Uygun sağlayıcı banka hesabı bulunamadı";
         public const string ProviderBankAmountIsNotEnough = "Sağlayıcı banka hesabı bakiyesi yetersiz";
         public const string SuccessMessage = "Para çekme işlemi başarıyla gerçekleşti.";
+        public const string PushNotificationMessage = "Cüzdanınızdan para çıkışı oldu.";
     }
 }
