@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using WalletApp.Domain.Entities;
+using Action = WalletApp.Domain.Entities.Action;
 
 
 namespace WalletApp.Persistence.Context
@@ -19,6 +20,7 @@ namespace WalletApp.Persistence.Context
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<ProviderBank> ProviderBanks { get; set; }
         public DbSet<BankRoute> BankRoutes { get; set; }
+        public DbSet<Action> Actions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -73,6 +75,7 @@ namespace WalletApp.Persistence.Context
                 builder.Property(w => w.CreatedDate).IsRequired();
                 builder.Property(w => w.Currency);
                 builder.Property(w => w.Assest).IsRequired().HasMaxLength(50);
+                builder.Property(w => w.WalletCode);
 
                 builder.HasOne(w => w.User)
                        .WithMany(u => u.Wallet)
@@ -83,6 +86,11 @@ namespace WalletApp.Persistence.Context
                        .WithOne(t => t.Wallet)
                        .HasForeignKey(t => t.WalletId)
                        .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasOne(w => w.Action)
+                        .WithOne(a => a.AppWallet)
+                        .HasForeignKey<Action>(a => a.Id)
+                        .OnDelete(DeleteBehavior.Restrict);
             });
 
             // BankAccount configuration
@@ -94,7 +102,6 @@ namespace WalletApp.Persistence.Context
                        .WithMany(u => u.BankHesap)
                        .HasForeignKey(ba => ba.AppUserId)
                        .OnDelete(DeleteBehavior.Restrict);
-
             });
 
             // Transaction configuration
@@ -116,9 +123,10 @@ namespace WalletApp.Persistence.Context
                        .WithMany(a => a.Transactions)
                        .HasForeignKey(t => t.AppBankAccountId)
                        .OnDelete(DeleteBehavior.Restrict);
+           
             });
 
-            // AppPayment configuration
+           
             modelBuilder.Entity<AppPayment>(builder =>
             {
                 builder.HasKey(p => p.Id);
@@ -136,8 +144,8 @@ namespace WalletApp.Persistence.Context
                 builder.HasKey(bt => bt.Id);
 
                 builder.Property(bt => bt.Iban)
-                       .IsRequired(false)
-                       .HasMaxLength(50);
+                       .IsRequired(false);
+                       
 
                 builder.Property(bt => bt.Commission)
                        .IsRequired();
@@ -177,8 +185,8 @@ namespace WalletApp.Persistence.Context
             modelBuilder.Entity<WalletTransfer>(builder =>
             {
                 builder.HasKey(wt => wt.Id);
-                builder.Property(wt => wt.Target).IsRequired().HasMaxLength(100);
-                builder.Property(wt => wt.IslemNo).IsRequired().HasMaxLength(50);
+                builder.Property(wt => wt.Target).IsRequired();
+                builder.Property(wt => wt.IslemNo).IsRequired();
                 builder.Property(wt => wt.SourceWalletId).IsRequired();
 
                 builder.HasOne(wt => wt.Transaction)
@@ -191,7 +199,12 @@ namespace WalletApp.Persistence.Context
                        .HasForeignKey(wt => wt.WalletId)
                        .OnDelete(DeleteBehavior.Restrict);
 
+                builder.HasOne(wt => wt.Action)
+                       .WithOne(a => a.WalletTransfer)
+                       .HasForeignKey<WalletTransfer>(wt => wt.Id)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
+
             // ProviderBank configuration
             modelBuilder.Entity<ProviderBank>(builder =>
             {
@@ -205,6 +218,24 @@ namespace WalletApp.Persistence.Context
                 builder.Property(br => br.TargetBankId);
                 builder.Property(br => br.SourceBankId).IsRequired();
                 builder.Property(br => br.Remark).IsRequired();
+            });
+
+            modelBuilder.Entity<Action>(builder =>
+            {
+                builder.HasKey(a => a.Id);
+                builder.Property(a => a.Remark).IsRequired();
+                builder.Property(a => a.IsTransfer);
+                builder.Property(a => a.Amount);
+                
+                builder.HasOne(a => a.WalletTransfer)
+                       .WithOne(wt => wt.Action)
+                       .HasForeignKey<Action>(a => a.Id)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                builder.HasOne(a => a.AppWallet)
+                          .WithOne(w => w.Action)
+                          .HasForeignKey<AppWallet>(a => a.Id)
+                          .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

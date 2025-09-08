@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using WalletApp.Application.Abstraction.Repositories;
+using WalletApp.Application.Abstraction.Services.Transaction;
 using WalletApp.Application.Feature.Wallet.Handlers;
 using WalletApp.Domain.Entities;
 using WalletApp.Infrastructure.Repositories;

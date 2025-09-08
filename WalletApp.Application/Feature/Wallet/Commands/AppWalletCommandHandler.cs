@@ -44,7 +44,8 @@ public class AppWalletCommandHandler : IRequestHandler<AppWalletCommand, Service
             Id = result.Id,
             AppUserId = currentUserId,
             TotalBalance = result.TotalBalance,
-            Assest = result.Assest 
+            Assest = result.Assest,
+            WalletCode = result.WalletCode,
         };
 
         return ServiceResponse<AppWalletResponseDTO>.Ok(dto, AppWalletResource.SuccessMessage);

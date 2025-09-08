@@ -22,6 +22,43 @@ namespace WalletApp.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("WalletApp.Domain.Entities.Action", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsTransfer")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedUser")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Actions");
+                });
+
             modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -177,7 +214,6 @@ namespace WalletApp.Persistence.Migrations
             modelBuilder.Entity("WalletApp.Domain.Entities.AppWallet", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AppUserId")
@@ -215,6 +251,9 @@ namespace WalletApp.Persistence.Migrations
                     b.Property<decimal>("TotalBalance")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("WalletCode")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -273,8 +312,7 @@ namespace WalletApp.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit");
@@ -501,7 +539,6 @@ namespace WalletApp.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("IslemNo")
-                        .HasMaxLength(50)
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ModifiedDate")
@@ -516,8 +553,7 @@ namespace WalletApp.Persistence.Migrations
 
                     b.Property<string>("Target")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("TransactionId")
                         .HasColumnType("uniqueidentifier");
@@ -532,6 +568,17 @@ namespace WalletApp.Persistence.Migrations
                     b.HasIndex("WalletId");
 
                     b.ToTable("WalletTransfers");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.Action", b =>
+                {
+                    b.HasOne("WalletApp.Domain.Entities.WalletTransfer", "WalletTransfer")
+                        .WithOne("Action")
+                        .HasForeignKey("WalletApp.Domain.Entities.Action", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("WalletTransfer");
                 });
 
             modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
@@ -569,6 +616,14 @@ namespace WalletApp.Persistence.Migrations
                         .HasForeignKey("AppUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("WalletApp.Domain.Entities.Action", "Action")
+                        .WithOne("AppWallet")
+                        .HasForeignKey("WalletApp.Domain.Entities.AppWallet", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Action");
 
                     b.Navigation("User");
                 });
@@ -659,6 +714,12 @@ namespace WalletApp.Persistence.Migrations
                     b.Navigation("Wallet");
                 });
 
+            modelBuilder.Entity("WalletApp.Domain.Entities.Action", b =>
+                {
+                    b.Navigation("AppWallet")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("WalletApp.Domain.Entities.AppBankAccount", b =>
                 {
                     b.Navigation("Transactions");
@@ -695,6 +756,12 @@ namespace WalletApp.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("WalletTransfers");
+                });
+
+            modelBuilder.Entity("WalletApp.Domain.Entities.WalletTransfer", b =>
+                {
+                    b.Navigation("Action")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -49,7 +49,8 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
             {
                 AppUserId = currentUserId,
                 Assest = assest,
-                TotalBalance = 0
+                TotalBalance = 0,
+                WalletCode = string.Concat(Enumerable.Range(0, 10).Select(_ => new Random().Next(0, 10).ToString())),
             };
 
             return await _walletRepository.AddAsync(wallet);
@@ -63,8 +64,6 @@ namespace WalletApp.Application.Feature.Wallet.Handlers
 
             return await _walletRepository.GetAllAsync(w => w.AppUserId == currentUserId);
         }
-
-
 
         public async Task<AppWallet> UpdateWalletAsync(AppWallet wallet)
         {

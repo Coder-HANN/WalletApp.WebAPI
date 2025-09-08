@@ -44,6 +44,12 @@
         /// 
         /// </summary>
         public Transaction Transaction { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        
+        public Action Action { get; set; }
+
     }
 }
 

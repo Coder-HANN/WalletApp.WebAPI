@@ -30,6 +30,5 @@ public class BankRouteRepository : EfEntityRepositoryBase<BankRoute>, IBankRoute
            .FirstOrDefaultAsync();
         }
         return Task.FromResult(Guid.Empty);
-
     }
 }

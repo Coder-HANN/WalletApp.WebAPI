@@ -1,20 +1,11 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Castle.DynamicProxy;
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
-using System.Reflection;
-using System.Security.Claims;
-using System.Text;
-using System.Transactions;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
@@ -39,12 +30,13 @@ using WalletApp.WebAPI.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
+
 // ---------- Serilog (singleton) ----------
 var serilogConfigSection = configuration.GetSection("LoggingConfig:Providers:Serilog");
 
 // Log seviyeleri, enrich vs. JSON’dan; sink ve kolonlar koddan:
 var logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(configuration, sectionName: "LoggingConfig:Providers:Serilog")
+    .ReadFrom.Configuration((Microsoft.Extensions.Configuration.IConfiguration)configuration, sectionName: "LoggingConfig:Providers:Serilog")
     .Enrich.FromLogContext()
     .Enrich.WithMachineName()
     .WriteTo.Console()
@@ -69,17 +61,16 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // Memory Cache
 builder.Services.AddMemoryCache();
-// Container - Autofac yapısı araştır
-builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
+// Container - Autofac yapısı araştır
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    // Memory Cache
     containerBuilder.RegisterType<MemoryCacheManager>()
                     .As<ICacheManager>()
                     .SingleInstance();
 });
-
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -93,66 +84,10 @@ builder.Services.AddCors(options =>
 var connectionString = configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<WalletDbContext>(options => options.UseSqlServer(connectionString));
 
+// E-posta & diğer servisler
 // HttpContext & CurrentUser
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-// JWT
-var jwtSettings = configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        RoleClaimType = ClaimTypes.Role
-    };
-});
-
-builder.Services.AddAuthorization();
-
-// Controllers & Swagger
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("Admin", new OpenApiInfo { Title = "Admin API", Version = "v1" });
-    options.SwaggerDoc("Public", new OpenApiInfo { Title = "Public API", Version = "v1" });
-
-    options.DocInclusionPredicate((group, api) =>
-    {
-        if (!api.TryGetMethodInfo(out var methodInfo)) return false;
-        var attr = methodInfo.DeclaringType?.GetCustomAttribute<ApiExplorerSettingsAttribute>();
-        return attr?.GroupName == group;
-    });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Bearer token. Örn: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }}, Array.Empty<string>() }
-    });
-});
-
 // E-posta & diğer servisler
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
@@ -166,39 +101,22 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddSingleton<ProxyGenerator>();
 
 
+// Authentication & Authorization
+builder.Services.AddJwtService(configuration);
+builder.Services.AddAuthorization();
+
+// Controllers & Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGenRegistration();
+
+
 // AOP - Transaction
-builder.Services.AddTransient<WalletService>(provider =>   // Eğer buraya istek gelirse , aşağıdaki fonksiyon çalışacak
-{
-    var transactionService = provider.GetRequiredService<ITransactionService>(); // TransactionAspect için gerekli class
-    var proxyGenerator = provider.GetRequiredService<ProxyGenerator>(); // Castle DynamicProxy için gerekli class
-
-    var walletRepository = provider.GetRequiredService<IWalletRepository>(); // WalletService için kullandığımız repolar
-    var transactionRepository = provider.GetRequiredService<ITransactionRepository>();
-    var walletTransferRepository = provider.GetRequiredService<IWalletTransferRepository>();
-    var httpContextAccessor = provider.GetRequiredService<IHttpContextAccessor>();
-    var providerBankRepository = provider.GetRequiredService<IProviderBankRepository>();
-    var bankTransactionRepository = provider.GetRequiredService<IBankTransactionRepository>();
-    var currentUserService = provider.GetRequiredService<ICurrentUserService>();
-
-    var walletService = new WalletService( // Gerçek WalletService instance'ı
-        walletRepository,
-        transactionRepository,
-        walletTransferRepository,
-        httpContextAccessor,
-        providerBankRepository,
-        bankTransactionRepository,
-        currentUserService
-    );
-
-    return proxyGenerator.CreateClassProxyWithTarget( // MediatR çağırdığında bu proxy gelecek
-        walletService,
-        new TransactionAspect(transactionService)
-    );
-});
-
+builder.Services.AddTransactionServices();
 // TransferCommandHandler register (MediatR otomatik çalışacak)
 builder.Services.AddTransient<TransferCommandHandler>();
 
+// Banka Servisleri 
 builder.Services.AddScoped<IBankServicesFactory, BankServicesFactory>();
 builder.Services.AddScoped<VakifBankServices>(provider =>
     new VakifBankServices(provider.GetRequiredService<IProviderBankRepository>()));
@@ -208,6 +126,7 @@ builder.Services.AddScoped<ZiraatBankServices>(provider =>
 
 builder.Services.AddScoped<GarantiBankServices>(provider =>
     new GarantiBankServices(provider.GetRequiredService<IProviderBankRepository>()));
+
 builder.Services.AddSignalR();
 ServiceTool.Create(builder.Services);
 
@@ -247,6 +166,7 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/Public/swagger.json", "Public API");
     });
 }
+
 
 app.UseCors();
 

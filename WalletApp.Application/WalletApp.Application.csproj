@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.7" />
+    <PackageReference Include="Quartz" Version="3.15.0" />
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
@@ -35,6 +36,10 @@
 
   <ItemGroup>
     <None Include="Feature\Payment\Commands\PaymentCommand.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Feature\Action\Validation\" />
   </ItemGroup>
 
 </Project>

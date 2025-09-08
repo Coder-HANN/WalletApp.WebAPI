@@ -59,7 +59,6 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
         AppBankAccount? targetBankAccount = null;
         string? cleanedIban = null;
         string? targetBankCode = null;
-        
 
         if (dto.RegisterBank == RegisterBank.External)
         {
@@ -130,7 +129,6 @@ public class BankTransferCommandHandler : IRequestHandler<BankTransferCommand, S
 
         await _bankTransactionRepository.AddAsync(bankTransaction); 
         await _bankTransactionRepository.SaveChangesAsync();
-
 
         var responseDto = new TransactionResponseDTO
         {
