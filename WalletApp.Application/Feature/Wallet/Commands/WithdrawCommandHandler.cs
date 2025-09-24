@@ -112,7 +112,6 @@ public class WithdrawCommandHandler : IRequestHandler<WithdrawCommand, ServiceRe
             CreatedDate = transaction.CreatedDate
         };
 
-
         await _notificationService.SendToUserAsync(currentUserId.ToString(), WithdrawResource.PushNotificationMessage);
 
         return ServiceResponse<TransactionResponseDTO>.Ok(responseDto, WithdrawResource.SuccessMessage);

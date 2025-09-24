@@ -39,7 +39,6 @@ namespace WalletApp.Application.Feature.Wallet.Queries
                 AppUserId = currentUserId,
                 TotalBalance = w.TotalBalance,
                 Assest = w.Assest,
-                
             });
 
             return ServiceResponse<IEnumerable<AppWalletResponseDTO>>.Ok(dtoList, GetUserWalletsQueryResource.SuccessMessage);

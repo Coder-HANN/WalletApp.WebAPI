@@ -11,7 +11,10 @@ namespace WalletApp.Application.Common.Pagination
             protected ServiceResponse<IEnumerable<T>> HandleResult<T>(IPagingExecutionResult<T> paginationResult)
             {
                 return paginationResult.HasPaging
-                    ? Infrastructure.Services.Pagenation.PaginatedResult<T>.Success(paginationResult.Data, paginationResult.TotalCount, paginationResult.CurrentPage, paginationResult.PageSize)
+                    ? Infrastructure.Services.Pagenation.PaginatedResult<T>.Success(paginationResult.Data,
+                    paginationResult.TotalCount,
+                    paginationResult.CurrentPage,
+                    paginationResult.PageSize)
                     : ServiceResponse<IEnumerable<T>>.Ok(data: paginationResult.Data);
             }
         }

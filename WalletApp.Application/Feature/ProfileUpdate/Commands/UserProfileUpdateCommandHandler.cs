@@ -26,7 +26,7 @@ namespace WalletApp.Application.Feature.ProfileUpdate.Commands
                 _httpContextAccessor = httpContextAccessor;
                 _currentUserService = currentUserService;
                 _userRepository = userRepository;
-        }
+            }
         public async Task<ServiceResponse<UserProfileResponseDTO>> Handle(UserProfileUpdateCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUserService.CurrentUser();

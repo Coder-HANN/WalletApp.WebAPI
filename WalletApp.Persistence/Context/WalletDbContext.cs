@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using WalletApp.Domain.Entities;
 using Action = WalletApp.Domain.Entities.Action;
 
@@ -123,10 +122,8 @@ namespace WalletApp.Persistence.Context
                        .WithMany(a => a.Transactions)
                        .HasForeignKey(t => t.AppBankAccountId)
                        .OnDelete(DeleteBehavior.Restrict);
-           
             });
 
-           
             modelBuilder.Entity<AppPayment>(builder =>
             {
                 builder.HasKey(p => p.Id);
@@ -146,7 +143,6 @@ namespace WalletApp.Persistence.Context
                 builder.Property(bt => bt.Iban)
                        .IsRequired(false);
                        
-
                 builder.Property(bt => bt.Commission)
                        .IsRequired();
 
@@ -267,6 +263,5 @@ namespace WalletApp.Persistence.Context
 
             return base.SaveChangesAsync(cancellationToken);
         }
-
     }
 }

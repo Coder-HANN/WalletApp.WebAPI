@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Linq.Expressions;
 using WalletApp.Application.Abstraction.Repositories;
-using WalletApp.Domain.Entities;
 using WalletApp.Persistence.Context;
 using WalletApp.Persistence.Repositories;
 

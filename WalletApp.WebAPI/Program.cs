@@ -167,7 +167,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-
 app.UseCors();
 
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

@@ -68,12 +68,10 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterCommand, Servi
             PhoneNumber = request.PhoneNumber
         };
 
-        
         await _userDetailRepository.AddAsync(userDetail);
 
         try
         {    
-          
             // Wallet oluştur
             await _walletService.CreateWalletAsync( "TL", cancellationToken);
 

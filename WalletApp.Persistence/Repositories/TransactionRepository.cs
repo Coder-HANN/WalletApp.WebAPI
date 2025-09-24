@@ -8,9 +8,7 @@ namespace WalletApp.Persistence.Base
     public class TransactionRepository: EfEntityRepositoryBase<Transaction>, ITransactionRepository
     {
        
-        public TransactionRepository(WalletDbContext context) : base(context)
-        {
-        }
+        public TransactionRepository(WalletDbContext context) : base(context){ }
 
         public Task SaveChangesAsync(Transaction transaction)
         {

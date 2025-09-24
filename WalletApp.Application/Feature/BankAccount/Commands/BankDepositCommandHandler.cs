@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Bson;
 using WalletApp.Application.Abstraction.Repositories;
 using WalletApp.Application.Abstraction.Services.CurrentUserServices;
+using WalletApp.Application.Abstraction.Services.UnitOfWork;
 using WalletApp.Application.DTOs.Wallet;
 using WalletApp.Application.Feature.BankAccount.Commands;
 using WalletApp.Application.Feature.BankAccount.Validatiors.Resource;
@@ -15,23 +16,17 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 {
     public class BankDepositCommandHandler : IRequestHandler<BankDepositCommand, ServiceResponse<TransactionResponseDTO>>
     {
-        
-        private readonly IBankAccountRepository _bankAccountRepository;
-        private readonly IBankTransactionRepository _bankTransactionRepository;
-        private readonly ITransactionRepository _transactionRepository;
+
+        private readonly IUnitOfWork unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICurrentUserService _currentUserService;
 
         public BankDepositCommandHandler(
-            IBankTransactionRepository bankTransactionRepository,
-            IBankAccountRepository bankAccountRepository,
-            ITransactionRepository transactionRepository,
+            IUnitOfWork unitOfWork,
             IHttpContextAccessor httpContextAccessor,
             ICurrentUserService currentUserService)
         {
-            _bankTransactionRepository = bankTransactionRepository;
-            _bankAccountRepository = bankAccountRepository;
-            _transactionRepository = transactionRepository;
+            this.unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
             _currentUserService = currentUserService;
         }
@@ -45,7 +40,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
             Guid SourceBankId = new Guid("00000000-0000-0000-0000-000000000001"); // dışarıdan para gelince bu değeri veriyoruz
 
             // Hedef banka kontrolü
-            var targetBank = await _bankAccountRepository.GetByIdAsync(request.TargetBankId);
+            var targetBank = await unitOfWork.BankAccountRepository.GetByIdAsync(request.TargetBankId);
             if (targetBank == null)
                 return ServiceResponse<TransactionResponseDTO>.Fail(BankDepositResource.TargetBankNotFound);
 
@@ -54,7 +49,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
 
             // Hedef banka bakiyesini güncelle
             targetBank.Balance += request.Amount;
-            await _bankAccountRepository.UpdateAsync(targetBank);
+            await unitOfWork.BankAccountRepository.UpdateAsync(targetBank);
 
             // Transaction kaydı oluştur
             var transaction = new Transaction
@@ -65,7 +60,7 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow
             };
-            await _transactionRepository.AddAsync(transaction);
+            await unitOfWork.TransactionRepository.AddAsync(transaction);
 
             // BankTransaction oluştur, source bank dış kaynak, target bank kullanıcı bankası
             var bankTransaction = new BankTransaction
@@ -77,7 +72,9 @@ namespace WalletApp.Application.Feature.BankAccount.Handlers
                 Commission = "0",
                 Transaction = transaction
             };
-            await _bankTransactionRepository.AddAsync(bankTransaction);
+            await unitOfWork.BankTransactionRepository.AddAsync(bankTransaction);
+
+            await unitOfWork.SaveChangeAsync();
 
             // Dönüş DTO'su
             var responseDto = new TransactionResponseDTO

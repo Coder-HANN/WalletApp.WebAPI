@@ -1,12 +1,11 @@
 ﻿using System.Linq.Expressions;
-using WalletApp.Application.Feature.Wallet.Queries;
-
 
 namespace WalletApp.Application.Abstraction.Repositories
 {
     public interface IEntityRepository<T> where T : class
     {
-        T Add(T entity);
+        T Add(T entity);  
+
         Task<T> AddAsync(T entity);
         T Update(T entity);
         Task<T> UpdateAsync(T entity);
@@ -16,14 +15,11 @@ namespace WalletApp.Application.Abstraction.Repositories
         Task<T> GetAsync(
         Expression<Func<T, bool>> predicate,
         Func<IQueryable<T>, IQueryable<T>> include = null);
-
         IEnumerable<T> GetAll(Expression<Func<T, bool>> predicate = null);
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate = null);
         IQueryable<T> Query();
         Task<int> SaveChangesAsync();
-       
         Task<T?> GetByIdAsync(Guid id);
-
         Task<IPagingExecutionResult<T>> GetPagedResult<T>(IEnumerable<T> query, int? pageSize = 10, int? pageIndex = 1,
         Func<IQueryable<T>, IOrderedQueryable<T>> ordering = null,
         CancellationToken cancellationToken = default);
